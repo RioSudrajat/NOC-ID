@@ -101,6 +101,7 @@ function Navbar() {
             { href: "/dapp", label: "DApp", isLink: true },
             { href: "/workshop", label: "Workshop", isLink: true },
             { href: "/enterprise", label: "Enterprise", isLink: true },
+            { href: "/admin", label: "Admin", isLink: true },
           ].map((item) =>
             item.isLink ? (
               <Link
@@ -153,6 +154,7 @@ function Navbar() {
             <Link href="/dapp" className="text-sm" style={{ color: "var(--solana-text-muted)" }}>DApp</Link>
             <Link href="/workshop" className="text-sm" style={{ color: "var(--solana-text-muted)" }}>Workshop</Link>
             <Link href="/enterprise" className="text-sm" style={{ color: "var(--solana-text-muted)" }}>Enterprise</Link>
+            <Link href="/admin" className="text-sm" style={{ color: "var(--solana-text-muted)" }}>Admin</Link>
             <Link href="/dapp" className="glow-btn text-sm text-center mt-2">Launch DApp</Link>
           </div>
         </motion.div>
@@ -561,6 +563,7 @@ export default function LandingPage() {
                   { href: "/dapp", label: "Vehicle DApp" },
                   { href: "/workshop", label: "Workshop Portal" },
                   { href: "/enterprise", label: "Enterprise Dashboard" },
+                  { href: "/admin", label: "Admin Portal" },
                   { href: "/dapp/viewer", label: "3D Digital Twin Demo" },
                 ].map((link) => (
                   <Link

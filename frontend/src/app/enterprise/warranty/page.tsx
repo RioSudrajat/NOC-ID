@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Shield, Clock, CheckCircle2, AlertTriangle, XCircle, FileText, Search, Download, Filter, MoreHorizontal, Check, X } from "lucide-react";
+import { useBooking } from "@/context/BookingContext";
 
 const warranties = [
   { vin: "MHKA1BA1JFK000001", model: "Avanza 2025", claim: "Engine warranty — CVT noise", status: "Approved", autoScore: 98, amount: "Rp 4,200,000", date: "2026-03-10" },
@@ -20,6 +21,7 @@ const statusConfig: Record<string, { icon: React.ReactNode; color: string; bg: s
 };
 
 export default function WarrantyPage() {
+  const booking = useBooking();
   const [filter, setFilter] = useState("all");
   const [claimList, setClaimList] = useState(warranties);
   const [selectedAction, setSelectedAction] = useState<number | null>(null);
@@ -34,9 +36,26 @@ export default function WarrantyPage() {
     const updated = [...claimList];
     const itemIndex = claimList.findIndex((_, i) => i === idx);
     if(itemIndex > -1) {
-      updated[itemIndex].status = action === "Approve" ? "Approved" : "Rejected";
+      const claim = updated[itemIndex];
+      const newStatus = action === "Approve" ? "Approved" : "Rejected";
+      updated[itemIndex].status = newStatus;
       setClaimList(updated);
       setSelectedAction(null);
+
+      // Push notification to user
+      booking?.addNotification(
+        "warranty_update",
+        `Warranty Claim ${newStatus}`,
+        `Your claim "${claim.claim}" for ${claim.model} (${claim.vin}) has been ${newStatus.toLowerCase()}.`,
+        "user"
+      );
+      // Push notification to workshop
+      booking?.addNotification(
+        "warranty_update",
+        `Warranty Claim ${newStatus}`,
+        `Claim "${claim.claim}" for ${claim.model} has been ${newStatus.toLowerCase()} by enterprise.`,
+        "workshop"
+      );
     }
   };
 

@@ -11,10 +11,10 @@ import { useBooking } from "@/context/BookingContext";
 export default function WorkshopQueue() {
   const bookingCtx = useBooking();
 
-  // Derive queue entry from active booking session if IN_SERVICE
+  // Derive queue entry from active booking session if ACCEPTED or IN_SERVICE
   const bookingQueueItem = useMemo(() => {
     const b = bookingCtx?.booking;
-    if (!b || b.status !== "IN_SERVICE") return null;
+    if (!b || !["ACCEPTED", "IN_SERVICE"].includes(b.status)) return null;
     const vd = vehicleData[b.form.vehicleKey];
     return {
       id: b.id,
@@ -23,7 +23,7 @@ export default function WorkshopQueue() {
       year: 2025,
       owner: "Pelanggan NOC",
       arrivalTime: b.form.time,
-      status: "IN_PROGRESS" as const,
+      status: b.status === "IN_SERVICE" ? "IN_PROGRESS" as const : "WAITING" as const,
       priority: "NORMAL" as "NORMAL" | "HIGH",
       mechanic: b.workshop.name,
       isBooking: true,
@@ -65,11 +65,11 @@ export default function WorkshopQueue() {
              initial={{ opacity: 0, y: 20 }}
              animate={{ opacity: 1, y: 0 }}
              transition={{ delay: i * 0.1 }}
-             className={`glass-card p-6 border ${item.status === 'IN_PROGRESS' ? 'border-blue-500/30' : 'border-slate-700/50'}`}
+             className={`glass-card p-6 border ${item.status === 'IN_PROGRESS' ? 'border-blue-500/30' : item.status === 'WAITING' ? 'border-yellow-500/30' : 'border-slate-700/50'}`}
            >
              <div className="flex justify-between items-start mb-4">
                <div className="flex items-center gap-3">
-                 <div className={`p-3 rounded-xl ${item.status === 'IN_PROGRESS' ? 'bg-blue-500/20 text-blue-400' : 'bg-slate-800 text-slate-400'}`}>
+                 <div className={`p-3 rounded-xl ${item.status === 'IN_PROGRESS' ? 'bg-blue-500/20 text-blue-400' : item.status === 'WAITING' ? 'bg-yellow-500/20 text-yellow-400' : 'bg-slate-800 text-slate-400'}`}>
                    <Car className="w-6 h-6" />
                  </div>
                  <div>
@@ -84,8 +84,8 @@ export default function WorkshopQueue() {
              </div>
 
              <div className="flex flex-wrap items-center gap-3 mb-6 p-3 rounded-lg bg-slate-900/50 border border-slate-800">
-                <span className={`text-xs px-2.5 py-1 rounded-md font-semibold ${item.status === 'IN_PROGRESS' ? 'bg-blue-500/20 text-blue-400' : 'bg-slate-700/50 text-slate-300'}`}>
-                  {item.status.replace("_", " ")}
+                <span className={`text-xs px-2.5 py-1 rounded-md font-semibold ${item.status === 'IN_PROGRESS' ? 'bg-blue-500/20 text-blue-400' : item.status === 'WAITING' ? 'bg-yellow-500/20 text-yellow-400' : 'bg-slate-700/50 text-slate-300'}`}>
+                  {item.status === 'WAITING' ? 'MENUNGGU SERVIS' : item.status.replace("_", " ")}
                 </span>
                 {item.priority === 'HIGH' && (
                   <span className="text-xs px-2.5 py-1 rounded-md font-semibold bg-red-500/20 text-red-400 flex items-center gap-1">
@@ -101,7 +101,7 @@ export default function WorkshopQueue() {
                <Link href={`/workshop/vehicle/${item.vin}`} className="flex-1 px-4 py-2.5 rounded-lg border border-slate-700 text-slate-300 text-sm font-medium hover:bg-slate-800 transition-colors flex items-center justify-center gap-2">
                  Patient History
                </Link>
-               <Link href={`/workshop/maintenance?vin=${item.vin}`} className="flex-1 px-4 py-2.5 rounded-lg bg-gradient-to-r from-purple-600 to-blue-600 text-white text-sm font-medium hover:from-purple-500 hover:to-blue-500 shadow-lg shadow-purple-500/20 transition-all flex items-center justify-center gap-2">
+               <Link href={`/workshop/maintenance?vin=${item.vin}&fromBooking=true`} className="flex-1 px-4 py-2.5 rounded-lg bg-gradient-to-r from-purple-600 to-blue-600 text-white text-sm font-medium hover:from-purple-500 hover:to-blue-500 shadow-lg shadow-purple-500/20 transition-all flex items-center justify-center gap-2">
                  <Wrench className="w-4 h-4" /> Log Servis
                </Link>
              </div>

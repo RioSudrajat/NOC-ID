@@ -144,6 +144,7 @@ interface BookingContextType {
   markNotificationRead: (id: string) => void;
   markAllNotificationsRead: (role: BookingNotification["targetRole"]) => void;
   deleteNotification: (id: string) => void;
+  addNotification: (type: BookingNotification["type"], title: string, message: string, targetRole: BookingNotification["targetRole"]) => void;
 }
 
 const STORAGE_KEY = "noc-booking-state";
@@ -453,6 +454,7 @@ export function BookingProvider({ children }: { children: ReactNode }) {
         markNotificationRead,
         markAllNotificationsRead,
         deleteNotification,
+        addNotification,
       }}
     >
       {children}

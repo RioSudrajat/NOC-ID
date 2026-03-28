@@ -3,17 +3,20 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { LayoutDashboard, Cpu, Map, ShieldCheck, Users, Shield, ChevronLeft, ChevronRight, BarChart3, AlertOctagon, Settings } from "lucide-react";
+import { LayoutDashboard, Cpu, Map, ShieldCheck, Users, Shield, ChevronLeft, ChevronRight, BarChart3, AlertOctagon, Settings, Receipt, Scale } from "lucide-react";
 import { GlobalCopilotSidebar } from "@/components/ui/GlobalCopilotSidebar";
+import { ConnectWalletButton } from "@/components/ui/ConnectWalletButton";
 
 const navItems = [
   { href: "/enterprise", label: "Overview", icon: LayoutDashboard },
   { href: "/enterprise/mint", label: "Mint Console", icon: Cpu },
   { href: "/enterprise/fleet", label: "Fleet Map", icon: Map },
   { href: "/enterprise/analytics", label: "Analytics", icon: BarChart3 },
+  { href: "/enterprise/transactions", label: "Transactions", icon: Receipt },
   { href: "/enterprise/warranty", label: "Warranty", icon: ShieldCheck },
   { href: "/enterprise/workshops", label: "Workshops", icon: Users },
   { href: "/enterprise/recalls", label: "Recalls", icon: AlertOctagon },
+  { href: "/enterprise/disputes", label: "Disputes", icon: Scale },
   { href: "/enterprise/settings", label: "API & Settings", icon: Settings },
 ];
 
@@ -79,7 +82,12 @@ export default function EnterpriseLayout({ children }: { children: React.ReactNo
         </div>
       </div>
 
-      <main className="flex-1 p-6 md:p-12 pt-24 md:pt-12 overflow-y-auto" style={{ maxHeight: "100dvh" }}>{children}</main>
+      <main className="flex-1 p-6 md:p-12 pt-24 md:pt-12 overflow-y-auto" style={{ maxHeight: "100dvh" }}>
+        <header className="hidden md:flex justify-end mb-0 -mt-4 pb-4">
+          <ConnectWalletButton variant="enterprise" />
+        </header>
+        {children}
+      </main>
       
       <GlobalCopilotSidebar />
     </div>

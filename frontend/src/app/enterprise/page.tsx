@@ -1,18 +1,28 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Car, Cpu, Shield, BarChart3, AlertTriangle, CheckCircle2, TrendingUp, ArrowUpRight } from "lucide-react";
+import { Car, Cpu, Shield, BarChart3, AlertTriangle, CheckCircle2, TrendingUp, ArrowUpRight, Activity, DollarSign, Wrench, Star, Clock } from "lucide-react";
 import Link from "next/link";
-
-const recentMints = [
-  { vin: "MHKA1BA1JFK000001", model: "Avanza 2025", date: "2026-02-15", status: "Active", health: 87 },
-  { vin: "MHKA1BA1JFK000002", model: "Avanza 2025", date: "2026-02-15", status: "Active", health: 92 },
-  { vin: "MHKB2CC3JFK000001", model: "Rush 2025", date: "2026-02-10", status: "Active", health: 78 },
-  { vin: "MHKC3DD4JFK000001", model: "Innova 2025", date: "2026-01-28", status: "Active", health: 95 },
-  { vin: "MHKD4EE5JFK000001", model: "Fortuner 2025", date: "2026-01-20", status: "Warranty Alert", health: 65 },
-];
+import { useEnterprise } from "@/context/EnterpriseContext";
+import { useBooking } from "@/context/BookingContext";
 
 export default function EnterpriseDashboard() {
+  const enterprise = useEnterprise();
+  const bookingCtx = useBooking();
+  const m = enterprise?.metrics;
+  const notifications = bookingCtx?.bookingNotifications || [];
+
+  // Derive recent activity from notifications (last 10)
+  const recentActivity = notifications.slice(0, 10);
+
+  // Top workshops by total services
+  const topWorkshops = (m?.workshopMetrics || [])
+    .sort((a, b) => b.totalServices - a.totalServices)
+    .slice(0, 5);
+
+  // Use workshops from context with seed data fallback for recent mints
+  const recentMints = (m?.vehicles || []).slice(0, 5);
+
   return (
     <div>
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
@@ -25,13 +35,13 @@ export default function EnterpriseDashboard() {
         </Link>
       </div>
 
-      {/* Stats */}
+      {/* KPI Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
         {[
-          { icon: Car, label: "Vehicles Minted", value: "1,247", change: "+32 this month", color: "var(--solana-purple)" },
-          { icon: Shield, label: "Avg Health Score", value: "84.2", change: "+2.1 vs last month", color: "var(--solana-green)" },
-          { icon: BarChart3, label: "Service Events", value: "8,912", change: "+425 this month", color: "var(--solana-cyan)" },
-          { icon: AlertTriangle, label: "Warranty Alerts", value: "12", change: "3 critical", color: "#F97316" },
+          { icon: Car, label: "Vehicles Registered", value: m?.totalVehicles.toLocaleString() || "0", change: `${m?.totalVehicles || 0} total`, color: "var(--solana-purple)" },
+          { icon: Activity, label: "Active Sessions", value: m?.activeServiceSessions.toString() || "0", change: m?.activeServiceSessions ? "Sedang berlangsung" : "Tidak ada aktif", color: "var(--solana-green)" },
+          { icon: DollarSign, label: "Monthly Revenue", value: `Rp ${((m?.revenueThisMonth || 0) / 1000).toFixed(0)}K`, change: `${m?.completedThisMonth || 0} servis bulan ini`, color: "var(--solana-cyan)" },
+          { icon: Shield, label: "Avg Fleet Health", value: m?.avgFleetHealth.toString() || "0", change: `${m?.totalVehicles || 0} kendaraan`, color: (m?.avgFleetHealth || 0) >= 70 ? "#22C55E" : "#F97316" },
         ].map((stat, i) => (
           <motion.div key={i} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }} className="glass-card p-6">
             <div className="flex items-center gap-3 mb-3">
@@ -48,80 +58,174 @@ export default function EnterpriseDashboard() {
         ))}
       </div>
 
-      {/* Model distribution */}
+      {/* Model distribution + Service Type Distribution */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
         <div className="glass-card p-6">
           <h2 className="text-lg font-semibold mb-4">Vehicle Model Distribution</h2>
           <div className="flex flex-col gap-3">
-            {[
-              { model: "Avanza", count: 520, pct: 42 },
-              { model: "Rush", count: 280, pct: 22 },
-              { model: "Innova", count: 210, pct: 17 },
-              { model: "Fortuner", count: 150, pct: 12 },
-              { model: "Other", count: 87, pct: 7 },
-            ].map((m, i) => (
-              <div key={i} className="flex items-center gap-4">
-                <span className="text-sm w-20">{m.model}</span>
-                <div className="flex-1 h-3 rounded-full" style={{ background: "rgba(153,69,255,0.1)" }}>
-                  <motion.div initial={{ width: 0 }} animate={{ width: `${m.pct}%` }} transition={{ duration: 1, delay: i * 0.1 }} className="h-3 rounded-full" style={{ background: `linear-gradient(90deg, var(--solana-purple), var(--solana-green))` }} />
+            {(m?.vehicles || []).reduce<{ model: string; count: number }[]>((acc, v) => {
+              const modelName = v.name.split(" ")[0];
+              const existing = acc.find(a => a.model === modelName);
+              if (existing) existing.count++;
+              else acc.push({ model: modelName, count: 1 });
+              return acc;
+            }, []).sort((a, b) => b.count - a.count).map((item, i) => {
+              const total = m?.totalVehicles || 1;
+              const pct = Math.round((item.count / total) * 100);
+              return (
+                <div key={i} className="flex items-center gap-4">
+                  <span className="text-sm w-24">{item.model}</span>
+                  <div className="flex-1 h-3 rounded-full" style={{ background: "rgba(153,69,255,0.1)" }}>
+                    <motion.div initial={{ width: 0 }} animate={{ width: `${pct}%` }} transition={{ duration: 1, delay: i * 0.1 }} className="h-3 rounded-full" style={{ background: "linear-gradient(90deg, var(--solana-purple), var(--solana-green))" }} />
+                  </div>
+                  <span className="text-sm mono w-16 text-right" style={{ color: "var(--solana-text-muted)" }}>{item.count} ({pct}%)</span>
                 </div>
-                <span className="text-sm mono w-16 text-right" style={{ color: "var(--solana-text-muted)" }}>{m.count}</span>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
 
         <div className="glass-card p-6">
-          <h2 className="text-lg font-semibold mb-4">Health Score Distribution</h2>
+          <h2 className="text-lg font-semibold mb-4">Service Type Distribution</h2>
           <div className="flex flex-col gap-3">
-            {[
-              { range: "90-100 (Excellent)", count: 687, pct: 55, color: "#22C55E" },
-              { range: "70-89 (Good)", count: 312, pct: 25, color: "#A3E635" },
-              { range: "50-69 (Warning)", count: 162, pct: 13, color: "#FACC15" },
-              { range: "30-49 (Critical)", count: 62, pct: 5, color: "#F97316" },
-              { range: "0-29 (Danger)", count: 24, pct: 2, color: "#EF4444" },
-            ].map((h, i) => (
-              <div key={i} className="flex items-center gap-4">
-                <span className="text-xs w-36" style={{ color: h.color }}>{h.range}</span>
-                <div className="flex-1 h-3 rounded-full" style={{ background: "rgba(153,69,255,0.1)" }}>
-                  <motion.div initial={{ width: 0 }} animate={{ width: `${h.pct}%` }} transition={{ duration: 1, delay: i * 0.1 }} className="h-3 rounded-full" style={{ background: h.color }} />
-                </div>
-                <span className="text-sm mono w-12 text-right" style={{ color: "var(--solana-text-muted)" }}>{h.count}</span>
+            {Object.entries(m?.serviceTypeDistribution || {}).length > 0 ? (
+              Object.entries(m?.serviceTypeDistribution || {})
+                .sort(([, a], [, b]) => b - a)
+                .map(([type, count], i) => {
+                  const maxCount = Math.max(...Object.values(m?.serviceTypeDistribution || {}));
+                  const pct = maxCount > 0 ? Math.round((count / maxCount) * 100) : 0;
+                  return (
+                    <div key={type} className="flex items-center gap-4">
+                      <span className="text-sm w-36 truncate">{type}</span>
+                      <div className="flex-1 h-3 rounded-full" style={{ background: "rgba(153,69,255,0.1)" }}>
+                        <motion.div initial={{ width: 0 }} animate={{ width: `${pct}%` }} transition={{ duration: 1, delay: i * 0.1 }} className="h-3 rounded-full" style={{ background: "var(--solana-cyan)" }} />
+                      </div>
+                      <span className="text-sm mono w-12 text-right" style={{ color: "var(--solana-text-muted)" }}>{count}</span>
+                    </div>
+                  );
+                })
+            ) : (
+              <div className="text-center py-8">
+                <Wrench className="w-8 h-8 mx-auto mb-2 opacity-30" />
+                <p className="text-sm" style={{ color: "var(--solana-text-muted)" }}>Belum ada data servis. Selesaikan booking untuk melihat distribusi.</p>
               </div>
-            ))}
+            )}
           </div>
         </div>
       </div>
 
-      {/* Recent mints table */}
+      {/* Recent Activity Feed + Workshop Network Status */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        {/* Recent Activity Feed */}
+        <div className="glass-card p-6">
+          <h2 className="text-lg font-semibold mb-4">Recent Activity Feed</h2>
+          {recentActivity.length > 0 ? (
+            <div className="flex flex-col gap-3 max-h-80 overflow-y-auto">
+              {recentActivity.map((n) => (
+                <div key={n.id} className="flex items-start gap-3 p-3 rounded-xl hover:bg-white/5 transition-colors">
+                  <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style={{ background: "rgba(153,69,255,0.15)" }}>
+                    {n.type.includes("completed") ? <CheckCircle2 className="w-4 h-4 text-green-400" /> :
+                     n.type.includes("paid") ? <DollarSign className="w-4 h-4 text-cyan-400" /> :
+                     n.type.includes("invoice") ? <BarChart3 className="w-4 h-4 text-purple-400" /> :
+                     <Clock className="w-4 h-4 text-yellow-400" />}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium truncate">{n.title}</p>
+                    <p className="text-xs truncate" style={{ color: "var(--solana-text-muted)" }}>{n.message}</p>
+                  </div>
+                  <span className="text-xs shrink-0" style={{ color: "var(--solana-text-muted)" }}>{n.time}</span>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8">
+              <Activity className="w-8 h-8 mx-auto mb-2 opacity-30" />
+              <p className="text-sm" style={{ color: "var(--solana-text-muted)" }}>Belum ada aktivitas terbaru.</p>
+            </div>
+          )}
+        </div>
+
+        {/* Workshop Network Status */}
+        <div className="glass-card p-6">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-lg font-semibold">Workshop Network</h2>
+            <Link href="/enterprise/workshops" className="text-sm flex items-center gap-1" style={{ color: "var(--solana-purple)" }}>
+              View All <ArrowUpRight className="w-4 h-4" />
+            </Link>
+          </div>
+          {(m?.workshops || []).length > 0 ? (
+            <div className="flex flex-col gap-3">
+              {(m?.workshops || []).slice(0, 5).map((ws) => {
+                const wsMetric = topWorkshops.find(w => w.workshopId === ws.id);
+                return (
+                  <div key={ws.id} className="flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 transition-colors">
+                    <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: ws.verified ? "rgba(20,241,149,0.1)" : "rgba(250,204,21,0.1)" }}>
+                      <Wrench className="w-5 h-5" style={{ color: ws.verified ? "var(--solana-green)" : "#FACC15" }} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">{ws.name}</p>
+                      <div className="flex items-center gap-2 text-xs" style={{ color: "var(--solana-text-muted)" }}>
+                        <span>{ws.location}</span>
+                        {ws.verified && <CheckCircle2 className="w-3 h-3 text-green-400" />}
+                        {ws.oem && <Shield className="w-3 h-3 text-purple-400" />}
+                      </div>
+                    </div>
+                    <div className="text-right shrink-0">
+                      <div className="flex items-center gap-1">
+                        <Star className="w-3 h-3 text-yellow-400" fill="#FACC15" />
+                        <span className="text-sm font-bold text-yellow-400">{wsMetric?.avgRating ? wsMetric.avgRating.toFixed(1) : ws.rating}</span>
+                      </div>
+                      <span className="text-xs" style={{ color: "var(--solana-text-muted)" }}>{wsMetric?.totalServices || ws.totalServices} servis</span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="text-center py-8">
+              <Wrench className="w-8 h-8 mx-auto mb-2 opacity-30" />
+              <p className="text-sm" style={{ color: "var(--solana-text-muted)" }}>Belum ada workshop terdaftar.</p>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Recent Mints / Fleet Vehicles */}
       <div>
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-lg font-semibold">Recent Mints</h2>
-          <Link href="/enterprise/mint" className="text-sm flex items-center gap-1" style={{ color: "var(--solana-purple)" }}>
-            View All <ArrowUpRight className="w-4 h-4" />
+          <h2 className="text-lg font-semibold">Fleet Vehicles</h2>
+          <Link href="/enterprise/fleet" className="text-sm flex items-center gap-1" style={{ color: "var(--solana-purple)" }}>
+            View Fleet Map <ArrowUpRight className="w-4 h-4" />
           </Link>
         </div>
         <div className="glass-card overflow-hidden">
           <table className="data-table">
-            <thead><tr><th>VIN</th><th>Model</th><th>Mint Date</th><th>Health</th><th>Status</th></tr></thead>
+            <thead><tr><th>VIN</th><th>Model</th><th>Region</th><th>Health</th><th>Status</th></tr></thead>
             <tbody>
-              {recentMints.map((v, i) => (
+              {recentMints.length > 0 ? recentMints.map((v, i) => (
                 <tr key={i}>
                   <td className="mono text-sm">{v.vin}</td>
-                  <td className="font-medium">{v.model}</td>
-                  <td style={{ color: "var(--solana-text-muted)" }}>{v.date}</td>
+                  <td className="font-medium">{v.name}</td>
+                  <td style={{ color: "var(--solana-text-muted)" }}>{v.region}</td>
                   <td>
                     <span className="mono font-bold" style={{ color: v.health >= 80 ? "#22C55E" : v.health >= 60 ? "#FACC15" : "#F97316" }}>{v.health}</span>
                   </td>
                   <td>
-                    {v.status === "Active" ? (
+                    {v.health >= 70 ? (
                       <span className="flex items-center gap-1 text-xs" style={{ color: "var(--solana-green)" }}><CheckCircle2 className="w-4 h-4" /> Active</span>
                     ) : (
-                      <span className="flex items-center gap-1 text-xs" style={{ color: "#F97316" }}><AlertTriangle className="w-4 h-4" /> {v.status}</span>
+                      <span className="flex items-center gap-1 text-xs" style={{ color: "#F97316" }}><AlertTriangle className="w-4 h-4" /> Warning</span>
                     )}
                   </td>
                 </tr>
-              ))}
+              )) : (
+                <tr>
+                  <td colSpan={5} className="text-center py-8 text-gray-500">
+                    <Car className="w-8 h-8 mx-auto mb-2 opacity-30" />
+                    <p className="text-sm">Belum ada kendaraan terdaftar.</p>
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>

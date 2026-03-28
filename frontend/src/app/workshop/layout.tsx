@@ -19,6 +19,7 @@ import {
   CalendarCheck,
 } from "lucide-react";
 import { GlobalCopilotSidebar } from "@/components/ui/GlobalCopilotSidebar";
+import { ConnectWalletButton } from "@/components/ui/ConnectWalletButton";
 
 const navItems = [
   { href: "/workshop", label: "Dashboard", icon: LayoutDashboard },
@@ -104,10 +105,7 @@ export default function WorkshopLayout({ children }: { children: React.ReactNode
       <main className="flex-1 overflow-y-auto flex flex-col" style={{ maxHeight: "100dvh" }}>
         {/* Desktop Header for Wallet Connect */}
         <header className="hidden md:flex justify-end p-6 pb-0 max-w-7xl mx-auto w-full">
-          <button className="glow-btn-outline px-4 py-2 text-sm flex items-center gap-2 cursor-pointer transition-colors border-[var(--solana-purple)] text-[var(--solana-purple)]">
-            <span className="w-2 h-2 rounded-full" style={{ background: "var(--solana-purple)" }} />
-            Connect Wallet
-          </button>
+          <ConnectWalletButton variant="workshop" />
         </header>
         <div className="max-w-7xl mx-auto w-full flex-1 p-6 md:p-12 pt-24 md:pt-6">
           {children}
