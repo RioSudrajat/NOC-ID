@@ -19,7 +19,7 @@ export function GlobalCopilotSidebar() {
 
   useEffect(() => {
     const handleOpen = () => setIsCollapsed(false);
-    window.addEventListener("open-copilot", handleOpen);
+    window.addEventListener("open-copilot", handleOpen, { passive: true });
     return () => window.removeEventListener("open-copilot", handleOpen);
   }, []);
 

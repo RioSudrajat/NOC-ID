@@ -1,13 +1,9 @@
 import type { Metadata } from "next";
-import { ToastProvider } from "@/components/ui/Toast";
-import { BookingProvider } from "@/context/BookingContext";
-import { EnterpriseProvider } from "@/context/EnterpriseContext";
-import { AdminProvider } from "@/context/AdminContext";
-import { PartCatalogProvider } from "@/context/PartCatalogContext";
+import { Providers } from "@/context/Providers";
 import { Orbitron, Exo_2 } from "next/font/google";
 import "./globals.css";
 
-const orbitron = Orbitron({ 
+const orbitron = Orbitron({
   subsets: ["latin"],
   variable: "--font-orbitron",
   display: "swap",
@@ -30,17 +26,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className={`${orbitron.variable} ${exo2.variable}`}>
       <body className="font-exo bg-[#1A1D23] text-zinc-100 antialiased selection:bg-teal-400/25 selection:text-teal-900">
-        <ToastProvider>
-          <AdminProvider>
-            <PartCatalogProvider>
-              <BookingProvider>
-                <EnterpriseProvider>
-                  {children}
-                </EnterpriseProvider>
-              </BookingProvider>
-            </PartCatalogProvider>
-          </AdminProvider>
-        </ToastProvider>
+        <Providers>
+          {children}
+        </Providers>
       </body>
     </html>
   );

@@ -3,7 +3,12 @@
 import { useState, useEffect, useMemo } from "react";
 import { Filter, Search, Wrench, Droplets, ShieldCheck, Gauge, Settings } from "lucide-react";
 import { SharedServiceCard, ServiceEvent } from "@/components/ui/SharedServiceCard";
-import { PaymentModal } from "@/components/ui/PaymentModal";
+import dynamic from "next/dynamic";
+
+const PaymentModal = dynamic(
+  () => import("@/components/ui/PaymentModal").then(m => ({ default: m.PaymentModal })),
+  { ssr: false }
+);
 import { useToast } from "@/components/ui/Toast";
 import { useActiveVehicle, vehicleData } from "@/context/ActiveVehicleContext";
 import { useBooking } from "@/context/BookingContext";

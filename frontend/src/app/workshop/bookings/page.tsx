@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import {
   CalendarCheck, CheckCircle2, XCircle, Clock, Loader2, Car,
@@ -17,6 +17,25 @@ const pastBookings = [
   { id: "BK-HIST-002", vehicleName: "Toyota Avanza 2023", complaint: "AC tidak dingin", date: "2026-03-05", time: "10:00", status: "COMPLETED" as BookingStatus, rating: 4 },
   { id: "BK-HIST-003", vehicleName: "Suzuki Ertiga 2025", complaint: "Rem berderit", date: "2026-02-28", time: "14:00", status: "REJECTED" as BookingStatus, rating: 0 },
 ];
+
+const STATUS_BADGE_MAP: Record<string, { bg: string; color: string; label: string }> = {
+  PENDING: { bg: "rgba(250,204,21,0.1)", color: "#FCD34D", label: "Menunggu" },
+  ACCEPTED: { bg: "rgba(94, 234, 212,0.1)", color: "#5EEAD4", label: "Diterima" },
+  REJECTED: { bg: "rgba(239,68,68,0.1)", color: "#FCA5A5", label: "Ditolak" },
+  IN_SERVICE: { bg: "rgba(20,209,255,0.1)", color: "var(--solana-cyan)", label: "Dalam Servis" },
+  INVOICE_SENT: { bg: "rgba(94, 234, 212,0.1)", color: "#5EEAD4", label: "Invoice Terkirim" },
+  PAID: { bg: "rgba(94, 234, 212,0.1)", color: "#5EEAD4", label: "Dibayar" },
+  COMPLETED: { bg: "rgba(94, 234, 212,0.1)", color: "#5EEAD4", label: "Selesai" },
+};
+
+function StatusBadge({ status }: { status: string }) {
+  const s = STATUS_BADGE_MAP[status] || STATUS_BADGE_MAP.PENDING;
+  return (
+    <span className="text-[10px] px-2.5 py-1 rounded-full font-medium" style={{ background: s.bg, color: s.color, border: `1px solid ${s.color}22` }}>
+      {s.label}
+    </span>
+  );
+}
 
 export default function WorkshopBookingsPage() {
   const ctx = useBooking();
@@ -49,23 +68,7 @@ export default function WorkshopBookingsPage() {
 
   const visibleBookings = activeBookings.filter((b) => matchesTab(b.status));
 
-  const statusBadge = (status: BookingStatus) => {
-    const map: Record<string, { bg: string; color: string; label: string }> = {
-      PENDING: { bg: "rgba(250,204,21,0.1)", color: "#FCD34D", label: "Menunggu" },
-      ACCEPTED: { bg: "rgba(94, 234, 212,0.1)", color: "#5EEAD4", label: "Diterima" },
-      REJECTED: { bg: "rgba(239,68,68,0.1)", color: "#FCA5A5", label: "Ditolak" },
-      IN_SERVICE: { bg: "rgba(20,209,255,0.1)", color: "var(--solana-cyan)", label: "Dalam Servis" },
-      INVOICE_SENT: { bg: "rgba(94, 234, 212,0.1)", color: "#5EEAD4", label: "Invoice Terkirim" },
-      PAID: { bg: "rgba(94, 234, 212,0.1)", color: "#5EEAD4", label: "Dibayar" },
-      COMPLETED: { bg: "rgba(94, 234, 212,0.1)", color: "#5EEAD4", label: "Selesai" },
-    };
-    const s = map[status] || map.PENDING;
-    return (
-      <span className="text-[10px] px-2.5 py-1 rounded-full font-medium" style={{ background: s.bg, color: s.color, border: `1px solid ${s.color}22` }}>
-        {s.label}
-      </span>
-    );
-  };
+  // statusBadge hoisted to StatusBadge component above
 
   const handleSendInvoice = (booking: BookingRequest) => {
     const vehicle = vehicleData[booking.form.vehicleKey];
@@ -159,7 +162,7 @@ export default function WorkshopBookingsPage() {
                   <h3 className="font-semibold text-sm">
                     {booking.type === "walkin" ? "Walk-In" : "Booking Baru"} · {vehicle?.name || booking.form.vehicleKey}
                   </h3>
-                  {statusBadge(booking.status)}
+                  <StatusBadge status={booking.status} />
                 </div>
                 <p className="text-[10px] mono" style={{ color: "var(--solana-text-muted)" }}>{booking.id}</p>
               </div>
@@ -309,7 +312,7 @@ export default function WorkshopBookingsPage() {
               <div className="flex justify-between items-start mb-3">
                 <div className="flex items-center gap-2">
                   <h3 className="font-semibold text-sm">{pb.vehicleName}</h3>
-                  {statusBadge(pb.status)}
+                  <StatusBadge status={pb.status} />
                 </div>
                 <p className="text-[10px] mono" style={{ color: "var(--solana-text-muted)" }}>{pb.date}</p>
               </div>

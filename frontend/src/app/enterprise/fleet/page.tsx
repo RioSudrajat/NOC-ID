@@ -5,6 +5,7 @@ import dynamic from "next/dynamic";
 import { motion } from "framer-motion";
 import { Map, Car, Shield, AlertTriangle, CheckCircle2, MapPin, Search, Filter, Download, MoreHorizontal, ChevronLeft, ChevronRight } from "lucide-react";
 import { useEnterprise } from "@/context/EnterpriseContext";
+import { getHealthColor, getHealthStatus } from "@/lib/health";
 
 const FleetLeafletMap = dynamic(() => import("@/components/ui/FleetLeafletMap"), { ssr: false, loading: () => (
   <div className="flex items-center justify-center h-full">
@@ -14,21 +15,6 @@ const FleetLeafletMap = dynamic(() => import("@/components/ui/FleetLeafletMap"),
     </div>
   </div>
 )});
-
-function getHealthColor(health: number) {
-  if (health >= 90) return "#86EFAC";
-  if (health >= 70) return "#5EEAD4";
-  if (health >= 50) return "#FCD34D";
-  if (health >= 30) return "#5EEAD4";
-  return "#FCA5A5";
-}
-
-function getHealthStatus(health: number) {
-  if (health >= 90) return "Excellent";
-  if (health >= 70) return "Good";
-  if (health >= 50) return "Warning";
-  return "Critical";
-}
 
 export default function FleetPage() {
   const enterprise = useEnterprise();

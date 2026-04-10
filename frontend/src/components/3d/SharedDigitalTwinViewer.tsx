@@ -71,7 +71,7 @@ export default function SharedDigitalTwinViewer({ mode, initialVehicle }: Shared
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 768);
     check();
-    window.addEventListener("resize", check);
+    window.addEventListener("resize", check, { passive: true });
     
     // Sync active vehicle context for DApp users
     if (mode === "owner" && activeVehicleCtx?.activeVehicle) {
