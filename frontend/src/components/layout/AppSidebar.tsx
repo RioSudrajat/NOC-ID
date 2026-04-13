@@ -1,9 +1,10 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useState, type ReactNode } from "react";
-import { Shield, ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
 export interface NavItem {
@@ -18,7 +19,6 @@ export interface AppSidebarProps {
   portalLabel: ReactNode;
   infoCard?: ReactNode;
   collapsedIcon?: ReactNode;
-  logoGradient?: string;
   /** Number of nav items to show in mobile header (default: 4) */
   mobileNavCount?: number;
   /**
@@ -34,7 +34,6 @@ export function AppSidebar({
   portalLabel,
   infoCard,
   collapsedIcon,
-  logoGradient = "var(--solana-gradient)",
   mobileNavCount = 4,
   useInlineActiveStyle = false,
 }: AppSidebarProps) {
@@ -79,11 +78,8 @@ export function AppSidebar({
           href="/"
           className={`flex items-center gap-3 mb-8 ${isLeftCollapsed ? "justify-center" : ""}`}
         >
-          <div
-            className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0"
-            style={{ background: logoGradient }}
-          >
-            <Shield className="w-5 h-5 text-white" />
+          <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0 overflow-hidden">
+            <Image src="/noc_logo.png" alt="NOC Logo" width={36} height={36} className="object-contain" />
           </div>
           {!isLeftCollapsed && (
             <span className="font-bold text-lg whitespace-nowrap overflow-hidden transition-opacity">
@@ -168,11 +164,8 @@ export function AppSidebar({
         }}
       >
         <Link href="/" className="flex items-center gap-2">
-          <div
-            className="w-8 h-8 rounded-lg flex items-center justify-center"
-            style={{ background: logoGradient }}
-          >
-            <Shield className="w-4 h-4 text-white" />
+          <div className="w-8 h-8 rounded-lg flex items-center justify-center overflow-hidden">
+            <Image src="/noc_logo.png" alt="NOC Logo" width={32} height={32} className="object-contain" />
           </div>
           <span className="font-bold text-sm">{portalLabel}</span>
         </Link>

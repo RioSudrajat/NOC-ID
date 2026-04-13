@@ -171,12 +171,7 @@ function Navbar() {
       >
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2.5 shrink-0">
-          <div className="w-8 h-8 rounded-lg bg-zinc-900 flex items-center justify-center">
-            <svg viewBox="0 0 24 24" className="w-4 h-4 text-teal-300" fill="none" stroke="currentColor" strokeWidth="2.5">
-              <circle cx="12" cy="12" r="9" />
-              <path d="M12 3v18M3 12h18" />
-            </svg>
-          </div>
+          <Image src="/noc_logo.png" alt="NOC Logo" width={32} height={32} className="object-contain" />
           <span className="font-semibold text-zinc-900 tracking-tight">NOC ID</span>
         </Link>
 

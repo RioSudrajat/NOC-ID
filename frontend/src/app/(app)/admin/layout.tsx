@@ -35,7 +35,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       navItems={navItems}
       portalName={<><span style={{ color: "var(--solana-green)" }}>NOC</span> Admin</>}
       portalLabel={<><span style={{ color: "var(--solana-green)" }}>NOC</span> Admin</>}
-      logoGradient="linear-gradient(135deg, var(--solana-green), #FCA5A5)"
       infoCard={
         <div
           className="p-4 rounded-xl border"
