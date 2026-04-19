@@ -87,22 +87,29 @@ NEMESIS bukan protokol armada. NEMESIS adalah lapisan protokol untuk seluruh eko
 
 | Modul | Status | Mekanisme Bukti | Sumber Pendapatan |
 |---|---|---|---|
-| **Modul 1 — Armada EV Produktif** | ✅ Fokus Saat Ini | Pelacakan perjalanan GPS + odometer | Tarif perjalanan, biaya pengiriman, logistik |
+| **Modul 1 — Armada EV Produktif** | ✅ Fokus Saat Ini | Pelacakan perjalanan GPS + odometer | Tarif perjalanan, biaya pengiriman, kargo, rute penumpang |
 | **Modul 2 — Jaringan Pengisian EV** | 🔜 Berikutnya | kWh yang dikeluarkan per sesi | Biaya pengisian per kWh |
 | **Modul 3 — Energi Surya + EV P2P** | 🔮 Masa Depan | Energi yang diproduksi, disimpan, diperdagangkan | Penjualan energi P2P |
 | **Modul N — Protokol Terbuka** | 🌐 Terbuka | Standar bukti kustom per aset | Aliran pendapatan EV apapun |
 
 **Modul 1 — Armada EV Produktif (Fokus Saat Ini):**
 
-Kendaraan EV yang menghasilkan pendapatan melalui operasi harian — ojol, pengiriman makanan, kurir paket, logistik last-mile — adalah titik masuk NEMESIS. Contoh aset yang memenuhi syarat:
+Modul 1 tidak terbatas pada motor saja. Setiap kendaraan listrik yang menghasilkan pendapatan yang dapat diverifikasi melalui operasinya — baik itu motor, mobil, truk, maupun bus — memenuhi syarat sebagai node NEMESIS. Tipe kendaraan menentukan parameter bukti GPS; logika ekonominya identik di semua kategori.
+
+**Contoh aset yang memenuhi syarat:**
 
 | Tipe Kendaraan | Operator | Sumber Pendapatan |
 |---|---|---|
 | Motor listrik | Pengemudi ojol (Gojek/Grab) | Tarif perjalanan |
 | Motor listrik | Pengantar makanan (GoFood/GrabFood) | Biaya pengiriman |
 | Motor listrik | Kurir ekspres (GoSend/ShopeeExpress) | Biaya pengiriman paket |
-| Motor kargo listrik | Logistik last-mile | Per paket terkirim |
-| Motor listrik | Armada pengiriman perusahaan | Kontrak logistik |
+| Motor kargo listrik | Logistik last-mile (J&T, SiCepat) | Per paket terkirim |
+| Mobil listrik | Ride-hailing (Maxim, BlueBird Electric) | Tarif perjalanan |
+| MPV / minivan listrik | Shuttle & layanan carter | Tarif penumpang per rute |
+| Pikap listrik | Kargo ringan & logistik antar kota | Biaya kargo per perjalanan |
+| Van listrik | Armada pengiriman perusahaan | Kontrak logistik |
+| Truk listrik | Logistik kargo menengah-berat | Kontrak pengangkutan |
+| Bus listrik | Shuttle korporat / sekolah / wisata | Kontrak rute, tarif penumpang |
 
 Kriteria kualifikasinya sederhana: **aset menghasilkan pendapatan yang dapat diverifikasi melalui operasinya.** NEMESIS mentokenisasi aliran pendapatan tersebut dan mendistribusikannya ke investor.
 

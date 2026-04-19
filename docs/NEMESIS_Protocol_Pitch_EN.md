@@ -89,7 +89,7 @@ NEMESIS is engineered as the **universal protocol layer for Indonesia's EV produ
 
 | Module | Status | Asset Type | Proof of Activity | Revenue Source |
 |---|---|---|---|---|
-| **Module 1 — EV Productive Fleet** | ✅ **Current Focus** | Electric motorcycles, cargo bikes, delivery EVs | GPS trip tracking + mileage odometer | Trip fares, delivery fees, logistics |
+| **Module 1 — EV Productive Fleet** | ✅ **Current Focus** | Electric motorcycles, cars, trucks, buses, cargo bikes — any revenue-generating EV | GPS trip tracking + mileage odometer | Trip fares, delivery fees, freight, passenger routes |
 | **Module 2 — EV Charging Network** | 🔜 Next | EV charging stations (home, commercial, fast charger) | kWh dispensed per session | Per-kWh charging fees |
 | **Module 3 — Solar + EV P2P Energy** | 🔮 Future | Solar panels + EV battery storage nodes | Energy produced, stored, and traded | P2P energy sales + storage arbitrage |
 | **Module N — Open Protocol** | 🌐 Open | Battery swap stations, EV parking, V2G grids | Custom per-asset proof standard | Any recurring EV revenue stream |
@@ -100,6 +100,8 @@ NEMESIS is engineered as the **universal protocol layer for Indonesia's EV produ
 
 **Module 1 — EV Productive Fleet (Current Focus)**
 
+Module 1 is not limited to motorcycles. Any electric vehicle that generates verifiable revenue through its operation — whether it's a motorbike, a car, a truck, or a bus — qualifies as a NEMESIS node. The vehicle type determines the GPS proof parameters; the economic logic is identical across all categories.
+
 **What qualifies as a Module 1 asset:**
 
 | Vehicle Type | Operator | Revenue Source |
@@ -107,11 +109,15 @@ NEMESIS is engineered as the **universal protocol layer for Indonesia's EV produ
 | Electric motorcycle | Ojol driver (Gojek/Grab) | Trip fares |
 | Electric motorcycle | Food delivery (GoFood/GrabFood) | Delivery fees |
 | Electric motorcycle | Express courier (GoSend/ShopeeExpress) | Shipping fees |
-| Electric cargo bike | Last-mile logistics | Per-package delivery |
-| Electric motorcycle | Enterprise delivery fleet | Contract logistics |
-| Electric vehicle | EV shuttle / angkot | Passenger fares |
+| Electric cargo bike / motorcycle | Last-mile logistics (J&T, SiCepat) | Per-package delivery |
+| Electric car | Ride-hailing (Maxim, BlueBird Electric) | Trip fares |
+| Electric MPV / minivan | Shuttle & charter services | Passenger fares per route |
+| Electric pickup truck | Light cargo & inter-city logistics | Per-trip cargo fees |
+| Electric van | Enterprise delivery fleet | Contract logistics |
+| Electric truck | Mid-to-heavy freight logistics | Freight contracts |
+| Electric bus | Corporate / school / tourist shuttle | Route contracts, passenger fares |
 
-The qualifying criteria for Module 1: **the vehicle generates revenue through its operation.** NEMESIS tokenizes that revenue stream and distributes it to investors.
+The qualifying criteria for Module 1: **the vehicle generates verifiable revenue through its operation.** NEMESIS tokenizes that revenue stream and distributes it to investors.
 
 **Fleet Pool Model** — Investors buy shares in the entire fleet pool, not individual vehicles. This diversifies idle unit risk across the whole network. One inactive vehicle does not eliminate any investor's yield.
 
