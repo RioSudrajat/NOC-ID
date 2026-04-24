@@ -1,4 +1,4 @@
-export type PlatformRole = "superadmin" | "admin" | "enterprise" | "workshop" | "user";
+export type PlatformRole = "superadmin" | "admin" | "operator" | "workshop" | "driver";
 
 export interface WalletEntry {
   wallet: string;
@@ -10,19 +10,17 @@ export interface WalletEntry {
 }
 
 export interface PlatformConfig {
-  platformFeePercent: number;
-  gasSubsidyPercent: number;
-  minServiceFee: number;
-  maxServiceFee: number;
-  nocTokenRate: number;
-  usdcRate: number;
+  platformFeePercent: number;       // protocol treasury fee (default 4%)
+  fleetManagerFeePercent: number;   // fleet manager fee (default 3%)
+  maintenanceFundPercent: number;   // maintenance fund (default 3%)
+  flatFeeDailyIDR: number;          // default flat fee for rent (IDR)
   maxBatchMintSize: number;
-  qrExpirySeconds: number;
+  maintenanceThresholdsKm: number[];
   features: {
     aiInsights: boolean;
-    digitalTwin: boolean;
     copilot: boolean;
     walletPayments: boolean;
+    depinCampaigns: boolean;
   };
 }
 

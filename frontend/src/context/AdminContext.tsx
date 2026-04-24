@@ -37,7 +37,7 @@ export function AdminProvider({ children }: { children: ReactNode }) {
 export function useAdmin() {
   const store = useAdminStore();
   return {
-    currentAdmin: { wallet: "NOC1...adm1" as string, role: "superadmin" as const },
+    currentAdmin: { wallet: "NMS1...adm1" as string, role: "superadmin" as const },
     whitelistedWallets: store.whitelistedWallets,
     addWallet: store.addWallet,
     removeWallet: store.removeWallet,

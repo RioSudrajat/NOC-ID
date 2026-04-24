@@ -117,7 +117,7 @@ export default function FleetLeafletMap({ vehicles }: FleetLeafletMapProps) {
                   </div>
                   <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
                     <span style={{ fontSize: 11, color: "rgba(255,255,255,0.5)" }}>Mileage</span>
-                    <span style={{ fontSize: 12, fontWeight: 600 }}>{v.mileage}</span>
+                    <span style={{ fontSize: 12, fontWeight: 600 }}>{v.odometer.toLocaleString("id-ID")} km</span>
                   </div>
                   <div style={{ display: "flex", justifyContent: "space-between" }}>
                     <span style={{ fontSize: 11, color: "rgba(255,255,255,0.5)" }}>Owner</span>

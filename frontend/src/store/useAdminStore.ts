@@ -33,46 +33,43 @@ function saveJSON<T>(key: string, data: T) {
 /* ── Default data ── */
 
 const defaultConfig: PlatformConfig = {
-  platformFeePercent: 2.5,
-  gasSubsidyPercent: 0,
-  minServiceFee: 50000,
-  maxServiceFee: 50000000,
-  nocTokenRate: 52,
-  usdcRate: 16000,
+  platformFeePercent: 4,
+  fleetManagerFeePercent: 3,
+  maintenanceFundPercent: 3,
+  flatFeeDailyIDR: 50000,
   maxBatchMintSize: 10000,
-  qrExpirySeconds: 300,
+  maintenanceThresholdsKm: [2500, 5000, 7500, 10000],
   features: {
     aiInsights: true,
-    digitalTwin: true,
     copilot: true,
     walletPayments: false,
+    depinCampaigns: true,
   },
 };
 
 const seedWallets: WalletEntry[] = [
-  { wallet: "NOC1...adm1", role: "superadmin", entityName: "NOC ID Core", status: "active", registeredAt: "2025-01-15", lastActive: "2026-03-27" },
-  { wallet: "AST1...ent1", role: "enterprise", entityName: "PT Astra Manufacturing", status: "active", registeredAt: "2025-06-01", lastActive: "2026-03-26" },
-  { wallet: "HND1...ws01", role: "workshop", entityName: "Bengkel Hendra Motor", status: "active", registeredAt: "2025-08-10", lastActive: "2026-03-27" },
-  { wallet: "MJY1...ws02", role: "workshop", entityName: "Maju Jaya Motor", status: "active", registeredAt: "2025-09-15", lastActive: "2026-03-25" },
-  { wallet: "EUR1...ws03", role: "workshop", entityName: "EuroHaus M Performance", status: "active", registeredAt: "2025-10-01", lastActive: "2026-03-27" },
-  { wallet: "AHS1...ws04", role: "workshop", entityName: "Ahass Sejahtera Motor", status: "active", registeredAt: "2025-10-20", lastActive: "2026-03-24" },
-  { wallet: "MAB1...ws05", role: "workshop", entityName: "Mabua Harley Custom", status: "active", registeredAt: "2025-11-05", lastActive: "2026-03-26" },
-  { wallet: "JAB1...ws06", role: "workshop", entityName: "Bengkel Jaya Abadi", status: "pending", registeredAt: "2026-03-01", lastActive: "2026-03-20" },
-  { wallet: "BUD1...usr1", role: "user", entityName: "Pak Budi", status: "active", registeredAt: "2025-12-01", lastActive: "2026-03-27" },
-  { wallet: "AND1...usr2", role: "user", entityName: "Andi Wijaya", status: "active", registeredAt: "2026-01-10", lastActive: "2026-03-26" },
+  { wallet: "NMS1...adm1", role: "superadmin", entityName: "Nemesis Core", status: "active", registeredAt: "2025-01-15", lastActive: "2026-04-23" },
+  { wallet: "ELC1...op01", role: "operator", entityName: "PT Electrum Mobilitas Indonesia", status: "active", registeredAt: "2025-06-01", lastActive: "2026-04-23" },
+  { wallet: "NMS1...op02", role: "operator", entityName: "Nemesis Native Fleet", status: "active", registeredAt: "2025-11-15", lastActive: "2026-04-24" },
+  { wallet: "HND1...ws01", role: "workshop", entityName: "Bengkel Hendra Motor", status: "active", registeredAt: "2025-08-10", lastActive: "2026-04-24" },
+  { wallet: "MJY1...ws02", role: "workshop", entityName: "Maju Jaya Motor", status: "active", registeredAt: "2025-09-15", lastActive: "2026-04-22" },
+  { wallet: "AHS1...ws04", role: "workshop", entityName: "Ahass Sejahtera Motor", status: "active", registeredAt: "2025-10-20", lastActive: "2026-04-21" },
+  { wallet: "JAB1...ws06", role: "workshop", entityName: "Bengkel Jaya Abadi", status: "pending", registeredAt: "2026-03-01", lastActive: "2026-04-15" },
+  { wallet: "DRV1...dr01", role: "driver", entityName: "Budi Santoso", status: "active", registeredAt: "2026-02-01", lastActive: "2026-04-24" },
+  { wallet: "DRV2...dr02", role: "driver", entityName: "Agus Prabowo", status: "active", registeredAt: "2026-02-12", lastActive: "2026-04-24" },
 ];
 
 const seedAuditLogs: AuditLogEntry[] = [
-  { id: "AL-001", timestamp: "2026-03-27T09:00:00Z", adminWallet: "NOC1...adm1", action: "kyc_approval", targetEntity: "Mabua Harley Custom", details: "Workshop KYC approved. On-chain credential issued." },
-  { id: "AL-002", timestamp: "2026-03-25T14:30:00Z", adminWallet: "NOC1...adm1", action: "config_change", targetEntity: "Platform", details: "Platform fee updated from 2.0% to 2.5%." },
-  { id: "AL-003", timestamp: "2026-03-20T10:15:00Z", adminWallet: "NOC1...adm1", action: "wallet_whitelist", targetEntity: "Bengkel Jaya Abadi", details: "New workshop wallet registered. KYC status: pending." },
-  { id: "AL-004", timestamp: "2026-03-15T16:00:00Z", adminWallet: "NOC1...adm1", action: "enterprise_onboard", targetEntity: "PT Astra Manufacturing", details: "Enterprise account created. Plan: Enterprise Tier." },
+  { id: "AL-001", timestamp: "2026-04-23T09:00:00Z", adminWallet: "NMS1...adm1", action: "kyc_approval", targetEntity: "Ahass Sejahtera Motor", details: "Workshop KYC approved. On-chain credential issued." },
+  { id: "AL-002", timestamp: "2026-04-20T14:30:00Z", adminWallet: "NMS1...adm1", action: "config_change", targetEntity: "Platform", details: "Platform fee updated from 3.5% to 4%." },
+  { id: "AL-003", timestamp: "2026-04-15T10:15:00Z", adminWallet: "NMS1...adm1", action: "wallet_whitelist", targetEntity: "Bengkel Jaya Abadi", details: "New workshop wallet registered. KYC status: pending." },
+  { id: "AL-004", timestamp: "2026-04-10T16:00:00Z", adminWallet: "NMS1...adm1", action: "operator_onboard", targetEntity: "PT Electrum Mobilitas Indonesia", details: "Fleet operator onboarded. Type: verified partner." },
 ];
 
 const seedDisputes: DisputeEntry[] = [
-  { id: "DSP-001", type: "service_quality", userWallet: "BUD1...usr1", workshopId: "ws-6", workshopName: "Bengkel Jaya Abadi", bookingId: "BK-001", amountIDR: 450000, status: "open", createdAt: "2026-03-25", resolvedAt: null, resolution: null, assignedAdmin: null },
-  { id: "DSP-002", type: "part_authenticity", userWallet: "AND1...usr2", workshopId: "ws-2", workshopName: "Maju Jaya Motor", bookingId: "BK-002", amountIDR: 1200000, status: "investigating", createdAt: "2026-03-20", resolvedAt: null, resolution: null, assignedAdmin: "NOC1...adm1" },
-  { id: "DSP-003", type: "payment", userWallet: "BUD1...usr1", workshopId: "ws-1", workshopName: "Bengkel Hendra Motor", bookingId: "BK-003", amountIDR: 300000, status: "resolved", createdAt: "2026-03-10", resolvedAt: "2026-03-12", resolution: "Partial refund Rp 150,000 issued to user.", assignedAdmin: "NOC1...adm1" },
+  { id: "DSP-001", type: "service_quality", userWallet: "DRV1...dr01", workshopId: "ws-6", workshopName: "Bengkel Jaya Abadi", bookingId: "BK-001", amountIDR: 450000, status: "open", createdAt: "2026-04-22", resolvedAt: null, resolution: null, assignedAdmin: null },
+  { id: "DSP-002", type: "part_authenticity", userWallet: "DRV2...dr02", workshopId: "ws-2", workshopName: "Maju Jaya Motor", bookingId: "BK-002", amountIDR: 1200000, status: "investigating", createdAt: "2026-04-18", resolvedAt: null, resolution: null, assignedAdmin: "NMS1...adm1" },
+  { id: "DSP-003", type: "payment", userWallet: "DRV1...dr01", workshopId: "ws-1", workshopName: "Bengkel Hendra Motor", bookingId: "BK-003", amountIDR: 300000, status: "resolved", createdAt: "2026-04-10", resolvedAt: "2026-04-12", resolution: "Partial refund Rp 150,000 issued.", assignedAdmin: "NMS1...adm1" },
 ];
 
 /* ── Store ── */
@@ -103,7 +100,7 @@ function addAuditEntry(prev: AuditLogEntry[], action: string, targetEntity: stri
   const entry: AuditLogEntry = {
     id: `AL-${Date.now()}`,
     timestamp: new Date().toISOString(),
-    adminWallet: "NOC1...adm1",
+    adminWallet: "NMS1...adm1",
     action,
     targetEntity,
     details,
@@ -230,7 +227,7 @@ export const useAdminStore = create<AdminStore>((set, get) => ({
       const disputes = state.disputes.map(d => {
         if (d.id !== id) return d;
         auditLogs = addAuditEntry(auditLogs, "dispute_resolution", d.workshopName, `Dispute ${d.id} resolved: ${resolution}`);
-        return { ...d, status: "resolved" as const, resolvedAt: new Date().toISOString().split("T")[0], resolution, assignedAdmin: "NOC1...adm1" };
+        return { ...d, status: "resolved" as const, resolvedAt: new Date().toISOString().split("T")[0], resolution, assignedAdmin: "NMS1...adm1" };
       });
       saveJSON(DISPUTES_KEY, disputes);
       return { disputes, auditLogs };

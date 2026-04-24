@@ -5,7 +5,23 @@
       "WebSearch",
       "WebFetch(domain:help.grab.com)",
       "WebFetch(domain:projectmultatuli.org)",
-      "WebFetch(domain:messari.io)"
+      "WebFetch(domain:messari.io)",
+      "Bash(find \"D:\\\\Projekan\\\\NOC ID\\\\frontend\\\\src\\\\app\" -name \"layout.tsx\" -exec head -20 {} +)",
+      "Bash(rmdir /s /q \"app\\\\\\(app\\)\\\\dapp\")",
+      "Bash(rmdir /s /q \"app\\\\\\(app\\)\\\\enterprise\")",
+      "Bash(rmdir /s /q \"components\\\\3d\")",
+      "Bash(rmdir /s /q \"components\\\\dapp\")",
+      "Bash(rmdir /s /q \"components\\\\landing\")",
+      "Bash(Remove-Item -Recurse -Force \"D:\\\\Projekan\\\\NOC ID\\\\frontend\\\\src\\\\app\\\\\\(app\\)\\\\dapp\" -ErrorAction SilentlyContinue)",
+      "Bash(Remove-Item -Recurse -Force \"D:\\\\Projekan\\\\NOC ID\\\\frontend\\\\src\\\\app\\\\\\(app\\)\\\\enterprise\" -ErrorAction SilentlyContinue)",
+      "Bash(Remove-Item -Recurse -Force \"D:\\\\Projekan\\\\NOC ID\\\\frontend\\\\src\\\\components\\\\3d\" -ErrorAction SilentlyContinue)",
+      "Bash(Remove-Item -Recurse -Force \"D:\\\\Projekan\\\\NOC ID\\\\frontend\\\\src\\\\components\\\\dapp\" -ErrorAction SilentlyContinue)",
+      "Bash(Remove-Item -Recurse -Force \"D:\\\\Projekan\\\\NOC ID\\\\frontend\\\\src\\\\components\\\\landing\" -ErrorAction SilentlyContinue)",
+      "Bash(npx tsc *)",
+      "PowerShell($base = \"D:\\\\Projekan\\\\NOC ID\\\\frontend\\\\src\\\\app\\\\\\(admin\\)\"; if \\(Test-Path \"$base\\\\enterprises\"\\) { Rename-Item -Path \"$base\\\\enterprises\" -NewName \"operators\" -Force; Write-Output \"Renamed enterprises -> operators\" }; if \\(Test-Path \"$base\\\\vehicles\"\\) { Rename-Item -Path \"$base\\\\vehicles\" -NewName \"fleet\" -Force; Write-Output \"Renamed vehicles -> fleet\" }; Get-ChildItem \"$base\" -Directory | Select-Object Name)",
+      "Bash(npx next *)",
+      "Read(//tmp/**)",
+      "Bash(rm -rf .next)"
     ]
   }
 }
