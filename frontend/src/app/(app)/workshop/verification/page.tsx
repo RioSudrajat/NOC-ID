@@ -148,7 +148,7 @@ export default function WorkshopVerificationPage() {
               
               <div className="p-4 rounded-xl flex items-start gap-3 mb-6" style={{ background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.3)" }}>
                 <AlertTriangle className="w-5 h-5 shrink-0" style={{ color: "#FCA5A5" }} />
-                <p className="text-xs leading-relaxed text-red-200">The serial number <strong>{serialNumber.toUpperCase()}</strong> does not exist on the NOC ID registry. DO NOT INSTALL this part. Installing counterfeit parts voids warranties and lowers the vehicle's health score.</p>
+                <p className="text-xs leading-relaxed text-red-200">The serial number <strong>{serialNumber.toUpperCase()}</strong> does not exist on the NOC ID registry. DO NOT INSTALL this part. Installing counterfeit parts voids warranties and lowers the vehicle&apos;s health score.</p>
               </div>
 
               <button className="w-full py-3 rounded-lg font-semibold text-sm cursor-pointer transition-colors" style={{ background: "rgba(239,68,68,0.2)", color: "#fca5a5" }}>

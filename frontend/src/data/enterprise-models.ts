@@ -5,7 +5,7 @@
 export const ENTERPRISE_NAME = "PT Astra Manufacturing";
 export const ENTERPRISE_ROLE = "Genesis Minter";
 
-export type EnterpriseModelKey = "avanza" | "bmw_m4" | "beat" | "harley" | "supra";
+export type EnterpriseModelKey = "bmw_m4" | "harley" | "pcx_150" | "supra";
 
 export interface EnterpriseModel {
   id: string;
@@ -21,19 +21,7 @@ export interface EnterpriseModel {
 
 // The 5 seeded 3D models the enterprise already owns.
 // These mirror the vehicles the workshop digital-twin viewer can render.
-export const SEED_ENTERPRISE_MODELS: EnterpriseModel[] = [
-  {
-    id: "mdl-avanza",
-    name: "Toyota Avanza 2025",
-    category: "car",
-    modelKey: "avanza",
-    fileName: "avanza.glb",
-    fileSize: "12.4 MB",
-    blobUrl: "/models/avanza.glb",
-    uploadedAt: "2026-01-08",
-    status: "active",
-  },
-  {
+export const SEED_ENTERPRISE_MODELS: EnterpriseModel[] = [  {
     id: "mdl-bmw-m4",
     name: "BMW M4 G82 2025",
     category: "car",
@@ -43,19 +31,7 @@ export const SEED_ENTERPRISE_MODELS: EnterpriseModel[] = [
     blobUrl: "/models/bmw_m4_g82.glb",
     uploadedAt: "2026-01-15",
     status: "active",
-  },
-  {
-    id: "mdl-beat",
-    name: "Honda Beat 2024",
-    category: "motorcycle",
-    modelKey: "beat",
-    fileName: "honda_beat.glb",
-    fileSize: "8.9 MB",
-    blobUrl: "/models/honda_beat.glb",
-    uploadedAt: "2026-01-20",
-    status: "active",
-  },
-  {
+  },  {
     id: "mdl-harley",
     name: "Harley-Davidson Sportster S",
     category: "motorcycle",
@@ -64,6 +40,17 @@ export const SEED_ENTERPRISE_MODELS: EnterpriseModel[] = [
     fileSize: "14.7 MB",
     blobUrl: "/models/harley_sportster_s.glb",
     uploadedAt: "2026-02-02",
+    status: "active",
+  },
+  {
+    id: "mdl-pcx-150",
+    name: "Honda PCX 150 2017",
+    category: "motorcycle",
+    modelKey: "pcx_150",
+    fileName: "PCXDLXABS.glb",
+    fileSize: "14.3 MB",
+    blobUrl: "/models/honda-pcx/source/PCXDLXABS.glb",
+    uploadedAt: "2026-05-15",
     status: "active",
   },
   {
@@ -79,11 +66,7 @@ export const SEED_ENTERPRISE_MODELS: EnterpriseModel[] = [
   },
 ];
 
-export const ENTERPRISE_MODEL_LABELS: Record<EnterpriseModelKey, string> = {
-  avanza: "Toyota Avanza",
-  bmw_m4: "BMW M4 G82",
-  beat: "Honda Beat",
-  harley: "Harley-Davidson Sportster S",
+export const ENTERPRISE_MODEL_LABELS: Record<EnterpriseModelKey, string> = {  bmw_m4: "BMW M4 G82",  harley: "Harley-Davidson Sportster S",  pcx_150: "Honda PCX 150 2017",
   supra: "Toyota Supra Veilside",
 };
 
@@ -95,6 +78,9 @@ export const PART_CATEGORIES = [
   "Brakes",
   "Wheels",
   "Suspension",
+  "CVT",
+  "Electrical",
+  "Fuel",
 ] as const;
 
 export type PartCategory = (typeof PART_CATEGORIES)[number];
@@ -107,4 +93,7 @@ export const CATEGORY_COLORS: Record<PartCategory, string> = {
   Brakes: "#0F766E",
   Wheels: "#99F6E4",
   Suspension: "#67E8F9",
+  CVT: "#22D3EE",
+  Electrical: "#A7F3D0",
+  Fuel: "#FDE68A",
 };

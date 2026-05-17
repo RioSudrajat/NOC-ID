@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import {
@@ -10,7 +10,11 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { workshopsData, useBooking, type BookingForm } from "@/context/BookingContext";
-import { useActiveVehicle, vehicleData, VehicleKey } from "@/context/ActiveVehicleContext";
+import { useActiveVehicle, vehicleData } from "@/context/ActiveVehicleContext";
+import { useAdminStore } from "@/store/useAdminStore";
+import { useUserStore } from "@/store/useUserStore";
+import { useVehicleRegistryStore } from "@/store/useVehicleRegistryStore";
+import { getVehicleDisplayName } from "@/types/vehicle";
 
 const timeSlots = ["08:00", "09:00", "10:00", "11:00", "13:00", "14:00", "15:00", "16:00"];
 
@@ -46,9 +50,31 @@ export default function WorkshopProfilePage() {
   const ws = workshopsData.find((w) => w.id === workshopId);
   const bookingCtx = useBooking();
   const vehicleCtx = useActiveVehicle();
+  const hydrateAdmin = useAdminStore((state) => state.hydrate);
+  const allCredentials = useAdminStore((state) => state.credentials);
+  const credentials = allCredentials.filter(item => item.workshopId === workshopId && !item.revokedAt);
 
-  const activeVehicleKey = vehicleCtx?.activeVehicle || "avanza";
-  const currentVehicle = vehicleCtx?.currentVehicleData || vehicleData.avanza;
+  useEffect(() => {
+    hydrateAdmin();
+  }, [hydrateAdmin]);
+
+  const activeVehicleKey = vehicleCtx?.activeVehicle || "bmw_m4";
+  const activeVehicleId = vehicleCtx?.activeVehicleId ?? activeVehicleKey;
+  const currentVehicle = vehicleCtx?.currentVehicleData || vehicleData.bmw_m4;
+  const currentUser = useUserStore((state) => state.currentUser);
+  const registryVehicles = useVehicleRegistryStore((state) => state.vehicles);
+  const ownedVehicleIds = currentUser?.ownedVehicleIds;
+  const userId = currentUser?.userId;
+  const visibleVehicles = useMemo(() => {
+    return registryVehicles
+      .filter((vehicle) => {
+        if (!vehicle.make || !vehicle.model || !vehicle.year || !vehicle.vin) return false;
+        if (userId) return vehicle.currentOwnerId === userId || ownedVehicleIds?.includes(vehicle.vehicleId);
+        if (vehicle.mintStatus === "transferred" || vehicle.mintStatus === "escrow") return false;
+        return vehicle.isDemo;
+      })
+      .filter((vehicle, index, list) => list.findIndex((item) => item.vin === vehicle.vin) === index);
+  }, [ownedVehicleIds, registryVehicles, userId]);
 
   const [selectedDate, setSelectedDate] = useState("");
   const [selectedTime, setSelectedTime] = useState("");
@@ -56,8 +82,12 @@ export default function WorkshopProfilePage() {
   const [shareHistory, setShareHistory] = useState(false);
   const [shareDigitalTwin, setShareDigitalTwin] = useState(false);
   const [showShareDetails, setShowShareDetails] = useState(false);
-  const [vehicleKey, setVehicleKey] = useState<VehicleKey>(activeVehicleKey);
+  const [vehicleKey, setVehicleKey] = useState<string>(activeVehicleId);
   const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    setVehicleKey((prev) => (prev === activeVehicleId ? prev : activeVehicleId));
+  }, [activeVehicleId]);
 
   if (!ws) {
     return (
@@ -87,7 +117,15 @@ export default function WorkshopProfilePage() {
     }, 1500);
   };
 
-  const selectedVehicle = vehicleData[vehicleKey];
+  const selectedVehicleIdentity = visibleVehicles.find((vehicle) => vehicle.vehicleId === vehicleKey);
+  const selectedVehicle = selectedVehicleIdentity
+    ? {
+        name: getVehicleDisplayName(selectedVehicleIdentity),
+        vin: selectedVehicleIdentity.vin,
+        health: selectedVehicleIdentity.healthScore,
+        mileage: selectedVehicleIdentity.currentMileageKm.toLocaleString("id-ID"),
+      }
+    : vehicleData[vehicleKey] ?? currentVehicle;
   const canSubmit = selectedDate && selectedTime && complaint.trim().length > 0 && !submitting;
 
   return (
@@ -128,6 +166,16 @@ export default function WorkshopProfilePage() {
                       {badge}
                     </span>
                   ))}
+                  {credentials.some((credential) => credential.credential === "oem_certified") && (
+                    <span className="text-[10px] px-2.5 py-1 rounded-full flex items-center gap-1 bg-teal-400/10 text-teal-300 border border-teal-400/20">
+                      <ShieldCheck className="w-3 h-3" /> Official Manufacturer Partner
+                    </span>
+                  )}
+                  {credentials.some((credential) => credential.credential === "manufacturer_audit_partner") && (
+                    <span className="text-[10px] px-2.5 py-1 rounded-full flex items-center gap-1 bg-cyan-400/10 text-cyan-300 border border-cyan-400/20">
+                      <CheckCircle2 className="w-3 h-3" /> Trusted Vehicle Auditor
+                    </span>
+                  )}
                 </div>
                 <div className="grid grid-cols-3 gap-4 text-center">
                   <div>
@@ -232,13 +280,13 @@ export default function WorkshopProfilePage() {
               <label className="text-xs mb-1.5 block" style={{ color: "var(--solana-text-muted)" }}>Kendaraan</label>
               <select
                 value={vehicleKey}
-                onChange={(e) => setVehicleKey(e.target.value as VehicleKey)}
+                onChange={(e) => setVehicleKey(e.target.value)}
                 className="w-full px-3 py-2.5 rounded-xl bg-white/5 text-sm outline-none cursor-pointer"
                 style={{ border: "1px solid rgba(94, 234, 212,0.15)", color: "var(--solana-text)" }}
               >
-                {(Object.keys(vehicleData) as VehicleKey[]).map((k) => (
-                  <option key={k} value={k} style={{ background: "var(--solana-dark-2)" }}>
-                    {vehicleData[k].name}
+                {visibleVehicles.map((vehicle) => (
+                  <option key={vehicle.vehicleId} value={vehicle.vehicleId} style={{ background: "var(--solana-dark-2)" }}>
+                    {getVehicleDisplayName(vehicle)}
                   </option>
                 ))}
               </select>

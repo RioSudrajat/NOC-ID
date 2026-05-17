@@ -1,4 +1,5 @@
 export interface VehicleData {
+  vehicleId: string;
   vin: string;
   model: string;
   year: number;
@@ -14,7 +15,9 @@ export interface SaleData {
 }
 
 export interface BuyerData {
+  userId?: string;
   name: string;
+  email?: string;
   wallet: string;
   nik: string;
 }
@@ -46,6 +49,7 @@ export interface BuyerInfoStepProps {
   buyerMode: BuyerMode;
   onBuyerModeChange: (mode: BuyerMode) => void;
   onSimulateMockBuyer: () => void;
+  registeredBuyers: import("@/types/user").RegisteredNocUser[];
   onBack: () => void;
   onNext: () => void;
 }

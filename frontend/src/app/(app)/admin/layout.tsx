@@ -14,6 +14,7 @@ import {
   Shield,
 } from "lucide-react";
 import { PortalLayout } from "@/components/layout/PortalLayout";
+import { PortalGuard } from "@/components/guards/PortalGuard";
 import type { NavItem } from "@/components/layout/AppSidebar";
 
 const navItems: NavItem[] = [
@@ -31,7 +32,8 @@ const navItems: NavItem[] = [
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   return (
-    <PortalLayout
+    <PortalGuard requiredRole="admin">
+      <PortalLayout
       navItems={navItems}
       portalName={<><span style={{ color: "var(--solana-green)" }}>NOC</span> Admin</>}
       portalLabel={<><span style={{ color: "var(--solana-green)" }}>NOC</span> Admin</>}
@@ -64,8 +66,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       mainLayout="flat"
       mobileNavCount={3}
       useInlineActiveStyle
-    >
-      {children}
-    </PortalLayout>
+      >
+        {children}
+      </PortalLayout>
+    </PortalGuard>
   );
 }

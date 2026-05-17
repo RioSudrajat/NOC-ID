@@ -1,14 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { MapPin, Star, Search, CheckCircle2, ShieldCheck, ChevronLeft, Building2, Loader2, Activity } from "lucide-react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
-import { workshopsData, Workshop, useBooking } from "@/context/BookingContext";
+import { Workshop, useBooking } from "@/context/BookingContext";
 import { useActiveVehicle, vehicleData } from "@/context/ActiveVehicleContext";
+import { mergeRegisteredWorkshops } from "@/data/workshops";
+import { useAdminStore } from "@/store/useAdminStore";
 
-const LeafletMap = dynamic(() => import("@/components/ui/LeafletMap"), {
+const MapLibreMap = dynamic(() => import("@/components/ui/MapLibreMap"), {
   ssr: false,
   loading: () => (
     <div className="flex items-center justify-center h-full rounded-2xl" style={{ background: "var(--solana-dark-2)" }}>
@@ -18,27 +20,44 @@ const LeafletMap = dynamic(() => import("@/components/ui/LeafletMap"), {
 });
 
 const cities = ["Semua", "Jakarta", "Surabaya", "Tangerang", "Bandung", "Semarang"];
-const filters = ["Semua", "Terverifikasi", "OEM Certified"];
+const filters = ["Terverifikasi", "Official Partner", "Brand Specialist"];
 
 export default function BookServicePage() {
   const [search, setSearch] = useState("");
   const [activeCity, setActiveCity] = useState("Semua");
-  const [activeFilter, setActiveFilter] = useState("Semua");
+  const [activeFilter, setActiveFilter] = useState("Terverifikasi");
+  const hydrateAdmin = useAdminStore((state) => state.hydrate);
+  const registrations = useAdminStore((state) => state.pendingRegistrations);
+  const getWorkshopCredentials = useAdminStore((state) => state.getWorkshopCredentials);
+
+  useEffect(() => {
+    hydrateAdmin();
+  }, [hydrateAdmin]);
 
   // Show the "Status Servis" button only when the currently active vehicle
   // has an ongoing booking session. Each vehicle has its own slot, so
   // switching the active vehicle in the sidebar updates this badge.
   const activeVehicleCtx = useActiveVehicle();
-  const activeVehicle = activeVehicleCtx?.activeVehicle || "avanza";
+  const activeVehicle = activeVehicleCtx?.activeVehicleId || activeVehicleCtx?.activeVehicle || "bmw_m4";
+  const activeVehicleMake = activeVehicleCtx?.activeVehicleIdentity.make ?? vehicleData[activeVehicle]?.make ?? "";
   const bookingCtx = useBooking();
   const currentBooking = bookingCtx?.bookings[activeVehicle] || null;
   const hasActiveBooking = !!currentBooking && !["COMPLETED", "REJECTED"].includes(currentBooking.status);
 
-  const filtered = workshopsData.filter((ws) => {
+  const workshops = useMemo(() => mergeRegisteredWorkshops(registrations), [registrations]);
+  const filtered = workshops.filter((ws) => {
     const matchSearch = ws.name.toLowerCase().includes(search.toLowerCase()) || ws.specialization.toLowerCase().includes(search.toLowerCase());
     const matchCity = activeCity === "Semua" || ws.city === activeCity;
-    const matchFilter = activeFilter === "Semua" || (activeFilter === "Terverifikasi" && ws.verified) || (activeFilter === "OEM Certified" && ws.oem);
-    return matchSearch && matchCity && matchFilter;
+    const credentials = getWorkshopCredentials(ws.id);
+    const isOemCertified = ws.oem || credentials.some((credential) => credential.credential === "oem_certified");
+    const isBrandSpecialist = activeVehicleMake
+      ? ws.specialization.toLowerCase().includes(activeVehicleMake.toLowerCase())
+      : false;
+    const matchFilter =
+      (activeFilter === "Terverifikasi" && ws.verified) ||
+      (activeFilter === "Official Partner" && isOemCertified) ||
+      (activeFilter === "Brand Specialist" && isBrandSpecialist);
+    return ws.verified && matchSearch && matchCity && matchFilter;
   });
 
   return (
@@ -68,7 +87,7 @@ export default function BookServicePage() {
           <span className="hidden sm:inline">Status Servis</span>
           {hasActiveBooking && (
             <>
-              <span className="hidden md:inline text-[10px] opacity-75">· {vehicleData[activeVehicle]?.name}</span>
+              <span className="hidden md:inline text-[10px] opacity-75">· {activeVehicleCtx?.currentVehicleData.name ?? vehicleData[activeVehicle]?.name}</span>
               <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full animate-pulse" style={{ background: "var(--solana-green)" }} />
             </>
           )}
@@ -82,7 +101,7 @@ export default function BookServicePage() {
         className="mb-8 rounded-2xl overflow-hidden"
         style={{ height: "400px" }}
       >
-        <LeafletMap workshops={filtered} />
+        <MapLibreMap workshops={filtered} />
       </motion.div>
 
       {/* Search & Filters */}

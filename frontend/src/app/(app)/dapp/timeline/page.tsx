@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { Filter, Search, Wrench, Droplets, ShieldCheck, Gauge, Settings } from "lucide-react";
-import { SharedServiceCard, ServiceEvent } from "@/components/ui/SharedServiceCard";
+import { SharedServiceCard, ServiceEvent, type PartItem } from "@/components/ui/SharedServiceCard";
 import dynamic from "next/dynamic";
 
 const PaymentModal = dynamic(
@@ -12,18 +12,9 @@ const PaymentModal = dynamic(
 import { useToast } from "@/components/ui/Toast";
 import { useActiveVehicle, vehicleData } from "@/context/ActiveVehicleContext";
 import { useBooking } from "@/context/BookingContext";
+import { api } from "@/lib/api/client";
 
 const timelineData: Record<string, ServiceEvent[]> = {
-  avanza: [
-    { id: 2, status: "ANCHORED", date: "2026-02-10", type: "Oil Change", category: "Fluids", icon: Droplets, mechanic: "Pak Hendra", workshop: "Bengkel Hendra Motor", rating: 4.8, mileage: "34,521 km", parts: [
-      { name: "Engine Oil 5W-30 (4L)", partNumber: "08880-83264", isOem: true, manufacturer: "Toyota Motor Corp", priceIDR: 380000 },
-      { name: "Oil Filter", partNumber: "90915-YZZD4", isOem: true, manufacturer: "Denso Corp", priceIDR: 45000 },
-    ], serviceCost: 50000, gasFee: 100, costIDR: 475100, costUSDC: 30, costNOC: 48, costStr: "Rp 475,100", txSig: "4xK9...mF7q", healthBefore: 45, healthAfter: 95, notes: "Filter changed. No leaks detected.", images: [] },
-    { id: 3, status: "ANCHORED", date: "2026-01-15", type: "Brake Pad Replacement", category: "Brakes", icon: ShieldCheck, mechanic: "Workshop Maju Jaya", workshop: "PT Maju Jaya Auto", rating: 4.5, mileage: "31,200 km", parts: [
-      { name: "Front Brake Pad Set", partNumber: "04465-BZ010", isOem: true, manufacturer: "Aisin Corp", priceIDR: 450000 },
-      { name: "Brake Disc Rotor FL", partNumber: "43512-BZ130", isOem: true, manufacturer: "Toyota Motor Corp", priceIDR: 550000 },
-    ], serviceCost: 150000, gasFee: 100, costIDR: 1150100, costUSDC: 72, costNOC: 115, costStr: "Rp 1,150,100", txSig: "7hR2...pK4s", healthBefore: 28, healthAfter: 100, notes: "Front pads replaced. Rotors look fine but should be checked next service.", images: [] },
-  ],
   bmw_m4: [
     { id: 4, status: "ANCHORED", date: "2026-03-01", type: "Suspension Check", category: "Full Service", icon: Gauge, mechanic: "EuroHaus M Performance", workshop: "EuroHaus ID", rating: 4.9, mileage: "12,400 km", parts: [
       { name: "Alignment Calibration Kit", partNumber: "31-12-6-867-848", isOem: true, manufacturer: "BMW AG", priceIDR: 350000 },
@@ -32,11 +23,6 @@ const timelineData: Record<string, ServiceEvent[]> = {
       { name: "Michelin Pilot Sport 4S (x4)", partNumber: "MPS4S-255/35R19", isOem: false, manufacturer: "Michelin", priceIDR: 16000000 },
     ], serviceCost: 500000, gasFee: 100, costIDR: 16500100, costUSDC: 1031, costNOC: 1650, costStr: "Rp 16,500,100", txSig: "9zX2...L0mN", healthBefore: 70, healthAfter: 99, notes: "All 4 tires changed. Balanced and aligned.", images: [] },
   ],
-  beat: [
-    { id: 6, status: "ANCHORED", date: "2026-01-05", type: "CVT & Roller Check", category: "Full Service", icon: Wrench, mechanic: "Ahass Motor", workshop: "PT Nusantara Sakti", rating: 4.5, mileage: "14,200 km", parts: [
-      { name: "CVT Grease", partNumber: "08C30-K59-600ML", isOem: true, manufacturer: "Honda Motor Co", priceIDR: 35000 },
-    ], serviceCost: 40000, gasFee: 100, costIDR: 75100, costUSDC: 5, costNOC: 8, costStr: "Rp 75,100", txSig: "P89q...21Wf", healthBefore: 85, healthAfter: 95, notes: "Roller and CVT cleaned, applied new grease.", images: [] },
-  ],
   harley: [
     { id: 7, status: "ANCHORED", date: "2025-12-20", type: "Primary Chain Adj", category: "Full Service", icon: Wrench, mechanic: "Mabua Custom", workshop: "Mabua HD", rating: 5.0, mileage: "8,900 km", parts: [
       { name: "Primary Chaincase Fluid", partNumber: "62600025", isOem: true, manufacturer: "Harley-Davidson Inc", priceIDR: 280000 },
@@ -44,19 +30,44 @@ const timelineData: Record<string, ServiceEvent[]> = {
   ]
 };
 
+function readText(value: unknown, fallback: string) {
+  return typeof value === "string" && value.trim() ? value : fallback;
+}
+
+function readNumber(value: unknown, fallback = 0) {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : fallback;
+}
+
+function mapInvoiceParts(parts: unknown): PartItem[] {
+  if (!Array.isArray(parts)) return [];
+  return parts.map((raw, index) => {
+    const part = raw && typeof raw === "object" ? raw as Record<string, unknown> : {};
+    return {
+      name: readText(part.name ?? part.componentName, `Part ${index + 1}`),
+      partNumber: readText(part.partNumber, "-"),
+      isOem: Boolean(part.isOem ?? part.isOEM ?? true),
+      manufacturer: readText(part.manufacturer, "NOC"),
+      priceIDR: readNumber(part.priceIDR ?? part.priceIdr ?? part.price),
+    };
+  }).filter((part) => part.name !== "-" || part.priceIDR > 0);
+}
+
 export default function TimelinePage() {
   const ctx = useActiveVehicle();
   const bookingCtx = useBooking();
-  const currentKey = ctx?.activeVehicle || "avanza";
-  const currentVehicleData = ctx?.currentVehicleData || vehicleData.avanza;
-  const currentEvents = timelineData[currentKey] || timelineData.avanza;
+  const currentKey = ctx?.activeVehicle || "bmw_m4";
+  const activeVehicleId = ctx?.activeVehicleId;
+  const isDemoVehicle = ctx?.activeVehicleIdentity.isDemo ?? true;
+  const currentVehicleData = ctx?.currentVehicleData || vehicleData.bmw_m4;
+  const currentEvents = isDemoVehicle ? (timelineData[currentKey] || timelineData.bmw_m4) : [];
 
   const { showToast } = useToast();
 
   // Convert completed bookings to ServiceEvent format
   const completedAsEvents: ServiceEvent[] = useMemo(() => {
     return (bookingCtx?.completedBookings || [])
-      .filter(cb => cb.vehicleKey === currentKey)
+      .filter(cb => cb.vehicleKey === currentKey || cb.vehicleKey === activeVehicleId)
       .map(cb => ({
         id: cb.id,
         status: "ANCHORED" as const,
@@ -87,16 +98,64 @@ export default function TimelinePage() {
         notes: cb.mechanicNotes || "Servis via booking NOC ID.",
         images: [],
       }));
-  }, [bookingCtx?.completedBookings, currentKey]);
+  }, [activeVehicleId, bookingCtx?.completedBookings, currentKey]);
 
   const [data, setData] = useState(currentEvents);
 
   useEffect(() => {
-    // Merge static + completed booking events, sorted by date desc
-    const merged = [...(timelineData[currentKey] || timelineData.avanza), ...completedAsEvents];
-    merged.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-    setData(merged);
-  }, [currentKey, completedAsEvents]);
+    let cancelled = false;
+    async function loadTimeline() {
+      const staticEvents = [...(isDemoVehicle ? (timelineData[currentKey] || timelineData.bmw_m4) : []), ...completedAsEvents];
+      if (!activeVehicleId) {
+        setData(staticEvents);
+        return;
+      }
+      try {
+        const response = await api.vehicleTimeline(activeVehicleId);
+        const backendEvents = response.items
+          .filter((entry) => entry.type === "service_log")
+          .map((entry, index) => {
+            const item = entry.item as Record<string, any>;
+            const booking = item.booking as Record<string, any> | undefined;
+            const invoice = booking?.invoice as Record<string, any> | undefined;
+            const txSig = typeof item.txSignature === "string" ? item.txSignature : null;
+            const parts = mapInvoiceParts(invoice?.parts);
+            return {
+              id: item.id ?? `backend-${index}`,
+              status: "ANCHORED" as const,
+              date: String(entry.at).slice(0, 10),
+              type: invoice?.serviceType ?? "Service Log",
+              category: "Devnet Anchored",
+              icon: Wrench,
+              mechanic: item.workshop?.name ?? "Verified Workshop",
+              workshop: item.workshop?.name ?? "Verified Workshop",
+              rating: 0,
+              mileage: `${item.odometerKm ?? currentVehicleData.mileage} km`,
+              parts,
+              serviceCost: invoice?.serviceCost ?? 0,
+              gasFee: invoice?.gasFee ?? 0,
+              costIDR: invoice?.totalIdr ?? 0,
+              costUSDC: invoice?.totalIdr ? Math.round(Number(invoice.totalIdr) / 16000 * 100) / 100 : 0,
+              costNOC: invoice?.totalIdr ? Math.round(Number(invoice.totalIdr) / 52) : 0,
+              costStr: invoice?.totalIdr ? `Rp ${Number(invoice.totalIdr).toLocaleString("id-ID")}` : "Rp 0",
+              txSig,
+              healthBefore: 70,
+              healthAfter: currentVehicleData.health,
+              notes: invoice?.mechanicNotes ?? "Service log anchored via backend devnet flow.",
+              images: [],
+            } satisfies ServiceEvent;
+          });
+        const merged = [...backendEvents, ...staticEvents];
+        merged.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+        if (!cancelled) setData(merged);
+      } catch {
+        const merged = staticEvents.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+        if (!cancelled) setData(merged);
+      }
+    }
+    void loadTimeline();
+    return () => { cancelled = true; };
+  }, [activeVehicleId, currentKey, completedAsEvents, currentVehicleData.health, currentVehicleData.mileage, isDemoVehicle]);
 
   const [paymentModalOpen, setPaymentModalOpen] = useState(false);
   const [selectedEventId, setSelectedEventId] = useState<string | number | null>(null);

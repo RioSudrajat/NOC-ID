@@ -7,7 +7,7 @@ import Link from "next/link";
 
 // Mock recall campaigns (shared with parent page)
 const recallCampaigns = [
-  { id: "RC-2026-001", title: "Avanza CVT Software Update", description: "A critical software bug in the CVT transmission control unit can cause unexpected gear shifts at high speed. All affected units require a firmware update.", status: "Active", completion: 68, affected: 15200, date: "2026-02-15", severity: "Critical", modelsAffected: ["Avanza 2024", "Avanza 2025", "Veloz 2024"] },
+  { id: "RC-2026-001", title: "BMW M4 CVT Software Update", description: "A critical software bug in the CVT transmission control unit can cause unexpected gear shifts at high speed. All affected units require a firmware update.", status: "Active", completion: 68, affected: 15200, date: "2026-02-15", severity: "Critical", modelsAffected: ["BMW M4 2024", "BMW M4 2025", "Veloz 2024"] },
   { id: "RC-2025-088", title: "Innova Airbag Sensor Bracket", description: "Mounting bracket for the passenger airbag sensor may corrode over time, causing intermittent SRS warning lights. Bracket replacement required.", status: "Active", completion: 82, affected: 8400, date: "2025-11-10", severity: "Medium", modelsAffected: ["Innova 2024", "Innova 2025"] },
   { id: "RC-2025-042", title: "Fortuner Brake Booster Line", description: "Brake booster vacuum line shows premature degradation in certain batch production units. Line replacement under warranty.", status: "Closed", completion: 97, affected: 4200, date: "2025-06-22", severity: "High", modelsAffected: ["Fortuner 2024"] },
 ];

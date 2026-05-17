@@ -10,8 +10,10 @@ import {
   Bell,
   BarChart3,
   CalendarCheck,
+  ClipboardCheck,
 } from "lucide-react";
 import { PortalLayout } from "@/components/layout/PortalLayout";
+import { PortalGuard } from "@/components/guards/PortalGuard";
 import type { NavItem } from "@/components/layout/AppSidebar";
 
 const navItems: NavItem[] = [
@@ -21,6 +23,7 @@ const navItems: NavItem[] = [
   { href: "/workshop/queue", label: "Active Queue", icon: Users },
   { href: "/workshop/viewer", label: "3D Digital Twin", icon: Box },
   { href: "/workshop/history", label: "Service Ledger", icon: FileText },
+  { href: "/workshop/audit", label: "Vehicle Audit", icon: ClipboardCheck },
   { href: "/workshop/analytics", label: "Analytics", icon: BarChart3 },
   { href: "/workshop/reputation", label: "Reputation", icon: Star },
   { href: "/workshop/notifications", label: "Notifications", icon: Bell },
@@ -28,7 +31,8 @@ const navItems: NavItem[] = [
 
 export default function WorkshopLayout({ children }: { children: React.ReactNode }) {
   return (
-    <PortalLayout
+    <PortalGuard requiredRole="workshop_owner">
+      <PortalLayout
       navItems={navItems}
       portalName={<><span className="gradient-text">NOC</span> ID</>}
       portalLabel={<><span className="gradient-text">NOC</span> Workshop</>}
@@ -54,8 +58,9 @@ export default function WorkshopLayout({ children }: { children: React.ReactNode
       }
       variant="workshop"
       mainLayout="wrapped"
-    >
-      {children}
-    </PortalLayout>
+      >
+        {children}
+      </PortalLayout>
+    </PortalGuard>
   );
 }

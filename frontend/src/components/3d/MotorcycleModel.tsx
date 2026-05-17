@@ -79,7 +79,7 @@ function BikePart({
   );
 }
 
-/* ——————————————— Honda Beat Motorcycle Model ——————————————— */
+/* ——————————————— Honda Harley Motorcycle Model ——————————————— */
 const bikeParts: Record<string, number> = {
   "Frame.Chassis": 90,
   "Body.Front_Fairing": 85, "Body.Rear_Fairing": 88,

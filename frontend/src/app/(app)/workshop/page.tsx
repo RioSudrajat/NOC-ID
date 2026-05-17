@@ -5,8 +5,8 @@ import { Wrench, Star, Scan, FileText, TrendingUp, CheckCircle2, Clock, Box, Shi
 import Link from "next/link";
 
 const recentScans = [
-  { vin: "MHKA1BA1JFK000001", model: "Toyota Avanza 2025", owner: "0x7a3...1f4d", time: "2 hours ago", status: "Completed" },
-  { vin: "MHKB2CC3JFK012345", model: "Honda Beat 2024", owner: "0x9b1...3e2a", time: "5 hours ago", status: "Completed" },
+  { vin: "MHKA1BA1JFK000001", model: "Toyota BMW M4 2025", owner: "0x7a3...1f4d", time: "2 hours ago", status: "Completed" },
+  { vin: "MHKB2CC3JFK012345", model: "Honda Harley 2024", owner: "0x9b1...3e2a", time: "5 hours ago", status: "Completed" },
   { vin: "MHKD4EE5JFK098765", model: "Suzuki Ertiga 2025", owner: "0x4c8...7d9f", time: "Yesterday", status: "Completed" },
 ];
 
@@ -124,6 +124,25 @@ export default function WorkshopDashboard() {
             <p className="text-xs hidden sm:block" style={{ color: "var(--solana-text-muted)" }}>On-chain submission</p>
           </div>
         </Link>
+      </div>
+
+      {/* OEM Credential Banner */}
+      <div className="mb-8 p-6 rounded-2xl border border-teal-500/20 bg-teal-500/5 relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-6">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-teal-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3"></div>
+        <div className="relative z-10 flex-1">
+          <div className="flex items-center gap-2 mb-2">
+            <Star className="w-5 h-5 text-yellow-400 fill-yellow-400" />
+            <h3 className="font-bold text-lg text-white">Apply OEM Credentials</h3>
+          </div>
+          <p className="text-sm text-zinc-400 max-w-xl">
+            Tingkatkan status bengkel Anda menjadi mitra resmi pabrikan (ATPM). Dapatkan akses eksklusif ke digital twin parts, manual servis resmi, dan claim garansi terpusat.
+          </p>
+        </div>
+        <div className="relative z-10 shrink-0 w-full md:w-auto">
+          <button className="w-full md:w-auto bg-teal-500 hover:bg-teal-400 text-zinc-950 font-bold px-6 py-3 rounded-xl transition-colors shadow-[0_0_20px_rgba(20,184,166,0.2)]">
+            Apply Sekarang
+          </button>
+        </div>
       </div>
 
       {/* Recent scans */}

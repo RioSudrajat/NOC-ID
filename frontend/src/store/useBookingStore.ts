@@ -1,6 +1,9 @@
 import { create } from "zustand";
-import { VehicleKey, vehicleData } from "@/context/ActiveVehicleContext";
+import { vehicleData } from "@/context/ActiveVehicleContext";
 import { workshopsData } from "@/data/workshops";
+import { api, type ApiBooking, type ApiWorkshop } from "@/lib/api/client";
+import { DEMO_VEHICLES, getVehicleDisplayName } from "@/types/vehicle";
+import { useVehicleRegistryStore } from "@/store/useVehicleRegistryStore";
 import type {
   BookingMap,
   BookingRequest,
@@ -47,8 +50,9 @@ function saveJSON<T>(key: string, data: T) {
 
 function emptyBookingMap(): BookingMap {
   const map = {} as BookingMap;
-  for (const key of Object.keys(vehicleData) as VehicleKey[]) {
-    map[key] = null;
+  for (const vehicle of DEMO_VEHICLES) {
+    map[vehicle.vehicleId] = null;
+    if (vehicle.legacyKey) map[vehicle.legacyKey] = null;
   }
   return map;
 }
@@ -70,21 +74,26 @@ interface BookingState {
 interface BookingActions {
   /** Call once on mount to hydrate from localStorage */
   hydrate: () => void;
+  syncFromBackend: () => Promise<void>;
 
   submitBooking: (workshop: Workshop, form: BookingForm) => void;
   createWalkinSession: (params: WalkinParams) => void;
 
-  acceptBooking: (vehicleKey: VehicleKey) => void;
-  rejectBooking: (vehicleKey: VehicleKey) => void;
-  startService: (vehicleKey: VehicleKey) => void;
-  sendInvoice: (vehicleKey: VehicleKey, invoice: InvoiceData) => void;
-  attachWarrantyClaim: (vehicleKey: VehicleKey, draft: WarrantyClaimDraft, vin: string, vehicleName: string) => void;
+  acceptBooking: (vehicleKey: string) => void;
+  rejectBooking: (vehicleKey: string) => void;
+  startService: (vehicleKey: string) => void;
+  sendInvoice: (vehicleKey: string, invoice: InvoiceData) => void;
+  
+  payInvoice: (vehicleKey: string) => void;
+  startAnchoring: (vehicleKey: string) => void;
+  completeAnchoring: (vehicleKey: string, txSig: string) => void;
+  failAnchoring: (vehicleKey: string) => void;
+  
+  attachWarrantyClaim: (vehicleKey: string, draft: Omit<WarrantyClaimRecord, "id" | "bookingId" | "vin" | "vehicleName" | "status">, vin: string, vehicleName: string) => void;
 
-  payInvoice: (vehicleKey: VehicleKey) => void;
-  signAnchoring: (vehicleKey: VehicleKey) => void;
-  submitReview: (vehicleKey: VehicleKey, review: ReviewData) => void;
+  submitReview: (vehicleKey: string, review: ReviewData) => void;
 
-  reset: (vehicleKey?: VehicleKey) => void;
+  reset: (vehicleKey?: string) => void;
 
   updateWarrantyClaimStatus: (id: string, status: WarrantyClaimStatus, opts?: { reimbursementIDR?: number; rejectionReason?: string }) => void;
   resubmitWarrantyClaim: (id: string, updates: { description: string; evidencePhotos: string[] }) => void;
@@ -100,7 +109,7 @@ export type BookingStore = BookingState & BookingActions;
 
 function updateSlot(
   bookings: BookingMap,
-  vehicleKey: VehicleKey,
+  vehicleKey: string,
   updater: (prev: BookingRequest | null) => BookingRequest | null,
 ): BookingMap {
   return { ...bookings, [vehicleKey]: updater(bookings[vehicleKey] ?? null) };
@@ -138,6 +147,104 @@ function persistBookings(bookings: BookingMap) {
   if (typeof window !== "undefined") {
     localStorage.removeItem(LEGACY_STORAGE_KEY);
   }
+}
+
+function mapApiWorkshop(workshop?: ApiWorkshop): Workshop {
+  const fallback = workshopsData[0];
+  if (!workshop) return fallback;
+  const hasVerifiedSigner = workshop.credentials?.some((credential) => credential.credential === "verified_signer" && !credential.revokedAt) ?? false;
+  const hasOem = workshop.credentials?.some((credential) => credential.credential === "oem_certified" && !credential.revokedAt) ?? false;
+  return {
+    id: workshop.id,
+    name: workshop.name,
+    location: workshop.city,
+    city: workshop.city,
+    address: workshop.address,
+    rating: 4.8,
+    totalReviews: 0,
+    totalServices: 0,
+    verified: workshop.status === "approved" || hasVerifiedSigner,
+    oem: hasOem,
+    specialization: hasOem ? "OEM Certified Service" : "General Service",
+    phone: workshop.phone,
+    treasuryWallet: workshop.treasuryWallet ?? undefined,
+    operatingHours: { weekday: "08:00 - 17:00", weekend: "09:00 - 15:00" },
+    coordinates: fallback.coordinates,
+    badges: [
+      workshop.status === "approved" || hasVerifiedSigner ? "Verified Signer" : "Pending KYC",
+      ...(hasOem ? ["OEM Certified"] : []),
+    ],
+    serviceBreakdown: {},
+    reviews: [],
+  };
+}
+
+function resolveUiVehicleKey(booking: ApiBooking) {
+  const vin = booking.vehicle?.vin;
+  const demo = vin ? DEMO_VEHICLES.find((vehicle) => vehicle.vin === vin) : undefined;
+  return demo?.legacyKey ?? booking.vehicleId;
+}
+
+function mapApiBooking(booking: ApiBooking): BookingRequest {
+  const vehicleKey = resolveUiVehicleKey(booking);
+  return {
+    id: booking.id,
+    type: booking.type,
+    workshop: mapApiWorkshop(booking.workshop),
+    form: {
+      date: booking.date,
+      time: booking.time,
+      complaint: booking.complaint,
+      shareHistory: true,
+      shareDigitalTwin: false,
+      vehicleKey,
+      vehicleName: booking.vehicle ? getVehicleDisplayName(booking.vehicle) : undefined,
+      vehicleVin: booking.vehicle?.vin,
+    },
+    status: booking.status,
+    createdAt: booking.createdAt,
+    invoice: booking.invoice ? {
+      invoiceId: booking.invoice.id,
+      serviceType: booking.invoice.serviceType,
+      serviceCost: booking.invoice.serviceCost,
+      gasFee: booking.invoice.gasFee,
+      totalIDR: booking.invoice.totalIdr,
+      mechanicNotes: booking.invoice.mechanicNotes ?? "",
+      parts: booking.invoice.parts.map((part, index) => ({
+        name: String(part.name ?? `Part ${index + 1}`),
+        partNumber: String(part.partNumber ?? "-"),
+        manufacturer: String(part.manufacturer ?? "NOC"),
+        price: Number(part.price ?? part.priceIdr ?? 0),
+        isOEM: Boolean(part.isOEM ?? true),
+      })),
+    } : null,
+    review: null,
+    anchorTxSig: booking.serviceLog?.txSignature ?? booking.invoice?.payments?.find((payment) => payment.signature)?.signature ?? undefined,
+  };
+}
+
+function findBackendVehicleId(vehicleKey: string) {
+  const registry = useVehicleRegistryStore.getState();
+  const vehicle = registry.getVehicleById(vehicleKey);
+  if (vehicle && !vehicle.isDemo) return vehicle.vehicleId;
+  const vin = vehicle?.vin ?? vehicleData[vehicleKey]?.vin;
+  return registry.vehicles.find((item) => item.vin === vin && !item.isDemo)?.vehicleId ?? vehicle?.vehicleId ?? vehicleKey;
+}
+
+function getBookingVehicleSnapshot(vehicleKey: string) {
+  const registry = useVehicleRegistryStore.getState();
+  const vehicle = registry.getVehicleById(vehicleKey);
+  if (vehicle) {
+    return { vehicleName: getVehicleDisplayName(vehicle), vehicleVin: vehicle.vin };
+  }
+  const legacy = vehicleData[vehicleKey];
+  return { vehicleName: legacy?.name, vehicleVin: legacy?.vin };
+}
+
+function clearMissingBooking(state: BookingState, vehicleKey: string) {
+  const bookings = updateSlot(state.bookings, vehicleKey, () => null);
+  persistBookings(bookings);
+  return { bookings };
 }
 
 /* ── Store ── */
@@ -214,6 +321,24 @@ export const useBookingStore = create<BookingStore>((set, get) => {
       });
     },
 
+    syncFromBackend: async () => {
+      try {
+        const response = await api.bookings();
+        const backendBookings = response.items.map(mapApiBooking);
+        set(() => {
+          const bookings = emptyBookingMap();
+          for (const booking of backendBookings) {
+            if (bookings[booking.form.vehicleKey]) continue;
+            bookings[booking.form.vehicleKey] = booking;
+          }
+          persistBookings(bookings);
+          return { bookings, hydrated: true };
+        });
+      } catch (error) {
+        console.warn("[booking-store] backend sync skipped", error);
+      }
+    },
+
     /* ── Actions ── */
 
     addNotification: (type, title, message, targetRole) => {
@@ -226,11 +351,12 @@ export const useBookingStore = create<BookingStore>((set, get) => {
 
     submitBooking: (workshop, form) => {
       const bookingId = `BK-${Date.now()}`;
+      const vehicleSnapshot = getBookingVehicleSnapshot(form.vehicleKey);
       const newBooking: BookingRequest = {
         id: bookingId,
         type: "booking",
         workshop,
-        form,
+        form: { ...form, ...vehicleSnapshot },
         status: "PENDING",
         createdAt: new Date().toISOString(),
         invoice: null,
@@ -249,170 +375,145 @@ export const useBookingStore = create<BookingStore>((set, get) => {
         saveJSON(NOTIF_KEY, bookingNotifications);
         return { bookings, bookingNotifications };
       });
+
+      void api.createBooking({
+        vehicleId: findBackendVehicleId(form.vehicleKey),
+        workshopId: workshop.id,
+        date: form.date,
+        time: form.time,
+        complaint: form.complaint,
+      }).then((response) => {
+        set((state) => {
+          const mapped = mapApiBooking(response.booking);
+          const bookings = updateSlot(state.bookings, form.vehicleKey, () => null);
+          bookings[mapped.form.vehicleKey] = mapped;
+          persistBookings(bookings);
+          return { bookings };
+        });
+      }).catch((error) => {
+        console.warn("[booking-store] backend booking create skipped", error);
+      });
     },
 
     createWalkinSession: (params) => {
-      const mockWorkshop = workshopsData[0];
-      const walkin: BookingRequest = {
-        id: `WI-${Date.now()}`,
+      const bookingId = `BK-${Date.now()}`;
+      const workshop = workshopsData[0]; // fallback
+      const newBooking: BookingRequest = {
+        id: bookingId,
         type: "walkin",
-        workshop: mockWorkshop,
+        workshop,
         form: {
-          date: new Date().toISOString().split("T")[0],
-          time: new Date().toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" }),
-          complaint: "Walk-in \u2013 datang langsung ke bengkel",
-          shareHistory: true,
-          shareDigitalTwin: false,
           vehicleKey: params.vehicleKey,
+          vehicleName: params.vehicleName,
+          vehicleVin: params.vin,
+          date: new Date().toLocaleDateString("id-ID"),
+          time: new Date().toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" }),
+          complaint: "Walk-in service",
+          shareHistory: true,
+          shareDigitalTwin: true,
         },
-        status: "ACCEPTED",
+        status: "ACCEPTED", // Walk-in is auto accepted usually, or IN_SERVICE
         createdAt: new Date().toISOString(),
         invoice: null,
         review: null,
       };
+
       set(state => {
-        const bookings = updateSlot(state.bookings, params.vehicleKey, () => walkin);
-        let notifs = pushNotification(
-          state.bookingNotifications,
-          "booking_accepted",
-          "Kendaraan Masuk Antrian Bengkel \uD83D\uDD27",
-          `${params.vehicleName} telah terdaftar di ${params.workshopName}. Pantau status servis Anda.`,
-          "user"
-        );
-        notifs = pushNotification(
-          notifs,
-          "booking_pending",
-          `Walk-In: ${params.vehicleName}`,
-          `Kendaraan datang langsung. VIN: ${params.vin}. Siapkan mekanik.`,
-          "workshop"
-        );
+        const bookings = updateSlot(state.bookings, params.vehicleKey, () => newBooking);
         persistBookings(bookings);
-        saveJSON(NOTIF_KEY, notifs);
-        return { bookings, bookingNotifications: notifs };
+        return { bookings };
       });
     },
-
     acceptBooking: (vehicleKey) => {
       set(state => {
         const bookings = updateSlot(state.bookings, vehicleKey, prev => prev ? { ...prev, status: "ACCEPTED" } : null);
-        const bookingNotifications = pushNotification(
-          state.bookingNotifications,
-          "booking_accepted",
-          "Booking Diterima! \u2705",
-          "Bengkel telah mengkonfirmasi booking Anda. Kendaraan sedang dianalisis. Datang sesuai jadwal.",
-          "user"
-        );
         persistBookings(bookings);
-        saveJSON(NOTIF_KEY, bookingNotifications);
-        return { bookings, bookingNotifications };
+        return { bookings };
       });
+      const booking = get().bookings[vehicleKey];
+      if (booking && !booking.id.startsWith("BK-")) void api.updateBookingStatus(booking.id, "ACCEPTED").then(() => get().syncFromBackend()).catch(() => set((state) => clearMissingBooking(state, vehicleKey)));
     },
-
     rejectBooking: (vehicleKey) => {
       set(state => {
         const bookings = updateSlot(state.bookings, vehicleKey, prev => prev ? { ...prev, status: "REJECTED" } : null);
-        const bookingNotifications = pushNotification(
-          state.bookingNotifications,
-          "booking_rejected",
-          "Booking Ditolak",
-          "Mohon maaf, bengkel tidak dapat menerima booking pada waktu yang dipilih. Silakan cari bengkel lain.",
-          "user"
-        );
         persistBookings(bookings);
-        saveJSON(NOTIF_KEY, bookingNotifications);
-        return { bookings, bookingNotifications };
+        return { bookings };
       });
+      const booking = get().bookings[vehicleKey];
+      if (booking && !booking.id.startsWith("BK-")) void api.updateBookingStatus(booking.id, "REJECTED").then(() => get().syncFromBackend()).catch(() => set((state) => clearMissingBooking(state, vehicleKey)));
     },
-
     startService: (vehicleKey) => {
       set(state => {
         const bookings = updateSlot(state.bookings, vehicleKey, prev => prev ? { ...prev, status: "IN_SERVICE" } : null);
-        const bookingNotifications = pushNotification(
-          state.bookingNotifications,
-          "booking_service",
-          "Kendaraan Sedang Diservis \uD83D\uDD27",
-          "Mekanik sudah mulai mengerjakan kendaraan Anda. Invoice akan dikirim setelah servis selesai.",
-          "user"
-        );
         persistBookings(bookings);
-        saveJSON(NOTIF_KEY, bookingNotifications);
-        return { bookings, bookingNotifications };
+        return { bookings };
       });
+      const booking = get().bookings[vehicleKey];
+      if (booking && !booking.id.startsWith("BK-")) void api.updateBookingStatus(booking.id, "IN_SERVICE").then(() => get().syncFromBackend()).catch(() => set((state) => clearMissingBooking(state, vehicleKey)));
     },
-
     sendInvoice: (vehicleKey, invoice) => {
       set(state => {
-        const bookings = updateSlot(state.bookings, vehicleKey, prev => prev ? { ...prev, status: "INVOICE_SENT", invoice } : null);
-        const bookingNotifications = pushNotification(
-          state.bookingNotifications,
-          "booking_invoice",
-          "Invoice Diterima \uD83D\uDCC4",
-          `Invoice servis sebesar Rp ${invoice.totalIDR.toLocaleString("id-ID")} telah dikirim. Silakan lakukan pembayaran.`,
-          "user"
-        );
+        const bookings = updateSlot(state.bookings, vehicleKey, prev => prev ? { ...prev, status: "INVOICE_SENT" as BookingStatus, invoice } : null);
         persistBookings(bookings);
-        saveJSON(NOTIF_KEY, bookingNotifications);
-        return { bookings, bookingNotifications };
+        return { bookings };
       });
+      const booking = get().bookings[vehicleKey];
+      if (booking && !booking.id.startsWith("BK-")) {
+        void api.createInvoice({
+          bookingId: booking.id,
+          serviceType: invoice.serviceType,
+          serviceCost: invoice.serviceCost,
+          gasFee: invoice.gasFee,
+          totalIdr: invoice.totalIDR,
+          mechanicNotes: invoice.mechanicNotes,
+          parts: invoice.parts.map((part) => ({
+            name: part.name,
+            partNumber: part.partNumber,
+            manufacturer: part.manufacturer,
+            price: part.price,
+            isOEM: part.isOEM,
+            componentId: part.componentId,
+            componentName: part.componentName,
+            componentZone: part.componentZone,
+            serviceAction: part.serviceAction,
+          })),
+        }).then(() => get().syncFromBackend()).catch((error) => {
+          console.warn("[booking-store] backend invoice create skipped", error);
+        });
+      }
     },
-
     payInvoice: (vehicleKey) => {
       set(state => {
-        const bookings = updateSlot(state.bookings, vehicleKey, prev => prev ? { ...prev, status: "PAID" } : null);
-        const bookingNotifications = pushNotification(
-          state.bookingNotifications,
-          "booking_paid",
-          "Pembayaran Diterima \uD83D\uDCB0",
-          "Pelanggan telah menyelesaikan pembayaran. Silakan tandatangani transaksi anchoring untuk mencatat log servis on-chain.",
-          "workshop"
-        );
+        const bookings = updateSlot(state.bookings, vehicleKey, prev => prev ? { ...prev, status: "PAID" as BookingStatus } : null);
         persistBookings(bookings);
-        saveJSON(NOTIF_KEY, bookingNotifications);
-        return { bookings, bookingNotifications };
+        return { bookings };
       });
+      const booking = get().bookings[vehicleKey];
+      if (booking && !booking.id.startsWith("BK-")) void api.updateBookingStatus(booking.id, "PAID").then(() => get().syncFromBackend()).catch(() => set((state) => clearMissingBooking(state, vehicleKey)));
     },
-
-    signAnchoring: (vehicleKey) => {
+    startAnchoring: (vehicleKey) => {
       set(state => {
-        const bookings = updateSlot(state.bookings, vehicleKey, prev => prev ? { ...prev, status: "ANCHORING" } : null);
-        const bookingNotifications = pushNotification(
-          state.bookingNotifications,
-          "service_anchoring",
-          "Menandatangani Log Servis \u23F3",
-          "Wallet bengkel sedang menandatangani pembaruan cNFT pada tree enterprise.",
-          "workshop"
-        );
+        const bookings = updateSlot(state.bookings, vehicleKey, prev => prev ? { ...prev, status: "ANCHORING" as BookingStatus } : null);
         persistBookings(bookings);
-        saveJSON(NOTIF_KEY, bookingNotifications);
-        return { bookings, bookingNotifications };
+        return { bookings };
       });
-
-      // Simulate async anchoring completion
-      setTimeout(() => {
-        const txSig = `${Math.random().toString(36).slice(2, 6)}...${Math.random().toString(36).slice(2, 6)}`;
-        set(state => {
-          const bookings = updateSlot(state.bookings, vehicleKey, prev => prev ? { ...prev, status: "ANCHORED", anchorTxSig: txSig } : null);
-          let notifs = pushNotification(
-            state.bookingNotifications,
-            "service_anchored",
-            "Log Servis Tercatat On-Chain \u2705",
-            `Riwayat servis telah di-anchor ke Solana. Tx: ${txSig}`,
-            "user"
-          );
-          notifs = pushNotification(
-            notifs,
-            "service_anchored",
-            "Anchoring Selesai \u2705",
-            `Log servis berhasil dicatat on-chain. Tx: ${txSig}`,
-            "workshop"
-          );
-          persistBookings(bookings);
-          saveJSON(NOTIF_KEY, notifs);
-          return { bookings, bookingNotifications: notifs };
-        });
-      }, 2500);
     },
-
+    completeAnchoring: (vehicleKey, txSig) => {
+      set(state => {
+        const bookings = updateSlot(state.bookings, vehicleKey, prev => prev ? { ...prev, status: "ANCHORED" as BookingStatus, anchorTxSig: txSig } : null);
+        persistBookings(bookings);
+        return { bookings };
+      });
+      const booking = get().bookings[vehicleKey];
+      if (booking) void get().syncFromBackend();
+    },
+    failAnchoring: (vehicleKey) => {
+      set(state => {
+        const bookings = updateSlot(state.bookings, vehicleKey, prev => prev ? { ...prev, status: "PAID" as BookingStatus } : null);
+        persistBookings(bookings);
+        return { bookings };
+      });
+    },
     attachWarrantyClaim: (vehicleKey, draft, vin, vehicleName) => {
       const recordId = `WC-${Date.now()}-${Math.random().toString(36).slice(2, 5)}`;
 
@@ -539,9 +640,9 @@ export const useBookingStore = create<BookingStore>((set, get) => {
             bookingId: prev.id,
             workshopName: prev.workshop.name,
             workshopId: prev.workshop.id,
-            vehicleName: vehicleData[prev.form.vehicleKey]?.name || "",
+            vehicleName: prev.form.vehicleName || vehicleData[prev.form.vehicleKey]?.name || "",
             vehicleKey: prev.form.vehicleKey,
-            vin: vehicleData[prev.form.vehicleKey]?.vin || "",
+            vin: prev.form.vehicleVin || vehicleData[prev.form.vehicleKey]?.vin || "",
             serviceType: prev.invoice!.serviceType,
             date: new Date().toISOString().split("T")[0],
             parts: prev.invoice!.parts,

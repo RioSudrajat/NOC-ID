@@ -615,8 +615,11 @@ export default function SupraModel({ onSelectPart, selectedPart, xray, exploded 
         const color = getHealthColor(def.health);
         for (const mesh of partMeshes[hoveredPart]) {
           const mat = mesh.material as MeshStandardMaterial;
+          // eslint-disable-next-line react-hooks/immutability
           mat.emissive = new Color(color);
+          // eslint-disable-next-line react-hooks/immutability
           mat.emissiveIntensity = 0.15;
+          // eslint-disable-next-line react-hooks/immutability
           mat.needsUpdate = true;
         }
       }

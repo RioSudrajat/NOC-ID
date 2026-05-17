@@ -14,20 +14,7 @@ import {
 import Link from "next/link";
 
 const dashboardData = {
-  avanza: {
-    recentEvents: [
-      { date: "2026-02-10", type: "Oil Change", mechanic: "Pak Hendra (★ 4.8)", mileage: "34,521 km", status: "Verified" },
-      { date: "2026-01-15", type: "Brake Pad Replacement", mechanic: "Workshop Maju Jaya (★ 4.5)", mileage: "31,200 km", status: "Verified" },
-      { date: "2025-11-20", type: "Full Inspection", mechanic: "Dealer Toyota BSD (★ 4.9)", mileage: "28,000 km", status: "Verified" },
-      { date: "2025-08-15", type: "CVT Fluid Replacement", mechanic: "Pak Hendra (★ 4.8)", mileage: "24,100 km", status: "Verified" },
-    ],
-    aiAlerts: [
-      { part: "CVT Belt", health: 42, risk: "High", prediction: "Replace within 45 days", color: "#5EEAD4" },
-      { part: "Air Filter", health: 55, risk: "Medium", prediction: "Replace within 60 days", color: "#FCD34D" },
-      { part: "Brake Fluid", health: 68, risk: "Medium", prediction: "Flush within 90 days", color: "#FCD34D" },
-    ]
-  },
-  bmw_m4: {
+bmw_m4: {
     recentEvents: [
       { date: "2026-03-01", type: "Suspension Check", mechanic: "EuroHaus M Performance (★ 4.9)", mileage: "12,400 km", status: "Verified" },
       { date: "2025-10-12", type: "Tire Replacement", mechanic: "Bintang Racing (★ 4.7)", mileage: "9,800 km", status: "Verified" },
@@ -36,21 +23,22 @@ const dashboardData = {
       { part: "Brake Pads (Rear)", health: 60, risk: "Medium", prediction: "Replace within 30 days", color: "#FCD34D" },
     ]
   },
-  beat: {
-    recentEvents: [
-      { date: "2026-01-05", type: "CVT & Roller Check", mechanic: "Ahass Motor (★ 4.5)", mileage: "14,200 km", status: "Verified" },
-    ],
-    aiAlerts: [
-      { part: "V-Belt", health: 30, risk: "High", prediction: "Replace immediately", color: "#FCA5A5" },
-      { part: "Engine Oil", health: 45, risk: "High", prediction: "Replace within 10 days", color: "#5EEAD4" },
-    ]
-  },
-  harley: {
+harley: {
     recentEvents: [
       { date: "2025-12-20", type: "Primary Chain Adj", mechanic: "Mabua Custom (★ 5.0)", mileage: "8,900 km", status: "Verified" },
     ],
     aiAlerts: [
       { part: "Battery", health: 50, risk: "Medium", prediction: "Check voltage", color: "#FCD34D" },
+    ]
+  },
+pcx_150: {
+    recentEvents: [
+      { date: "2026-04-18", type: "CVT Belt Inspection", mechanic: "Honda Wing Bandung", mileage: "18,250 km", status: "Verified" },
+      { date: "2026-02-09", type: "Engine Oil & Air Filter", mechanic: "Honda Wing Bandung", mileage: "16,100 km", status: "Verified" },
+    ],
+    aiAlerts: [
+      { part: "Drive Belt", health: 54, risk: "Medium", prediction: "Inspect CVT belt within 14 days", color: "#FCD34D" },
+      { part: "Air Filter Element", health: 58, risk: "Medium", prediction: "Clean or replace at next service", color: "#FCD34D" },
     ]
   },
   supra: {
@@ -103,9 +91,13 @@ import { Shield } from "lucide-react";
 export default function DAppDashboard() {
   const ctx = useActiveVehicle();
   const bookingCtx = useBooking();
-  const currentKey = ctx?.activeVehicle || "avanza";
-  const currentVehicleData = ctx?.currentVehicleData || vehicleData.avanza;
-  const { recentEvents, aiAlerts } = dashboardData[currentKey] || dashboardData.avanza;
+  const currentKey = ctx?.activeVehicle || "bmw_m4";
+  const activeVehicleId = ctx?.activeVehicleId;
+  const isDemoVehicle = ctx?.activeVehicleIdentity.isDemo ?? true;
+  const currentVehicleData = ctx?.currentVehicleData || vehicleData.bmw_m4;
+  const { recentEvents, aiAlerts } = isDemoVehicle
+    ? (dashboardData[currentKey] || dashboardData.bmw_m4)
+    : { recentEvents: [], aiAlerts: [] };
 
   // Warranty data for active vehicle
   const vehicleClaims = (bookingCtx?.warrantyClaims || []).filter(c => c.vin === currentVehicleData.vin);
@@ -114,7 +106,7 @@ export default function DAppDashboard() {
   const drivetrainSummary = `Drivetrain — 62,000 km remaining`;
 
   // Per-vehicle active booking — drives the "Status Servis" button badge.
-  const activeBookingForVehicle = bookingCtx?.bookings[currentKey] || null;
+  const activeBookingForVehicle = bookingCtx?.bookings[activeVehicleId || currentKey] || bookingCtx?.bookings[currentKey] || null;
   const hasActiveBooking = !!activeBookingForVehicle && !["COMPLETED", "REJECTED"].includes(activeBookingForVehicle.status);
 
   // Unread notifications for the user role — badge on the Bell button.
@@ -160,6 +152,27 @@ export default function DAppDashboard() {
             View 3D Digital Twin <ArrowUpRight className="w-4 h-4" />
           </Link>
         </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-10">
+        <Link href="/dapp/register-vehicle" className="glass-card p-5 flex items-center justify-between hover:bg-white/[0.04] transition-colors">
+          <div>
+            <p className="text-sm font-semibold">Daftarkan Kendaraan</p>
+            <p className="text-xs mt-1" style={{ color: "var(--solana-text-muted)" }}>
+              Kirim request audit ke workshop credentialed, lalu claim NFT setelah enterprise approve.
+            </p>
+          </div>
+          <ArrowUpRight className="w-5 h-5 text-teal-300" />
+        </Link>
+        <Link href="/dapp/identity" className="glass-card p-5 flex items-center justify-between hover:bg-white/[0.04] transition-colors">
+          <div>
+            <p className="text-sm font-semibold">Identity & Transfer</p>
+            <p className="text-xs mt-1" style={{ color: "var(--solana-text-muted)" }}>
+              Kelola QR/NFC, ownership, transfer, dan klaim vehicle identity.
+            </p>
+          </div>
+          <Shield className="w-5 h-5 text-teal-300" />
+        </Link>
       </div>
 
       {/* Top cards */}

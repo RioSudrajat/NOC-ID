@@ -8,7 +8,7 @@ import { useBooking } from "@/context/BookingContext";
 import { useToast } from "@/components/ui/Toast";
 
 const initialRecallCampaigns = [
-  { id: "RC-2026-001", title: "Avanza CVT Software Update", status: "Active", completion: 68, affected: 15200, date: "2026-02-15" },
+  { id: "RC-2026-001", title: "BMW M4 CVT Software Update", status: "Active", completion: 68, affected: 15200, date: "2026-02-15" },
   { id: "RC-2025-088", title: "Innova Airbag Sensor Bracket", status: "Active", completion: 82, affected: 8400, date: "2025-11-10" },
   { id: "RC-2025-042", title: "Fortuner Brake Booster Line", status: "Closed", completion: 97, affected: 4200, date: "2025-06-22" },
 ];
@@ -169,7 +169,7 @@ export default function RecallsPage() {
             <div className="flex flex-col gap-4">
               <div>
                 <label className="text-sm font-medium block mb-1" style={{ color: "var(--solana-text-muted)" }}>Campaign Title</label>
-                <input type="text" className="input-field text-sm w-full" placeholder="e.g. Avanza CVT Software Update" value={newRecall.title} onChange={e => setNewRecall(p => ({ ...p, title: e.target.value }))} />
+                <input type="text" className="input-field text-sm w-full" placeholder="e.g. BMW M4 CVT Software Update" value={newRecall.title} onChange={e => setNewRecall(p => ({ ...p, title: e.target.value }))} />
               </div>
               <div>
                 <label className="text-sm font-medium block mb-1" style={{ color: "var(--solana-text-muted)" }}>Affected Vehicles (est.)</label>

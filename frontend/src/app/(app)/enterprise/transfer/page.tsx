@@ -1,9 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { AnimatePresence } from "framer-motion";
 import { ArrowRightLeft, CheckCircle2, Sparkles } from "lucide-react";
 import { useToast } from "@/components/ui/Toast";
+import { api } from "@/lib/api/client";
+import { requestDevnetNetworkFeeSignature } from "@/lib/devnetWalletFee";
+import { useUserStore } from "@/store/useUserStore";
+import { useVehicleRegistryStore } from "@/store/useVehicleRegistryStore";
 import type { VehicleData, SaleData, BuyerData, BuyerMode } from "@/components/enterprise/transfer/types";
 import VehicleSelectStep from "@/components/enterprise/transfer/VehicleSelectStep";
 import SaleVerifyStep from "@/components/enterprise/transfer/SaleVerifyStep";
@@ -11,75 +15,115 @@ import BuyerInfoStep from "@/components/enterprise/transfer/BuyerInfoStep";
 import ConfirmStep from "@/components/enterprise/transfer/ConfirmStep";
 import TransferComplete from "@/components/enterprise/transfer/TransferComplete";
 
-function mockTxSig() {
-  const chars = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
-  let s = "";
-  for (let i = 0; i < 44; i++) s += chars[Math.floor(Math.random() * chars.length)];
-  return `${s.slice(0, 8)}...${s.slice(-8)}`;
-}
-
-const MOCK_BUYERS = [
-  { name: "Andi Pratama", wallet: "5YNmS1R5yjLezYFqP8tHnQxDv9WkXcR2bB7JmVhTuA3L", nik: "3201012509870001" },
-  { name: "Siti Rahayu", wallet: "8ZpQrTvK2cLmNbWxYuJ4HdGe6RfS9A1oP3iVnEzMqBsD", nik: "3271054407900002" },
-  { name: "Budi Wijaya", wallet: "3XkLmRvB9tYjH2nQpC8wD4uFsG7KaZ1iVoP6eNxMqJrT", nik: "3173061102950003" },
-];
-
-const MOCK_FLEET: VehicleData[] = [
-  { vin: "MHKA1BA1JFK000099", model: "Toyota Avanza", year: 2025, color: "Silver Metallic", status: "Ready to Transfer" },
-  { vin: "MHKA1BA1JFK000100", model: "Toyota Rush", year: 2025, color: "Midnight Black", status: "Ready to Transfer" },
-  { vin: "MHKA1BA1JFK000101", model: "Toyota Innova", year: 2025, color: "Pearl White", status: "Ready to Transfer" },
-  { vin: "MHKA1BA1JFK000102", model: "Toyota Fortuner", year: 2024, color: "Phantom Brown", status: "Ready to Transfer" },
-  { vin: "MHKA1BA1JFK000103", model: "Toyota Yaris", year: 2025, color: "Nebula Blue", status: "Ready to Transfer" },
-];
-
 type Step = 1 | 2 | 3 | 4;
 
 export default function TransferPage() {
   const { showToast } = useToast();
+  const hydrateVehicles = useVehicleRegistryStore((state) => state.hydrate);
+  const syncVehicles = useVehicleRegistryStore((state) => state.syncFromBackend);
+  const vehicles = useVehicleRegistryStore((state) => state.vehicles);
+  const updateVehicle = useVehicleRegistryStore((state) => state.updateVehicle);
+  const registeredBuyers = useUserStore((state) => state.registeredUsers);
+  const syncRegisteredUsers = useUserStore((state) => state.syncRegisteredUsers);
+  const currentUser = useUserStore((state) => state.currentUser);
   const [step, setStep] = useState<Step>(1);
   const [search, setSearch] = useState("");
   const [selectedVehicle, setSelectedVehicle] = useState<VehicleData | null>(null);
   const [saleData, setSaleData] = useState<SaleData>({ invoice: "", price: "", date: "", salesperson: "" });
-  const [buyerData, setBuyerData] = useState<BuyerData>({ name: "", wallet: "", nik: "" });
+  const [buyerData, setBuyerData] = useState<BuyerData>({ userId: "", name: "", email: "", wallet: "", nik: "" });
   const [buyerMode, setBuyerMode] = useState<BuyerMode>("manual");
   const [transferring, setTransferring] = useState(false);
   const [done, setDone] = useState(false);
   const [txSig, setTxSig] = useState("");
 
-  const filteredFleet = MOCK_FLEET.filter(v =>
+  useEffect(() => {
+    hydrateVehicles();
+    void syncVehicles();
+    void syncRegisteredUsers();
+  }, [hydrateVehicles, syncVehicles, syncRegisteredUsers]);
+
+  const registryFleet: VehicleData[] = vehicles
+    .filter((vehicle) => !vehicle.isDemo)
+    .filter((vehicle) => vehicle.mintStatus === "minted" || vehicle.mintStatus === "escrow")
+    .filter((vehicle) => !currentUser?.enterpriseId || vehicle.enterpriseId === currentUser.enterpriseId)
+    .filter((vehicle) => vehicle.vin && vehicle.make && vehicle.model && vehicle.year)
+    .map((vehicle) => ({
+    vehicleId: vehicle.vehicleId,
+    vin: vehicle.vin,
+    model: `${vehicle.make} ${vehicle.model}`,
+    year: vehicle.year,
+    color: vehicle.color,
+    status: vehicle.mintStatus === "escrow" ? "Minted Escrow" : "Ready to Transfer",
+  }));
+
+  const filteredFleet = registryFleet.filter(v =>
     v.vin.toLowerCase().includes(search.toLowerCase()) ||
     v.model.toLowerCase().includes(search.toLowerCase())
   );
 
-  const handleTransfer = () => {
+  const handleTransfer = async () => {
+    const buyer = registeredBuyers.find((item) => item.userId === buyerData.userId && item.walletAddress === buyerData.wallet);
+    if (!buyer || !selectedVehicle) {
+      showToast("error", "Buyer Invalid", "Pilih buyer yang sudah terdaftar di NOC ID sebelum transfer.");
+      return;
+    }
     setTransferring(true);
-    setTxSig(mockTxSig());
-    setTimeout(() => {
+    try {
+      const fee = await requestDevnetNetworkFeeSignature(`NOC ID transfer ${selectedVehicle.vin}`);
+      const result = await api.transferVehicle(selectedVehicle.vehicleId, {
+        newOwnerId: buyer.userId,
+        newOwnerEmail: buyer.email,
+        newOwnerWallet: buyer.walletAddress,
+        enterpriseAuthorityWallet: currentUser?.selfCustodyAddress,
+        feeSignature: fee.signature,
+        feePayer: fee.feePayer,
+      });
+      setTxSig(`${result.signature.slice(0, 8)}...${result.signature.slice(-8)}`);
+      updateVehicle(selectedVehicle.vehicleId, {
+        currentOwnerId: result.newOwnerId,
+        mintStatus: "transferred",
+      });
+      await syncVehicles();
       setTransferring(false);
       setDone(true);
-      const target = buyerData.wallet ? `${buyerData.wallet.slice(0, 8)}...` : "QR claim";
+      const target = `${buyer.displayName} (${buyer.email})`;
       showToast("success", "Transfer Complete!", `cNFT transferred to ${target}`);
-    }, 3500);
+    } catch (error) {
+      setTransferring(false);
+      showToast("error", "Transfer gagal", error instanceof Error ? error.message : "Backend transfer gagal.");
+    }
   };
 
   const simulateMockBuyer = () => {
-    const mock = MOCK_BUYERS[Math.floor(Math.random() * MOCK_BUYERS.length)];
+    const mock = registeredBuyers[Math.floor(Math.random() * registeredBuyers.length)];
     setBuyerMode("manual");
-    setBuyerData(mock);
-    showToast("success", "Mock Buyer Loaded", `${mock.name} siap untuk di-transfer.`);
+    setBuyerData({
+      userId: mock.userId,
+      name: mock.displayName,
+      email: mock.email,
+      wallet: mock.walletAddress,
+      nik: mock.nik ?? "",
+    });
+    showToast("success", "Mock Buyer Loaded", `${mock.displayName} siap untuk di-transfer.`);
   };
 
   const simulateFullTransfer = () => {
-    if (!selectedVehicle) setSelectedVehicle(MOCK_FLEET[0]);
+    if (!selectedVehicle) setSelectedVehicle(registryFleet[0] ?? null);
     setSaleData({
       invoice: `INV-2026-${Math.floor(10000 + Math.random() * 89999)}`,
       price: "285000000",
       date: new Date().toISOString().split("T")[0],
       salesperson: "Budi Santoso",
     });
-    const mock = MOCK_BUYERS[Math.floor(Math.random() * MOCK_BUYERS.length)];
+    const mock = registeredBuyers[Math.floor(Math.random() * registeredBuyers.length)];
     setBuyerMode("manual");
-    setBuyerData(mock);
+    setBuyerData({
+      userId: mock.userId,
+      name: mock.displayName,
+      email: mock.email,
+      wallet: mock.walletAddress,
+      nik: mock.nik ?? "",
+    });
     setStep(4);
     showToast("success", "Mock Data Loaded", "Form terisi otomatis. Tekan Konfirmasi untuk melanjutkan.");
   };
@@ -87,7 +131,7 @@ export default function TransferPage() {
   const handleReset = () => {
     setDone(false); setStep(1); setSelectedVehicle(null);
     setSaleData({ invoice: "", price: "", date: "", salesperson: "" });
-    setBuyerData({ name: "", wallet: "", nik: "" });
+    setBuyerData({ userId: "", name: "", email: "", wallet: "", nik: "" });
   };
 
   const steps = [
@@ -140,7 +184,7 @@ export default function TransferPage() {
       <AnimatePresence mode="wait">
         {step === 1 && <VehicleSelectStep search={search} onSearchChange={setSearch} filteredFleet={filteredFleet} selectedVehicle={selectedVehicle} onSelectVehicle={setSelectedVehicle} onNext={() => setStep(2)} />}
         {step === 2 && <SaleVerifyStep selectedVehicle={selectedVehicle} saleData={saleData} onSaleDataChange={setSaleData} onBack={() => setStep(1)} onNext={() => setStep(3)} />}
-        {step === 3 && <BuyerInfoStep selectedVehicle={selectedVehicle} saleData={saleData} buyerData={buyerData} onBuyerDataChange={setBuyerData} buyerMode={buyerMode} onBuyerModeChange={setBuyerMode} onSimulateMockBuyer={simulateMockBuyer} onBack={() => setStep(2)} onNext={() => setStep(4)} />}
+        {step === 3 && <BuyerInfoStep selectedVehicle={selectedVehicle} saleData={saleData} buyerData={buyerData} onBuyerDataChange={setBuyerData} buyerMode={buyerMode} onBuyerModeChange={setBuyerMode} onSimulateMockBuyer={simulateMockBuyer} registeredBuyers={registeredBuyers} onBack={() => setStep(2)} onNext={() => setStep(4)} />}
         {step === 4 && <ConfirmStep selectedVehicle={selectedVehicle} saleData={saleData} buyerData={buyerData} buyerMode={buyerMode} transferring={transferring} onTransfer={handleTransfer} onBack={() => setStep(3)} />}
       </AnimatePresence>
     </div>

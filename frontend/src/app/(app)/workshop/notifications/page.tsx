@@ -7,7 +7,7 @@ import { useBooking } from "@/context/BookingContext";
 
 const initialNotifications = [
   { id: 1, type: "reward", title: "Reward Received", message: "You earned 120 NOC for Proof of Maintenance on VIN MHKA...001", time: "2 hours ago", read: false },
-  { id: 2, type: "system", title: "Scan Successful", message: "Vehicle Toyota Avanza 2025 verified on-chain.", time: "4 hours ago", read: true },
+  { id: 2, type: "system", title: "Scan Successful", message: "Vehicle Toyota BMW M4 2025 verified on-chain.", time: "4 hours ago", read: true },
   { id: 3, type: "review", title: "New Rating", message: "Customer gave you 5 stars for the recent service.", time: "1 day ago", read: true },
   { id: 4, type: "service", title: "Service Logged", message: "Maintenance record successfully anchored to Solana.", time: "1 day ago", read: true },
 ];

@@ -7,26 +7,10 @@ import { SharedServiceCard, ServiceEvent } from "@/components/ui/SharedServiceCa
 import { vehicleData } from "@/context/ActiveVehicleContext";
 
 const timelineEvents: Record<string, ServiceEvent[]> = {
-  MHKA1BA1JFK000001: [
-    { id: 2, status: "ANCHORED", date: "2026-02-10", type: "Oil Change", category: "Fluids", icon: Droplets, mechanic: "Pak Hendra", workshop: "Bengkel Hendra Motor", rating: 4.8, mileage: "34,521 km", parts: [
-      { name: "Engine Oil 5W-30 (4L)", partNumber: "08880-83264", isOem: true, manufacturer: "Toyota Motor Corp", priceIDR: 380000 },
-      { name: "Oil Filter", partNumber: "90915-YZZD4", isOem: true, manufacturer: "Denso Corp", priceIDR: 45000 },
-    ], serviceCost: 50000, gasFee: 100, costIDR: 475100, costUSDC: 30, costNOC: 48, costStr: "Rp 475,100", txSig: "4xK9...mF7q", healthBefore: 45, healthAfter: 95, notes: "Filter changed. No leaks detected.", images: [] },
-    { id: 3, status: "ANCHORED", date: "2026-01-15", type: "Brake Pad Replacement", category: "Brakes", icon: ShieldCheck, mechanic: "Workshop Maju Jaya", workshop: "PT Maju Jaya Auto", rating: 4.5, mileage: "31,200 km", parts: [
-      { name: "Front Brake Pad Set", partNumber: "04465-BZ010", isOem: true, manufacturer: "Aisin Corp", priceIDR: 450000 },
-      { name: "Brake Disc Rotor FL", partNumber: "43512-BZ130", isOem: true, manufacturer: "Toyota Motor Corp", priceIDR: 550000 },
-    ], serviceCost: 150000, gasFee: 100, costIDR: 1150100, costUSDC: 72, costNOC: 115, costStr: "Rp 1,150,100", txSig: "7hR2...pK4s", healthBefore: 28, healthAfter: 100, notes: "Front pads replaced. Rotors look fine but should be checked next service.", images: [] },
-    { id: 4, status: "ANCHORED", date: "2025-11-20", type: "Full Inspection", category: "Inspection", icon: Gauge, mechanic: "Dealer Toyota BSD", workshop: "Toyota Astra Motor BSD", rating: 4.9, mileage: "28,000 km", parts: [], serviceCost: 0, gasFee: 100, costIDR: 100, costUSDC: 0, costNOC: 0, costStr: "Rp 0 (Warranty)", txSig: "2mN5...xJ8w", healthBefore: 82, healthAfter: 87, notes: "Standard 6-month checkup. All systems optimal.", images: [] },
-  ],
   WBA43AZ0X0CH00001: [
     { id: 5, status: "ANCHORED", date: "2026-03-01", type: "Suspension Check", category: "Full Service", icon: Gauge, mechanic: "EuroHaus M Performance", workshop: "EuroHaus ID", rating: 4.9, mileage: "12,400 km", parts: [
       { name: "Alignment Calibration Kit", partNumber: "31-12-6-867-848", isOem: true, manufacturer: "BMW AG", priceIDR: 350000 },
     ], serviceCost: 500000, gasFee: 100, costIDR: 850100, costUSDC: 53, costNOC: 85, costStr: "Rp 850,100", txSig: "1B3c...A5f9", healthBefore: 88, healthAfter: 98, notes: "Suspension aligned to factory M specification.", images: [] },
-  ],
-  MH1JFZ110K000042: [
-    { id: 6, status: "ANCHORED", date: "2026-01-05", type: "CVT & Roller Check", category: "Full Service", icon: Gauge, mechanic: "Ahass Motor", workshop: "PT Nusantara Sakti", rating: 4.5, mileage: "14,200 km", parts: [
-      { name: "CVT Grease", partNumber: "08C30-K59-600ML", isOem: true, manufacturer: "Honda Motor Co", priceIDR: 35000 },
-    ], serviceCost: 40000, gasFee: 100, costIDR: 75100, costUSDC: 5, costNOC: 8, costStr: "Rp 75,100", txSig: "P89q...21Wf", healthBefore: 85, healthAfter: 95, notes: "Roller and CVT cleaned.", images: [] },
   ],
   HD1ME23145K998212: [
     { id: 7, status: "ANCHORED", date: "2025-12-20", type: "Primary Chain Adj", category: "Full Service", icon: Gauge, mechanic: "Mabua Custom", workshop: "Mabua HD", rating: 5.0, mileage: "8,900 km", parts: [
@@ -37,8 +21,8 @@ const timelineEvents: Record<string, ServiceEvent[]> = {
 
 export default function WorkshopVehicleProfile({ params }: { params: Promise<{ vin: string }> }) {
   const { vin } = use(params);
-  const currVehicle = Object.values(vehicleData).find(v => v.vin === vin) || vehicleData.avanza;
-  const [data] = useState(timelineEvents[vin] || timelineEvents[vehicleData.avanza.vin]);
+  const currVehicle = Object.values(vehicleData).find(v => v.vin === vin) || vehicleData.bmw_m4;
+  const [data] = useState(timelineEvents[vin] || timelineEvents[vehicleData.bmw_m4.vin]);
 
   return (
     <div className="max-w-4xl mx-auto">

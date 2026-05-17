@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { Scan, Copy, Download, Clock, Shield, CheckCircle2, Maximize2, X, CreditCard, Activity, Power, AlertTriangle, Key, History, ArrowRightLeft, ShieldAlert, User, KeyRound, Loader2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useActiveVehicle, vehicleData } from "@/context/ActiveVehicleContext";
+import { useVehicleRegistryStore } from "@/store/useVehicleRegistryStore";
 
 const scanHistory = [
   { date: "2026-03-15 14:30", location: "Bengkel Hendra Motor", auth: "Success" },
@@ -12,7 +13,9 @@ const scanHistory = [
 
 export default function IdentityPage() {
   const ctx = useActiveVehicle();
-  const currentVehicleData = ctx?.currentVehicleData || vehicleData.avanza;
+  const currentVehicleData = ctx?.currentVehicleData || vehicleData.bmw_m4;
+  const activeVehicleIdentity = ctx?.activeVehicleIdentity;
+  const updateVehicle = useVehicleRegistryStore((state) => state.updateVehicle);
 
   const [activeTab, setActiveTab] = useState<"nfc" | "qr">("qr");
 
@@ -29,6 +32,12 @@ export default function IdentityPage() {
   const [isTransferring, setIsTransferring] = useState(false);
   const [recipient, setRecipient] = useState("");
   const handleTransfer = () => {
+    if (ctx?.activeVehicleId && recipient.trim()) {
+      updateVehicle(ctx.activeVehicleId, {
+        currentOwnerId: recipient.trim(),
+        mintStatus: "transferred",
+      });
+    }
     setIsTransferring(true);
     setTimeout(() => setIsTransferring(false), 2000);
   };
@@ -39,7 +48,20 @@ export default function IdentityPage() {
     return () => clearInterval(timer);
   }, [timeLimit, timeLeft]);
 
-  const handleCopy = () => { setCopied(true); setTimeout(() => setCopied(false), 2000); };
+  const qrPayload = JSON.stringify({
+    type: "noc_vehicle",
+    vehicleId: activeVehicleIdentity?.vehicleId ?? currentVehicleData.vehicleId,
+    vin: currentVehicleData.vin,
+    cnftAssetId: activeVehicleIdentity?.onChainMintAddress,
+    treeAddress: activeVehicleIdentity?.treeAddress,
+    vehicleRecordPda: activeVehicleIdentity?.vehicleRecordPda,
+  });
+
+  const handleCopy = () => {
+    void navigator.clipboard?.writeText(qrPayload);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
   const formatTime = (secs: number) => { const m = Math.floor(secs / 60); const s = secs % 60; return `${m}:${s < 10 ? "0" : ""}${s}`; };
 
   return (
@@ -49,7 +71,7 @@ export default function IdentityPage() {
           <Shield className="w-7 h-7" style={{ color: "var(--solana-purple)" }} />
           Identity Card
         </h1>
-        <p>Manage your vehicle's digital identity — QR code and NFC card</p>
+        <p>Manage your vehicle&apos;s digital identity — QR code and NFC card</p>
       </div>
 
       {/* Tab Toggle */}
@@ -80,6 +102,7 @@ export default function IdentityPage() {
                   </button>
                 </div>
                 <p className="text-xs mono mb-4" style={{ color: "var(--solana-text-muted)" }}>NOC ID #{currentVehicleData.vin.substring(currentVehicleData.vin.length - 5)} · {currentVehicleData.name}</p>
+                <textarea readOnly value={qrPayload} rows={4} className="mb-4 w-full rounded-xl bg-black/30 p-3 text-[10px] text-slate-300 outline-none" style={{ border: "1px solid rgba(94, 234, 212,0.18)" }} />
                 {timeLimit && (
                   <div className="flex items-center gap-2 mb-4 px-4 py-2 rounded-xl" style={{ background: "rgba(94, 234, 212,0.08)", border: "1px solid rgba(94, 234, 212,0.2)" }}>
                     <Clock className="w-4 h-4" style={{ color: "var(--solana-green)" }} />

@@ -46,6 +46,11 @@ export default function VehicleSelectStep({
               </div>
             </button>
           ))}
+          {filteredFleet.length === 0 && (
+            <div className="rounded-xl border border-white/10 bg-white/5 p-5 text-sm" style={{ color: "var(--solana-text-muted)" }}>
+              Tidak ada kendaraan yang eligible untuk transfer. Kendaraan yang sudah transferred otomatis keluar dari list.
+            </div>
+          )}
         </div>
       </div>
       <button onClick={onNext} disabled={!selectedVehicle} className="glow-btn w-full mt-4 disabled:opacity-40">

@@ -2,7 +2,8 @@
 
 import dynamic from "next/dynamic";
 import { useSearchParams } from "next/navigation";
-import { vehicleData, VehicleKey } from "@/context/ActiveVehicleContext";
+import { vehicleData } from "@/context/ActiveVehicleContext";
+import type { VehicleKey } from "@/types/vehicle";
 import { Suspense } from "react";
 
 const SharedDigitalTwinViewer = dynamic(

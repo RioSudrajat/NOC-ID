@@ -5,37 +5,18 @@ import { motion } from "framer-motion";
 import { Brain, TrendingUp, AlertTriangle, CheckCircle2, ChevronRight, Info, Eye, EyeOff } from "lucide-react";
 import { useActiveVehicle, vehicleData } from "@/context/ActiveVehicleContext";
 
-const predictionsData: Record<string, any[]> = {
-  avanza: [
-    {
-      part: "CVT Belt", component_id: "Transmission.CVT_Belt", health: 42,
-      failureProbability: 0.67, daysUntilFailure: 45, status: "Critical",
-      shapFactors: [
-        { feature: "Jarak sejak servis CVT terakhir", impact: 0.38, direction: "up" },
-        { feature: "Total kilometer tempuh", impact: 0.22, direction: "up" },
-        { feature: "Usia kendaraan (hari)", impact: 0.11, direction: "up" }
-      ],
-      recommendation: "Jadwalkan inspeksi CVT belt dalam 2 minggu. Pertimbangkan penggantian jika lebar belt < 21.0mm.",
-    },
-    {
-      part: "Air Filter", component_id: "Engine.Air_Filter", health: 55,
-      failureProbability: 0.45, daysUntilFailure: 60, status: "Warning",
-      shapFactors: [
-        { feature: "Hari sejak penggantian terakhir", impact: 0.30, direction: "up" },
-        { feature: "Rasio berkendara perkotaan", impact: 0.20, direction: "up" }
-      ],
-      recommendation: "Ganti elemen air filter (OEM #17801-BZ050) pada kunjungan servis berikutnya.",
-    },
-    {
-      part: "Brake Fluid", component_id: "Fluids.Brake_Fluid", health: 68,
-      failureProbability: 0.30, daysUntilFailure: 90, status: "Warning",
-      shapFactors: [
-        { feature: "Waktu sejak flush terakhir", impact: 0.25, direction: "up" },
-        { feature: "Zona iklim (tropis)", impact: 0.12, direction: "up" },
-      ],
-      recommendation: "Jadwalkan brake fluid flush (DOT 4) dalam 90 hari untuk performa pengereman optimal.",
-    }
-  ],
+interface PredictionItem {
+  part: string;
+  component_id: string;
+  health: number;
+  failureProbability: number;
+  daysUntilFailure: number;
+  status: string;
+  shapFactors: { feature: string; impact: number; direction: string }[];
+  recommendation: string;
+}
+
+const predictionsData: Record<string, PredictionItem[]> = {
   bmw_m4: [
     {
       part: "Brake Pads (Rear)", component_id: "Brakes.Brake_Pad_RL", health: 60,
@@ -45,25 +26,6 @@ const predictionsData: Record<string, any[]> = {
         { feature: "Harsh braking frequency", impact: 0.15, direction: "up" }
       ],
       recommendation: "Book an M Certified mechanic to replace rear brake pads very soon.",
-    }
-  ],
-  beat: [
-    {
-      part: "V-Belt", component_id: "Transmission.Belt", health: 30,
-      failureProbability: 0.85, daysUntilFailure: 5, status: "Danger",
-      shapFactors: [
-        { feature: "Stop and go traffic usage", impact: 0.50, direction: "up" },
-        { feature: "Missed scheduled CVT service", impact: 0.35, direction: "up" }
-      ],
-      recommendation: "Replace V-Belt immediately to avoid breakdown mid-trip.",
-    },
-    {
-      part: "Engine Oil", component_id: "Fluid.Engine_Oil", health: 45,
-      failureProbability: 0.70, daysUntilFailure: 10, status: "Critical",
-      shapFactors: [
-        { feature: "Mileage since last oil change", impact: 0.60, direction: "up" },
-      ],
-      recommendation: "Replace engine oil within 10 days.",
     }
   ],
   harley: [
@@ -127,10 +89,10 @@ function FactorsChart({ factors, showAdvanced }: { factors: { feature: string; i
 
 export default function InsightsPage() {
   const ctx = useActiveVehicle();
-  const currentKey = ctx?.activeVehicle || "avanza";
-  const currentVehicleData = ctx?.currentVehicleData || vehicleData.avanza;
+  const currentKey = ctx?.activeVehicle || "bmw_m4";
+  const currentVehicleData = ctx?.currentVehicleData || vehicleData.bmw_m4;
 
-  const currentPredictions = predictionsData[currentKey] || predictionsData.avanza;
+  const currentPredictions = predictionsData[currentKey] || predictionsData.bmw_m4;
 
   const [advancedView, setAdvancedView] = useState(false);
   const [expandedInsight, setExpandedInsight] = useState<number | null>(null);

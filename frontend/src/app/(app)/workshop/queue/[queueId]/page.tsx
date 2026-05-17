@@ -4,7 +4,8 @@ import { use, useMemo } from "react";
 import Link from "next/link";
 import { ArrowLeft, ClipboardList, Car, Calendar, Shield, Wrench, Eye, Share2 } from "lucide-react";
 import { useBookingStore } from "@/store/useBookingStore";
-import { vehicleData, type VehicleKey } from "@/context/ActiveVehicleContext";
+import { vehicleData } from "@/context/ActiveVehicleContext";
+import type { VehicleKey } from "@/types/vehicle";
 import { getHealthColor, getHealthStatus } from "@/lib/health";
 import type { BookingRequest } from "@/types/booking";
 

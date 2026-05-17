@@ -1,0 +1,11 @@
+node_modules/
+.env
+.env.*
+!.env.example
+
+backend/dist/
+clients/ts/noc-registry/dist/
+
+programs/**/target/
+programs/**/.anchor/
+programs/**/test-ledger/

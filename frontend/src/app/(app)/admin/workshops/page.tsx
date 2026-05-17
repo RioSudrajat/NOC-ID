@@ -1,22 +1,36 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Wrench, Star, Shield, CheckCircle2, ShieldAlert, Search, MapPin, BadgeCheck, Clock } from "lucide-react";
-import { workshopsData, useBooking } from "@/context/BookingContext";
+import { useBooking } from "@/context/BookingContext";
 import { useEnterprise } from "@/context/EnterpriseContext";
 import { useToast } from "@/components/ui/Toast";
+import { useAdminStore } from "@/store/useAdminStore";
+import { mergeRegisteredWorkshops } from "@/data/workshops";
+import type { WorkshopCredential } from "@/types/admin";
 
 export default function AdminWorkshopsPage() {
   const { showToast } = useToast();
   const booking = useBooking();
   const enterprise = useEnterprise();
+  const hydrateAdmin = useAdminStore((state) => state.hydrate);
+  const getWorkshopCredentials = useAdminStore((state) => state.getWorkshopCredentials);
+  const registrations = useAdminStore((state) => state.pendingRegistrations);
+  const approveWorkshop = useAdminStore((state) => state.approveWorkshop);
+  const rejectWorkshop = useAdminStore((state) => state.rejectWorkshop);
+  const grantCredential = useAdminStore((state) => state.grantCredential);
+  const revokeCredential = useAdminStore((state) => state.revokeCredential);
   const wsMetrics = enterprise?.metrics.workshopMetrics || [];
 
   const [filter, setFilter] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
 
-  const workshops = workshopsData;
+  useEffect(() => {
+    hydrateAdmin();
+  }, [hydrateAdmin]);
+
+  const workshops = useMemo(() => mergeRegisteredWorkshops(registrations), [registrations]);
   const verifiedCount = workshops.filter(w => w.verified).length;
   const oemCount = workshops.filter(w => w.oem).length;
   const pendingCount = workshops.filter(w => !w.verified).length;
@@ -31,19 +45,27 @@ export default function AdminWorkshopsPage() {
     });
   }, [workshops, filter, searchQuery]);
 
-  const pendingWorkshops = workshops.filter(w => !w.verified);
+  const pendingWorkshops = registrations.filter(item => item.status === "pending_kyc");
 
-  const handleApproveKYC = (name: string) => {
+  const handleApproveKYC = (workshopId: string, name: string) => {
+    approveWorkshop(workshopId, "usr-demo-admin");
+    grantCredential(workshopId, "verified_signer", "platform");
     showToast("success", "KYC Approved", `${name} has been verified. On-chain credential issued.`);
     // Notify workshop + enterprise
     booking?.addNotification("kyc_change", "KYC Approved", `Your workshop "${name}" has been verified by platform admin.`, "workshop");
     booking?.addNotification("kyc_change", "Workshop KYC Approved", `Workshop "${name}" has been verified and credentialed.`, "enterprise");
   };
 
-  const handleRejectKYC = (name: string) => {
+  const handleRejectKYC = (workshopId: string, name: string) => {
+    rejectWorkshop(workshopId, "Dokumen atau data bisnis belum lengkap.");
     showToast("error", "KYC Rejected", `${name} application has been rejected.`);
     // Notify workshop
     booking?.addNotification("kyc_change", "KYC Rejected", `Your workshop "${name}" KYC application has been rejected.`, "workshop");
+  };
+
+  const quickGrant = (workshopId: string, credential: WorkshopCredential) => {
+    grantCredential(workshopId, credential, credential === "verified_signer" ? "platform" : "ent-astra", credential === "verified_signer" ? undefined : "ent-astra");
+    showToast("success", "Credential Granted", `${credential} granted to ${workshopId}.`);
   };
 
   return (
@@ -80,19 +102,20 @@ export default function AdminWorkshopsPage() {
           </h2>
           <div className="flex flex-col gap-3">
             {pendingWorkshops.map(w => (
-              <div key={w.id} className="flex items-center justify-between p-4 rounded-xl bg-black/20 border border-white/5">
+              <div key={w.workshopId} className="flex items-center justify-between p-4 rounded-xl bg-black/20 border border-white/5">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: "rgba(250,204,21,0.1)" }}>
                     <Wrench className="w-5 h-5 text-yellow-400" />
                   </div>
                   <div>
-                    <p className="font-semibold text-sm">{w.name}</p>
-                    <p className="text-xs text-gray-400 flex items-center gap-1"><MapPin className="w-3 h-3" /> {w.location}, {w.city}</p>
+                    <p className="font-semibold text-sm">{w.businessName}</p>
+                    <p className="text-xs text-gray-400 flex items-center gap-1"><MapPin className="w-3 h-3" /> {w.address}, {w.city}</p>
+                    <p className="text-[11px] text-gray-500">{w.submittedByUserName ?? "Workshop owner"} · {w.submittedByContact ?? w.phone}</p>
                   </div>
                 </div>
                 <div className="flex gap-2">
-                  <button onClick={() => handleApproveKYC(w.name)} className="px-4 py-2 rounded-lg text-xs font-bold bg-teal-500/15 text-teal-400 hover:bg-teal-500/25 transition-colors">Approve</button>
-                  <button onClick={() => handleRejectKYC(w.name)} className="px-4 py-2 rounded-lg text-xs font-bold bg-red-500/15 text-red-400 hover:bg-red-500/25 transition-colors">Reject</button>
+                  <button onClick={() => handleApproveKYC(w.workshopId, w.businessName)} className="px-4 py-2 rounded-lg text-xs font-bold bg-teal-500/15 text-teal-400 hover:bg-teal-500/25 transition-colors">Approve</button>
+                  <button onClick={() => handleRejectKYC(w.workshopId, w.businessName)} className="px-4 py-2 rounded-lg text-xs font-bold bg-red-500/15 text-red-400 hover:bg-red-500/25 transition-colors">Reject</button>
                 </div>
               </div>
             ))}
@@ -126,6 +149,7 @@ export default function AdminWorkshopsPage() {
               <th className="py-4 px-6 font-medium">Services</th>
               <th className="py-4 px-6 font-medium">Verified</th>
               <th className="py-4 px-6 font-medium">OEM</th>
+              <th className="py-4 px-6 font-medium">Credentials</th>
               <th className="py-4 px-6 font-medium">KYC Status</th>
             </tr>
           </thead>
@@ -133,6 +157,7 @@ export default function AdminWorkshopsPage() {
             <AnimatePresence>
               {filtered.map((w) => {
                 const metric = wsMetrics.find(m => m.workshopId === w.id);
+                const credentials = getWorkshopCredentials(w.id);
                 return (
                   <motion.tr key={w.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="hover:bg-white/5 transition-colors">
                     <td className="py-4 px-6 font-semibold">{w.name}</td>
@@ -151,6 +176,17 @@ export default function AdminWorkshopsPage() {
                       {w.oem ? <Shield className="w-4 h-4 text-teal-400" /> : <span className="text-gray-500 text-xs">—</span>}
                     </td>
                     <td className="py-4 px-6">
+                      <div className="flex flex-wrap gap-1.5 max-w-[280px]">
+                        {credentials.map((credential) => (
+                          <button key={credential.credentialId} onClick={() => revokeCredential(credential.credentialId, "Revoked by admin")} className="rounded-full bg-teal-500/10 px-2 py-1 text-[10px] text-teal-300">
+                            {credential.credential}
+                          </button>
+                        ))}
+                        <button onClick={() => quickGrant(w.id, "verified_signer")} className="rounded-full bg-white/10 px-2 py-1 text-[10px] text-slate-300">+ signer</button>
+                        <button onClick={() => quickGrant(w.id, "manufacturer_audit_partner")} className="rounded-full bg-white/10 px-2 py-1 text-[10px] text-slate-300">+ auditor</button>
+                      </div>
+                    </td>
+                    <td className="py-4 px-6">
                       {w.verified ? (
                         <span className="text-xs px-2 py-1 rounded-full bg-teal-500/15 text-teal-400 flex items-center gap-1 w-fit"><BadgeCheck className="w-3 h-3" /> Approved</span>
                       ) : (
@@ -162,7 +198,7 @@ export default function AdminWorkshopsPage() {
               })}
             </AnimatePresence>
             {filtered.length === 0 && (
-              <tr><td colSpan={7} className="text-center py-12 text-gray-500"><Wrench className="w-8 h-8 mx-auto mb-2 opacity-30" /><p className="text-sm">No workshops match the filter.</p></td></tr>
+              <tr><td colSpan={8} className="text-center py-12 text-gray-500"><Wrench className="w-8 h-8 mx-auto mb-2 opacity-30" /><p className="text-sm">No workshops match the filter.</p></td></tr>
             )}
           </tbody>
         </table>

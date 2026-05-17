@@ -7,7 +7,7 @@ import { Map, Car, Shield, AlertTriangle, CheckCircle2, MapPin, Search, Filter, 
 import { useEnterprise } from "@/context/EnterpriseContext";
 import { getHealthColor, getHealthStatus } from "@/lib/health";
 
-const FleetLeafletMap = dynamic(() => import("@/components/ui/FleetLeafletMap"), { ssr: false, loading: () => (
+const FleetMapLibre = dynamic(() => import("@/components/ui/FleetMapLibre"), { ssr: false, loading: () => (
   <div className="flex items-center justify-center h-full">
     <div className="text-center">
       <Map className="w-12 h-12 mx-auto mb-3 animate-pulse" style={{ color: "var(--solana-purple)", opacity: 0.5 }} />
@@ -115,9 +115,9 @@ export default function FleetPage() {
           </div>
         </div>
 
-        {/* Live Leaflet Map */}
+        {/* Live MapLibre Map */}
         <div className="glass-card-static rounded-2xl col-span-1 lg:col-span-2 relative overflow-hidden border" style={{ borderColor: "rgba(94, 234, 212,0.1)", minHeight: 400 }}>
-          <FleetLeafletMap vehicles={vehicles} />
+          <FleetMapLibre vehicles={vehicles} />
         </div>
       </div>
 

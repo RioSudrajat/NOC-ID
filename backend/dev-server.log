@@ -1,0 +1,484 @@
+
+> @noc-id/backend@0.1.0 dev
+> tsx watch src/main.ts
+
+{"level":30,"time":1778899890763,"pid":36572,"hostname":"Selembar-Awan","msg":"Server listening at http://127.0.0.1:4000"}
+{"level":30,"time":1778899890763,"pid":36572,"hostname":"Selembar-Awan","msg":"Server listening at http://20.20.20.5:4000"}
+{"level":30,"time":1778899890763,"pid":36572,"hostname":"Selembar-Awan","msg":"Server listening at http://192.168.128.1:4000"}
+{"level":30,"time":1778899933396,"pid":36572,"hostname":"Selembar-Awan","reqId":"req-1","req":{"method":"GET","url":"/vehicles","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":52512},"msg":"incoming request"}
+{"level":30,"time":1778899933425,"pid":36572,"hostname":"Selembar-Awan","reqId":"req-1","res":{"statusCode":200},"responseTime":29.152699999511242,"msg":"request completed"}
+{"level":30,"time":1778899933438,"pid":36572,"hostname":"Selembar-Awan","reqId":"req-2","req":{"method":"GET","url":"/health","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":52514},"msg":"incoming request"}
+{"level":30,"time":1778899933439,"pid":36572,"hostname":"Selembar-Awan","reqId":"req-2","res":{"statusCode":200},"responseTime":0.5192000009119511,"msg":"request completed"}
+{"level":30,"time":1778899933517,"pid":36572,"hostname":"Selembar-Awan","reqId":"req-3","req":{"method":"GET","url":"/workshops","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":52515},"msg":"incoming request"}
+{"level":30,"time":1778899933525,"pid":36572,"hostname":"Selembar-Awan","reqId":"req-3","res":{"statusCode":200},"responseTime":7.952999997884035,"msg":"request completed"}
+{"level":30,"time":1778899933549,"pid":36572,"hostname":"Selembar-Awan","reqId":"req-4","req":{"method":"GET","url":"/bookings","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":52517},"msg":"incoming request"}
+{"level":50,"time":1778899933568,"pid":36572,"hostname":"Selembar-Awan","reqId":"req-4","req":{"method":"GET","url":"/bookings","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":52517},"res":{"statusCode":500},"err":{"type":"TypeError","message":"Do not know how to serialize a BigInt","stack":"TypeError: Do not know how to serialize a BigInt\n    at JSON.stringify (<anonymous>)\n    at serialize (D:\\Projekan\\Web3\\NOC-ID\\node_modules\\fastify\\lib\\reply.js:1023:15)\n    at preSerializationHookEnd (D:\\Projekan\\Web3\\NOC-ID\\node_modules\\fastify\\lib\\reply.js:526:17)\n    at preSerializationHook (D:\\Projekan\\Web3\\NOC-ID\\node_modules\\fastify\\lib\\reply.js:510:5)\n    at Reply.send (D:\\Projekan\\Web3\\NOC-ID\\node_modules\\fastify\\lib\\reply.js:217:7)\n    at D:\\Projekan\\Web3\\NOC-ID\\node_modules\\fastify\\lib\\wrap-thenable.js:42:17","serialization":{"url":"/bookings","method":"GET"}},"msg":"Do not know how to serialize a BigInt"}
+{"level":30,"time":1778899933569,"pid":36572,"hostname":"Selembar-Awan","reqId":"req-4","res":{"statusCode":500},"responseTime":19.651099998503923,"msg":"request completed"}
+09.52.34 [tsx] change in ./src\main.ts Restarting...
+c{"level":30,"time":1778899955675,"pid":15292,"hostname":"Selembar-Awan","msg":"Server listening at http://127.0.0.1:4000"}
+{"level":30,"time":1778899955675,"pid":15292,"hostname":"Selembar-Awan","msg":"Server listening at http://20.20.20.5:4000"}
+{"level":30,"time":1778899955675,"pid":15292,"hostname":"Selembar-Awan","msg":"Server listening at http://192.168.128.1:4000"}
+{"level":30,"time":1778899995425,"pid":15292,"hostname":"Selembar-Awan","reqId":"req-1","req":{"method":"GET","url":"/bookings","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":51905},"msg":"incoming request"}
+{"level":30,"time":1778899995474,"pid":15292,"hostname":"Selembar-Awan","reqId":"req-1","res":{"statusCode":200},"responseTime":48.86659999936819,"msg":"request completed"}
+09.53.34 [tsx] change in ./src\main.ts Restarting...
+c{"level":30,"time":1778900015731,"pid":81556,"hostname":"Selembar-Awan","msg":"Server listening at http://127.0.0.1:4000"}
+{"level":30,"time":1778900015732,"pid":81556,"hostname":"Selembar-Awan","msg":"Server listening at http://20.20.20.5:4000"}
+{"level":30,"time":1778900015732,"pid":81556,"hostname":"Selembar-Awan","msg":"Server listening at http://192.168.128.1:4000"}
+{"level":30,"time":1778900059605,"pid":81556,"hostname":"Selembar-Awan","reqId":"req-1","req":{"method":"GET","url":"/bookings","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":51925},"msg":"incoming request"}
+{"level":30,"time":1778900059640,"pid":81556,"hostname":"Selembar-Awan","reqId":"req-1","res":{"statusCode":200},"responseTime":34.94419999793172,"msg":"request completed"}
+{"level":30,"time":1778900079822,"pid":81556,"hostname":"Selembar-Awan","reqId":"req-2","req":{"method":"POST","url":"/payments/intents","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":51931},"msg":"incoming request"}
+{"level":30,"time":1778900079836,"pid":81556,"hostname":"Selembar-Awan","reqId":"req-2","res":{"statusCode":200},"responseTime":14.04500000178814,"msg":"request completed"}
+{"level":30,"time":1778900273472,"pid":81556,"hostname":"Selembar-Awan","reqId":"req-3","req":{"method":"POST","url":"/payments/cmp7r6eah000100xg70k7u1pz/submit-signed","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":51969},"msg":"incoming request"}
+{"level":30,"time":1778900273492,"pid":81556,"hostname":"Selembar-Awan","reqId":"req-3","res":{"statusCode":200},"responseTime":19.129200000315905,"msg":"request completed"}
+09.58.29 [tsx] change in ./src\modules\solana\routes.ts Restarting...
+c{"level":30,"time":1778900311145,"pid":134088,"hostname":"Selembar-Awan","msg":"Server listening at http://127.0.0.1:4000"}
+{"level":30,"time":1778900311145,"pid":134088,"hostname":"Selembar-Awan","msg":"Server listening at http://20.20.20.5:4000"}
+{"level":30,"time":1778900311145,"pid":134088,"hostname":"Selembar-Awan","msg":"Server listening at http://192.168.128.1:4000"}
+{"level":30,"time":1778900409592,"pid":134088,"hostname":"Selembar-Awan","reqId":"req-1","req":{"method":"GET","url":"/solana/jobs","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":52009},"msg":"incoming request"}
+{"level":30,"time":1778900409616,"pid":134088,"hostname":"Selembar-Awan","reqId":"req-1","res":{"statusCode":200},"responseTime":23.566599998623133,"msg":"request completed"}
+{"level":30,"time":1778900952838,"pid":134088,"hostname":"Selembar-Awan","reqId":"req-2","req":{"method":"GET","url":"/","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":63889},"msg":"incoming request"}
+{"level":30,"time":1778900952838,"pid":134088,"hostname":"Selembar-Awan","reqId":"req-2","msg":"Route GET:/ not found"}
+{"level":30,"time":1778900952839,"pid":134088,"hostname":"Selembar-Awan","reqId":"req-2","res":{"statusCode":404},"responseTime":0.5456999987363815,"msg":"request completed"}
+{"level":30,"time":1778900953809,"pid":134088,"hostname":"Selembar-Awan","reqId":"req-3","req":{"method":"GET","url":"/favicon.ico","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":63889},"msg":"incoming request"}
+{"level":30,"time":1778900953809,"pid":134088,"hostname":"Selembar-Awan","reqId":"req-3","msg":"Route GET:/favicon.ico not found"}
+{"level":30,"time":1778900953810,"pid":134088,"hostname":"Selembar-Awan","reqId":"req-3","res":{"statusCode":404},"responseTime":0.8553999997675419,"msg":"request completed"}
+10.15.11 [tsx] change in ./src\modules\notifications\routes.ts Restarting...
+c10.15.11 [tsx] change in ./src\modules\analytics\routes.ts Restarting...
+c10.15.11 [tsx] change in ./src\modules\storage\routes.ts Restarting...
+c{"level":30,"time":1778901313295,"pid":91492,"hostname":"Selembar-Awan","msg":"Server listening at http://127.0.0.1:4000"}
+{"level":30,"time":1778901313295,"pid":91492,"hostname":"Selembar-Awan","msg":"Server listening at http://20.20.20.5:4000"}
+{"level":30,"time":1778901313295,"pid":91492,"hostname":"Selembar-Awan","msg":"Server listening at http://192.168.128.1:4000"}
+10.19.22 [tsx] change in ./src\modules\warranties\routes.ts Restarting...
+c10.19.22 [tsx] change in ./src\modules\disputes\routes.ts Restarting...
+c10.19.22 [tsx] change in ./src\modules\recalls\routes.ts Restarting...
+c10.19.23 [tsx] change in ./src\modules\webhooks\routes.ts Restarting...
+c{"level":30,"time":1778901564253,"pid":69892,"hostname":"Selembar-Awan","msg":"Server listening at http://127.0.0.1:4000"}
+{"level":30,"time":1778901564253,"pid":69892,"hostname":"Selembar-Awan","msg":"Server listening at http://20.20.20.5:4000"}
+{"level":30,"time":1778901564253,"pid":69892,"hostname":"Selembar-Awan","msg":"Server listening at http://192.168.128.1:4000"}
+10.20.08 [tsx] change in ./src\modules\webhooks\routes.ts Restarting...
+c{"level":30,"time":1778901609460,"pid":70912,"hostname":"Selembar-Awan","msg":"Server listening at http://127.0.0.1:4000"}
+{"level":30,"time":1778901609460,"pid":70912,"hostname":"Selembar-Awan","msg":"Server listening at http://20.20.20.5:4000"}
+{"level":30,"time":1778901609460,"pid":70912,"hostname":"Selembar-Awan","msg":"Server listening at http://192.168.128.1:4000"}
+{"level":30,"time":1778901639642,"pid":70912,"hostname":"Selembar-Awan","reqId":"req-1","req":{"method":"GET","url":"/health","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":55592},"msg":"incoming request"}
+{"level":30,"time":1778901639648,"pid":70912,"hostname":"Selembar-Awan","reqId":"req-1","res":{"statusCode":200},"responseTime":5.170000001788139,"msg":"request completed"}
+{"level":30,"time":1778901639717,"pid":70912,"hostname":"Selembar-Awan","reqId":"req-2","req":{"method":"GET","url":"/disputes","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":55594},"msg":"incoming request"}
+{"level":30,"time":1778901639720,"pid":70912,"hostname":"Selembar-Awan","reqId":"req-3","req":{"method":"GET","url":"/recalls","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":55593},"msg":"incoming request"}
+{"level":30,"time":1778901639721,"pid":70912,"hostname":"Selembar-Awan","reqId":"req-4","req":{"method":"GET","url":"/warranties","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":55595},"msg":"incoming request"}
+{"level":30,"time":1778901639745,"pid":70912,"hostname":"Selembar-Awan","reqId":"req-2","res":{"statusCode":200},"responseTime":27.522199999541044,"msg":"request completed"}
+{"level":30,"time":1778901639757,"pid":70912,"hostname":"Selembar-Awan","reqId":"req-4","res":{"statusCode":200},"responseTime":36.09439999982715,"msg":"request completed"}
+{"level":30,"time":1778901639761,"pid":70912,"hostname":"Selembar-Awan","reqId":"req-3","res":{"statusCode":200},"responseTime":40.46279999986291,"msg":"request completed"}
+{"level":30,"time":1778901655173,"pid":70912,"hostname":"Selembar-Awan","reqId":"req-5","req":{"method":"GET","url":"/analytics/admin","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":55613},"msg":"incoming request"}
+{"level":30,"time":1778901655190,"pid":70912,"hostname":"Selembar-Awan","reqId":"req-6","req":{"method":"GET","url":"/vehicles","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":55616},"msg":"incoming request"}
+{"level":30,"time":1778901655228,"pid":70912,"hostname":"Selembar-Awan","reqId":"req-5","res":{"statusCode":200},"responseTime":54.99560000002384,"msg":"request completed"}
+{"level":30,"time":1778901655237,"pid":70912,"hostname":"Selembar-Awan","reqId":"req-6","res":{"statusCode":200},"responseTime":47.16430000215769,"msg":"request completed"}
+{"level":30,"time":1778901655238,"pid":70912,"hostname":"Selembar-Awan","reqId":"req-7","req":{"method":"GET","url":"/workshops","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":55618},"msg":"incoming request"}
+{"level":30,"time":1778901655239,"pid":70912,"hostname":"Selembar-Awan","reqId":"req-8","req":{"method":"GET","url":"/bookings","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":55619},"msg":"incoming request"}
+{"level":30,"time":1778901655247,"pid":70912,"hostname":"Selembar-Awan","reqId":"req-7","res":{"statusCode":200},"responseTime":8.536299999803305,"msg":"request completed"}
+{"level":30,"time":1778901655262,"pid":70912,"hostname":"Selembar-Awan","reqId":"req-8","res":{"statusCode":200},"responseTime":22.366200000047684,"msg":"request completed"}
+{"level":30,"time":1778901671358,"pid":70912,"hostname":"Selembar-Awan","reqId":"req-9","req":{"method":"POST","url":"/warranties","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":55626},"msg":"incoming request"}
+{"level":30,"time":1778901671371,"pid":70912,"hostname":"Selembar-Awan","reqId":"req-9","res":{"statusCode":200},"responseTime":13.601199999451637,"msg":"request completed"}
+{"level":30,"time":1778901685165,"pid":70912,"hostname":"Selembar-Awan","reqId":"req-a","req":{"method":"PATCH","url":"/warranties/cmp7s4ibn000000ps97j7dcha/status","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":55630},"msg":"incoming request"}
+{"level":30,"time":1778901685184,"pid":70912,"hostname":"Selembar-Awan","reqId":"req-a","res":{"statusCode":200},"responseTime":18.95889999717474,"msg":"request completed"}
+{"level":30,"time":1778901701265,"pid":70912,"hostname":"Selembar-Awan","reqId":"req-b","req":{"method":"POST","url":"/disputes","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":55119},"msg":"incoming request"}
+{"level":30,"time":1778901701273,"pid":70912,"hostname":"Selembar-Awan","reqId":"req-b","res":{"statusCode":200},"responseTime":7.6380999982357025,"msg":"request completed"}
+{"level":30,"time":1778901713476,"pid":70912,"hostname":"Selembar-Awan","reqId":"req-c","req":{"method":"POST","url":"/disputes/cmp7s55ed000400psih2pkft8/resolve","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":62217},"msg":"incoming request"}
+{"level":30,"time":1778901713491,"pid":70912,"hostname":"Selembar-Awan","reqId":"req-c","res":{"statusCode":200},"responseTime":14.23369999974966,"msg":"request completed"}
+{"level":30,"time":1778901730137,"pid":70912,"hostname":"Selembar-Awan","reqId":"req-d","req":{"method":"POST","url":"/recalls","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":58942},"msg":"incoming request"}
+{"level":30,"time":1778901730159,"pid":70912,"hostname":"Selembar-Awan","reqId":"req-d","res":{"statusCode":200},"responseTime":22.13569999858737,"msg":"request completed"}
+{"level":30,"time":1778901749239,"pid":70912,"hostname":"Selembar-Awan","reqId":"req-e","req":{"method":"POST","url":"/webhooks/storage","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":58961},"msg":"incoming request"}
+{"level":30,"time":1778901749247,"pid":70912,"hostname":"Selembar-Awan","reqId":"req-e","res":{"statusCode":200},"responseTime":8.679999999701977,"msg":"request completed"}
+{"level":30,"time":1778901749301,"pid":70912,"hostname":"Selembar-Awan","reqId":"req-f","req":{"method":"POST","url":"/webhooks/solana-confirmation","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":58962},"msg":"incoming request"}
+{"level":30,"time":1778901749311,"pid":70912,"hostname":"Selembar-Awan","reqId":"req-f","res":{"statusCode":200},"responseTime":9.504399999976158,"msg":"request completed"}
+{"level":30,"time":1778901749317,"pid":70912,"hostname":"Selembar-Awan","reqId":"req-g","req":{"method":"GET","url":"/notifications","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":58964},"msg":"incoming request"}
+{"level":30,"time":1778901749320,"pid":70912,"hostname":"Selembar-Awan","reqId":"req-g","res":{"statusCode":200},"responseTime":3.1334000006318092,"msg":"request completed"}
+{"level":30,"time":1778901761453,"pid":70912,"hostname":"Selembar-Awan","reqId":"req-h","req":{"method":"GET","url":"/solana/jobs","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":58972},"msg":"incoming request"}
+{"level":30,"time":1778901761457,"pid":70912,"hostname":"Selembar-Awan","reqId":"req-h","res":{"statusCode":200},"responseTime":3.812200002372265,"msg":"request completed"}
+{"level":30,"time":1778901828952,"pid":70912,"hostname":"Selembar-Awan","reqId":"req-i","req":{"method":"GET","url":"/vehicles","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":59027},"msg":"incoming request"}
+{"level":30,"time":1778901828953,"pid":70912,"hostname":"Selembar-Awan","reqId":"req-j","req":{"method":"GET","url":"/health","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":59028},"msg":"incoming request"}
+{"level":30,"time":1778901828954,"pid":70912,"hostname":"Selembar-Awan","reqId":"req-j","res":{"statusCode":200},"responseTime":0.5167999975383282,"msg":"request completed"}
+{"level":30,"time":1778901828954,"pid":70912,"hostname":"Selembar-Awan","reqId":"req-k","req":{"method":"GET","url":"/bookings","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":59029},"msg":"incoming request"}
+{"level":30,"time":1778901828955,"pid":70912,"hostname":"Selembar-Awan","reqId":"req-l","req":{"method":"GET","url":"/workshops","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":59030},"msg":"incoming request"}
+{"level":30,"time":1778901828956,"pid":70912,"hostname":"Selembar-Awan","reqId":"req-m","req":{"method":"GET","url":"/payments/currencies","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":59031},"msg":"incoming request"}
+{"level":30,"time":1778901828957,"pid":70912,"hostname":"Selembar-Awan","reqId":"req-m","res":{"statusCode":200},"responseTime":0.6020000018179417,"msg":"request completed"}
+{"level":30,"time":1778901828957,"pid":70912,"hostname":"Selembar-Awan","reqId":"req-n","req":{"method":"GET","url":"/solana/jobs","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":59032},"msg":"incoming request"}
+{"level":30,"time":1778901828964,"pid":70912,"hostname":"Selembar-Awan","reqId":"req-n","res":{"statusCode":200},"responseTime":6.243200000375509,"msg":"request completed"}
+{"level":30,"time":1778901828969,"pid":70912,"hostname":"Selembar-Awan","reqId":"req-i","res":{"statusCode":200},"responseTime":16.756999999284744,"msg":"request completed"}
+{"level":30,"time":1778901828970,"pid":70912,"hostname":"Selembar-Awan","reqId":"req-l","res":{"statusCode":200},"responseTime":14.52759999781847,"msg":"request completed"}
+{"level":30,"time":1778901828976,"pid":70912,"hostname":"Selembar-Awan","reqId":"req-k","res":{"statusCode":200},"responseTime":21.614099998027086,"msg":"request completed"}
+{"level":30,"time":1778901871883,"pid":70912,"hostname":"Selembar-Awan","reqId":"req-o","req":{"method":"GET","url":"/health","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":59096},"msg":"incoming request"}
+{"level":30,"time":1778901871884,"pid":70912,"hostname":"Selembar-Awan","reqId":"req-o","res":{"statusCode":200},"responseTime":0.5866999998688698,"msg":"request completed"}
+{"level":30,"time":1778901871884,"pid":70912,"hostname":"Selembar-Awan","reqId":"req-p","req":{"method":"GET","url":"/vehicles","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":59097},"msg":"incoming request"}
+{"level":30,"time":1778901871885,"pid":70912,"hostname":"Selembar-Awan","reqId":"req-q","req":{"method":"GET","url":"/workshops","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":59098},"msg":"incoming request"}
+{"level":30,"time":1778901871886,"pid":70912,"hostname":"Selembar-Awan","reqId":"req-r","req":{"method":"GET","url":"/payments/currencies","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":59099},"msg":"incoming request"}
+{"level":30,"time":1778901871886,"pid":70912,"hostname":"Selembar-Awan","reqId":"req-r","res":{"statusCode":200},"responseTime":0.42900000140070915,"msg":"request completed"}
+{"level":30,"time":1778901871887,"pid":70912,"hostname":"Selembar-Awan","reqId":"req-s","req":{"method":"GET","url":"/bookings","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":59100},"msg":"incoming request"}
+{"level":30,"time":1778901871887,"pid":70912,"hostname":"Selembar-Awan","reqId":"req-t","req":{"method":"GET","url":"/solana/jobs","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":59101},"msg":"incoming request"}
+{"level":30,"time":1778901871891,"pid":70912,"hostname":"Selembar-Awan","reqId":"req-t","res":{"statusCode":200},"responseTime":3.864800002425909,"msg":"request completed"}
+{"level":30,"time":1778901871892,"pid":70912,"hostname":"Selembar-Awan","reqId":"req-q","res":{"statusCode":200},"responseTime":6.938999999314547,"msg":"request completed"}
+{"level":30,"time":1778901871893,"pid":70912,"hostname":"Selembar-Awan","reqId":"req-p","res":{"statusCode":200},"responseTime":8.756099998950958,"msg":"request completed"}
+{"level":30,"time":1778901871897,"pid":70912,"hostname":"Selembar-Awan","reqId":"req-s","res":{"statusCode":200},"responseTime":10.740800000727177,"msg":"request completed"}
+{"level":30,"time":1778902316252,"pid":70912,"hostname":"Selembar-Awan","reqId":"req-u","req":{"method":"GET","url":"/vehicles","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":58498},"msg":"incoming request"}
+{"level":30,"time":1778902316279,"pid":70912,"hostname":"Selembar-Awan","reqId":"req-u","res":{"statusCode":200},"responseTime":26.98529999703169,"msg":"request completed"}
+{"level":30,"time":1778902316284,"pid":70912,"hostname":"Selembar-Awan","reqId":"req-v","req":{"method":"GET","url":"/bookings","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":58498},"msg":"incoming request"}
+{"level":30,"time":1778902316300,"pid":70912,"hostname":"Selembar-Awan","reqId":"req-v","res":{"statusCode":200},"responseTime":15.20499999821186,"msg":"request completed"}
+18.53.46 [tsx] change in ./src\modules\auth\routes.ts Restarting...
+c18.53.46 [tsx] change in ./src\modules\solana\routes.ts Restarting...
+c18.53.46 [tsx] change in ./src\modules\service-logs\routes.ts Restarting...
+c{"level":30,"time":1778932428141,"pid":109968,"hostname":"Selembar-Awan","msg":"Server listening at http://127.0.0.1:4000"}
+{"level":30,"time":1778932428141,"pid":109968,"hostname":"Selembar-Awan","msg":"Server listening at http://20.20.20.5:4000"}
+{"level":30,"time":1778932428141,"pid":109968,"hostname":"Selembar-Awan","msg":"Server listening at http://192.168.128.1:4000"}
+{"level":30,"time":1778932908549,"pid":109968,"hostname":"Selembar-Awan","reqId":"req-1","req":{"method":"GET","url":"/health","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":63498},"msg":"incoming request"}
+{"level":30,"time":1778932908554,"pid":109968,"hostname":"Selembar-Awan","reqId":"req-1","res":{"statusCode":200},"responseTime":4.680100001394749,"msg":"request completed"}
+{"level":30,"time":1778932908555,"pid":109968,"hostname":"Selembar-Awan","reqId":"req-2","req":{"method":"GET","url":"/vehicles","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":63499},"msg":"incoming request"}
+{"level":30,"time":1778932908557,"pid":109968,"hostname":"Selembar-Awan","reqId":"req-3","req":{"method":"GET","url":"/bookings","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":63500},"msg":"incoming request"}
+{"level":30,"time":1778932908558,"pid":109968,"hostname":"Selembar-Awan","reqId":"req-4","req":{"method":"GET","url":"/workshops","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":63501},"msg":"incoming request"}
+{"level":30,"time":1778932908559,"pid":109968,"hostname":"Selembar-Awan","reqId":"req-5","req":{"method":"GET","url":"/payments/currencies","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":63502},"msg":"incoming request"}
+{"level":30,"time":1778932908560,"pid":109968,"hostname":"Selembar-Awan","reqId":"req-5","res":{"statusCode":200},"responseTime":0.5503999963402748,"msg":"request completed"}
+{"level":30,"time":1778932908560,"pid":109968,"hostname":"Selembar-Awan","reqId":"req-6","req":{"method":"GET","url":"/solana/jobs","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":63503},"msg":"incoming request"}
+{"level":30,"time":1778932908594,"pid":109968,"hostname":"Selembar-Awan","reqId":"req-6","res":{"statusCode":200},"responseTime":33.77759999781847,"msg":"request completed"}
+{"level":30,"time":1778932908597,"pid":109968,"hostname":"Selembar-Awan","reqId":"req-4","res":{"statusCode":200},"responseTime":38.71559999883175,"msg":"request completed"}
+{"level":30,"time":1778932908607,"pid":109968,"hostname":"Selembar-Awan","reqId":"req-2","res":{"statusCode":200},"responseTime":52.69810000061989,"msg":"request completed"}
+{"level":30,"time":1778932908613,"pid":109968,"hostname":"Selembar-Awan","reqId":"req-3","res":{"statusCode":200},"responseTime":54.9746999964118,"msg":"request completed"}
+{"level":30,"time":1778932909463,"pid":109968,"hostname":"Selembar-Awan","reqId":"req-7","req":{"method":"GET","url":"/solana/jobs","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":63510},"msg":"incoming request"}
+{"level":30,"time":1778932909469,"pid":109968,"hostname":"Selembar-Awan","reqId":"req-7","res":{"statusCode":200},"responseTime":5.705199994146824,"msg":"request completed"}
+{"level":30,"time":1778932909558,"pid":109968,"hostname":"Selembar-Awan","reqId":"req-8","req":{"method":"POST","url":"/solana/simulate","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":63512},"msg":"incoming request"}
+{"level":30,"time":1778932909561,"pid":109968,"hostname":"Selembar-Awan","reqId":"req-8","res":{"statusCode":200},"responseTime":3.4095999971032143,"msg":"request completed"}
+{"level":30,"time":1778932937535,"pid":109968,"hostname":"Selembar-Awan","reqId":"req-9","req":{"method":"GET","url":"/health","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":58564},"msg":"incoming request"}
+{"level":30,"time":1778932937536,"pid":109968,"hostname":"Selembar-Awan","reqId":"req-9","res":{"statusCode":200},"responseTime":0.5561999976634979,"msg":"request completed"}
+{"level":30,"time":1778932937536,"pid":109968,"hostname":"Selembar-Awan","reqId":"req-a","req":{"method":"GET","url":"/vehicles","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":58565},"msg":"incoming request"}
+{"level":30,"time":1778932937537,"pid":109968,"hostname":"Selembar-Awan","reqId":"req-b","req":{"method":"GET","url":"/bookings","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":58566},"msg":"incoming request"}
+{"level":30,"time":1778932937538,"pid":109968,"hostname":"Selembar-Awan","reqId":"req-c","req":{"method":"GET","url":"/workshops","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":58567},"msg":"incoming request"}
+{"level":30,"time":1778932937539,"pid":109968,"hostname":"Selembar-Awan","reqId":"req-d","req":{"method":"GET","url":"/payments/currencies","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":58568},"msg":"incoming request"}
+{"level":30,"time":1778932937540,"pid":109968,"hostname":"Selembar-Awan","reqId":"req-d","res":{"statusCode":200},"responseTime":0.6054000034928322,"msg":"request completed"}
+{"level":30,"time":1778932937540,"pid":109968,"hostname":"Selembar-Awan","reqId":"req-e","req":{"method":"GET","url":"/solana/jobs","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":58569},"msg":"incoming request"}
+{"level":30,"time":1778932937544,"pid":109968,"hostname":"Selembar-Awan","reqId":"req-c","res":{"statusCode":200},"responseTime":5.98589999973774,"msg":"request completed"}
+{"level":30,"time":1778932937545,"pid":109968,"hostname":"Selembar-Awan","reqId":"req-e","res":{"statusCode":200},"responseTime":5.282899998128414,"msg":"request completed"}
+{"level":30,"time":1778932937553,"pid":109968,"hostname":"Selembar-Awan","reqId":"req-a","res":{"statusCode":200},"responseTime":16.78270000219345,"msg":"request completed"}
+{"level":30,"time":1778932937563,"pid":109968,"hostname":"Selembar-Awan","reqId":"req-b","res":{"statusCode":200},"responseTime":25.227299995720387,"msg":"request completed"}
+{"level":30,"time":1778933430330,"pid":109968,"hostname":"Selembar-Awan","reqId":"req-f","req":{"method":"GET","url":"/vehicles","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":54429},"msg":"incoming request"}
+{"level":30,"time":1778933430331,"pid":109968,"hostname":"Selembar-Awan","reqId":"req-g","req":{"method":"GET","url":"/health","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":54430},"msg":"incoming request"}
+{"level":30,"time":1778933430332,"pid":109968,"hostname":"Selembar-Awan","reqId":"req-g","res":{"statusCode":200},"responseTime":0.6303000003099442,"msg":"request completed"}
+{"level":30,"time":1778933430333,"pid":109968,"hostname":"Selembar-Awan","reqId":"req-h","req":{"method":"GET","url":"/bookings","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":54431},"msg":"incoming request"}
+{"level":30,"time":1778933430334,"pid":109968,"hostname":"Selembar-Awan","reqId":"req-i","req":{"method":"GET","url":"/workshops","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":54432},"msg":"incoming request"}
+{"level":30,"time":1778933430334,"pid":109968,"hostname":"Selembar-Awan","reqId":"req-j","req":{"method":"GET","url":"/payments/currencies","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":54433},"msg":"incoming request"}
+{"level":30,"time":1778933430335,"pid":109968,"hostname":"Selembar-Awan","reqId":"req-j","res":{"statusCode":200},"responseTime":0.6286999955773354,"msg":"request completed"}
+{"level":30,"time":1778933430336,"pid":109968,"hostname":"Selembar-Awan","reqId":"req-k","req":{"method":"GET","url":"/solana/jobs","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":54434},"msg":"incoming request"}
+{"level":30,"time":1778933430366,"pid":109968,"hostname":"Selembar-Awan","reqId":"req-k","res":{"statusCode":200},"responseTime":30.13279999792576,"msg":"request completed"}
+{"level":30,"time":1778933430368,"pid":109968,"hostname":"Selembar-Awan","reqId":"req-i","res":{"statusCode":200},"responseTime":34.377000004053116,"msg":"request completed"}
+{"level":30,"time":1778933430371,"pid":109968,"hostname":"Selembar-Awan","reqId":"req-f","res":{"statusCode":200},"responseTime":40.46119999885559,"msg":"request completed"}
+{"level":30,"time":1778933430378,"pid":109968,"hostname":"Selembar-Awan","reqId":"req-h","res":{"statusCode":200},"responseTime":45.651699997484684,"msg":"request completed"}
+19.34.56 [tsx] change in ./src\modules\service-logs\routes.ts Restarting...
+c19.34.56 [tsx] change in ./src\modules\solana\routes.ts Restarting...
+c19.34.56 [tsx] change in ./src\modules\admin\routes.ts Restarting...
+c19.34.57 [tsx] change in ./src\modules\vehicles\routes.ts Restarting...
+c{"level":30,"time":1778934898386,"pid":131504,"hostname":"Selembar-Awan","msg":"Server listening at http://127.0.0.1:4000"}
+{"level":30,"time":1778934898387,"pid":131504,"hostname":"Selembar-Awan","msg":"Server listening at http://20.20.20.5:4000"}
+{"level":30,"time":1778934898387,"pid":131504,"hostname":"Selembar-Awan","msg":"Server listening at http://192.168.128.1:4000"}
+{"level":30,"time":1778934940854,"pid":131504,"hostname":"Selembar-Awan","reqId":"req-1","req":{"method":"GET","url":"/bookings","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":55367},"msg":"incoming request"}
+{"level":30,"time":1778934940923,"pid":131504,"hostname":"Selembar-Awan","reqId":"req-2","req":{"method":"GET","url":"/solana/das/vehicles/cmp7qzmr9000a00s0ju5sf64d","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":55368},"msg":"incoming request"}
+{"level":30,"time":1778934940930,"pid":131504,"hostname":"Selembar-Awan","reqId":"req-3","req":{"method":"PATCH","url":"/admin/config","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":55369},"msg":"incoming request"}
+{"level":30,"time":1778934941069,"pid":131504,"hostname":"Selembar-Awan","reqId":"req-1","res":{"statusCode":200},"responseTime":213.6283999979496,"msg":"request completed"}
+{"level":30,"time":1778934941083,"pid":131504,"hostname":"Selembar-Awan","reqId":"req-3","res":{"statusCode":200},"responseTime":152.3513999953866,"msg":"request completed"}
+{"level":50,"time":1778934941835,"pid":131504,"hostname":"Selembar-Awan","reqId":"req-2","req":{"method":"GET","url":"/solana/das/vehicles/cmp7qzmr9000a00s0ju5sf64d","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":55368},"res":{"statusCode":502},"err":{"type":"BadGatewayError","message":"{\"code\":-32000,\"message\":\"Pubkey Validation Err: demo-cnft-asset is invalid\"}","stack":"BadGatewayError: {\"code\":-32000,\"message\":\"Pubkey Validation Err: demo-cnft-asset is invalid\"}\n    at Object.badGateway (D:\\Projekan\\Web3\\NOC-ID\\node_modules\\@fastify\\sensible\\lib\\httpErrors.js:145:12)\n    at Object.<anonymous> (D:\\Projekan\\Web3\\NOC-ID\\backend\\src\\modules\\solana\\routes.ts:89:28)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)","status":502,"statusCode":502,"expose":false},"msg":"{\"code\":-32000,\"message\":\"Pubkey Validation Err: demo-cnft-asset is invalid\"}"}
+{"level":30,"time":1778934941885,"pid":131504,"hostname":"Selembar-Awan","reqId":"req-2","res":{"statusCode":502},"responseTime":961.2938000038266,"msg":"request completed"}
+19.35.59 [tsx] change in ./src\modules\solana\routes.ts Restarting...
+c{"level":30,"time":1778934960668,"pid":106308,"hostname":"Selembar-Awan","msg":"Server listening at http://127.0.0.1:4000"}
+{"level":30,"time":1778934960668,"pid":106308,"hostname":"Selembar-Awan","msg":"Server listening at http://20.20.20.5:4000"}
+{"level":30,"time":1778934960668,"pid":106308,"hostname":"Selembar-Awan","msg":"Server listening at http://192.168.128.1:4000"}
+{"level":30,"time":1778934992522,"pid":106308,"hostname":"Selembar-Awan","reqId":"req-1","req":{"method":"POST","url":"/service-logs/draft","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":58387},"msg":"incoming request"}
+{"level":30,"time":1778934992601,"pid":106308,"hostname":"Selembar-Awan","reqId":"req-1","res":{"statusCode":200},"responseTime":77.84189999848604,"msg":"request completed"}
+{"level":30,"time":1778935012283,"pid":106308,"hostname":"Selembar-Awan","reqId":"req-2","req":{"method":"POST","url":"/service-logs/cmp8byp4s00010010fa5850r6/build-tx","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":59327},"msg":"incoming request"}
+{"level":30,"time":1778935012285,"pid":106308,"hostname":"Selembar-Awan","reqId":"req-2","res":{"statusCode":415},"err":{"type":"FastifyError","message":"Unsupported Media Type","stack":"FastifyError: Unsupported Media Type\n    at ContentTypeParser.run (D:\\Projekan\\Web3\\NOC-ID\\node_modules\\fastify\\lib\\content-type-parser.js:195:16)\n    at Object.handleRequest (D:\\Projekan\\Web3\\NOC-ID\\node_modules\\fastify\\lib\\handle-request.js:60:46)\n    at runPreParsing (D:\\Projekan\\Web3\\NOC-ID\\node_modules\\fastify\\lib\\route.js:651:19)\n    at next (D:\\Projekan\\Web3\\NOC-ID\\node_modules\\fastify\\lib\\hooks.js:236:9)\n    at D:\\Projekan\\Web3\\NOC-ID\\node_modules\\@fastify\\cors\\index.js:209:12\n    at resolveOriginOption (D:\\Projekan\\Web3\\NOC-ID\\node_modules\\@fastify\\cors\\index.js:162:129)\n    at addCorsHeadersHandler (D:\\Projekan\\Web3\\NOC-ID\\node_modules\\@fastify\\cors\\index.js:164:3)\n    at Object.handleCors (D:\\Projekan\\Web3\\NOC-ID\\node_modules\\@fastify\\cors\\index.js:64:9)\n    at hookIterator (D:\\Projekan\\Web3\\NOC-ID\\node_modules\\fastify\\lib\\hooks.js:408:10)\n    at next (D:\\Projekan\\Web3\\NOC-ID\\node_modules\\fastify\\lib\\hooks.js:242:18)","code":"FST_ERR_CTP_INVALID_MEDIA_TYPE","name":"FastifyError","statusCode":415},"msg":"Unsupported Media Type"}
+{"level":30,"time":1778935012287,"pid":106308,"hostname":"Selembar-Awan","reqId":"req-2","res":{"statusCode":415},"responseTime":4.105400003492832,"msg":"request completed"}
+{"level":30,"time":1778935012289,"pid":106308,"hostname":"Selembar-Awan","reqId":"req-3","req":{"method":"GET","url":"/solana/jobs?name=set_platform_config","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":59328},"msg":"incoming request"}
+{"level":30,"time":1778935012298,"pid":106308,"hostname":"Selembar-Awan","reqId":"req-3","res":{"statusCode":200},"responseTime":9.369500003755093,"msg":"request completed"}
+{"level":30,"time":1778935012339,"pid":106308,"hostname":"Selembar-Awan","reqId":"req-4","req":{"method":"GET","url":"/solana/das/vehicles/cmp7qzmr9000a00s0ju5sf64d","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":59329},"msg":"incoming request"}
+{"level":30,"time":1778935018303,"pid":106308,"hostname":"Selembar-Awan","reqId":"req-4","res":{"statusCode":200},"responseTime":5963.419200003147,"msg":"request completed"}
+{"level":30,"time":1778935039435,"pid":106308,"hostname":"Selembar-Awan","reqId":"req-5","req":{"method":"POST","url":"/service-logs/cmp8byp4s00010010fa5850r6/build-tx","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":60614},"msg":"incoming request"}
+{"level":30,"time":1778935039465,"pid":106308,"hostname":"Selembar-Awan","reqId":"req-5","res":{"statusCode":200},"responseTime":29.588100001215935,"msg":"request completed"}
+19.39.55 [tsx] change in ./src\modules\audits\routes.ts Restarting...
+c{"level":30,"time":1778935196635,"pid":123972,"hostname":"Selembar-Awan","msg":"Server listening at http://127.0.0.1:4000"}
+{"level":30,"time":1778935196635,"pid":123972,"hostname":"Selembar-Awan","msg":"Server listening at http://20.20.20.5:4000"}
+{"level":30,"time":1778935196635,"pid":123972,"hostname":"Selembar-Awan","msg":"Server listening at http://192.168.128.1:4000"}
+{"level":30,"time":1778935594869,"pid":123972,"hostname":"Selembar-Awan","reqId":"req-1","req":{"method":"GET","url":"/health","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":51259},"msg":"incoming request"}
+{"level":30,"time":1778935594873,"pid":123972,"hostname":"Selembar-Awan","reqId":"req-1","res":{"statusCode":200},"responseTime":4.363000005483627,"msg":"request completed"}
+{"level":30,"time":1778935594874,"pid":123972,"hostname":"Selembar-Awan","reqId":"req-2","req":{"method":"GET","url":"/vehicles","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":51260},"msg":"incoming request"}
+{"level":30,"time":1778935594877,"pid":123972,"hostname":"Selembar-Awan","reqId":"req-3","req":{"method":"GET","url":"/workshops","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":51261},"msg":"incoming request"}
+{"level":30,"time":1778935594878,"pid":123972,"hostname":"Selembar-Awan","reqId":"req-4","req":{"method":"GET","url":"/payments/currencies","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":51262},"msg":"incoming request"}
+{"level":30,"time":1778935594879,"pid":123972,"hostname":"Selembar-Awan","reqId":"req-4","res":{"statusCode":200},"responseTime":0.4592000022530556,"msg":"request completed"}
+{"level":30,"time":1778935594879,"pid":123972,"hostname":"Selembar-Awan","reqId":"req-5","req":{"method":"GET","url":"/solana/jobs","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":51263},"msg":"incoming request"}
+{"level":30,"time":1778935594880,"pid":123972,"hostname":"Selembar-Awan","reqId":"req-6","req":{"method":"GET","url":"/bookings","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":51264},"msg":"incoming request"}
+{"level":30,"time":1778935594915,"pid":123972,"hostname":"Selembar-Awan","reqId":"req-5","res":{"statusCode":200},"responseTime":35.56149999797344,"msg":"request completed"}
+{"level":30,"time":1778935594926,"pid":123972,"hostname":"Selembar-Awan","reqId":"req-3","res":{"statusCode":200},"responseTime":48.90309999883175,"msg":"request completed"}
+{"level":30,"time":1778935594928,"pid":123972,"hostname":"Selembar-Awan","reqId":"req-2","res":{"statusCode":200},"responseTime":53.46180000156164,"msg":"request completed"}
+{"level":30,"time":1778935594935,"pid":123972,"hostname":"Selembar-Awan","reqId":"req-6","res":{"statusCode":200},"responseTime":55.090900003910065,"msg":"request completed"}
+20.10.30 [tsx] change in ./src\config\env.ts Restarting...
+c{"level":30,"time":1778937032501,"pid":33296,"hostname":"Selembar-Awan","msg":"Server listening at http://127.0.0.1:4000"}
+{"level":30,"time":1778937032502,"pid":33296,"hostname":"Selembar-Awan","msg":"Server listening at http://20.20.20.5:4000"}
+{"level":30,"time":1778937032502,"pid":33296,"hostname":"Selembar-Awan","msg":"Server listening at http://192.168.128.1:4000"}
+{"level":30,"time":1778937803536,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-1","req":{"method":"GET","url":"/vehicles","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":57147},"msg":"incoming request"}
+{"level":30,"time":1778937803540,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-2","req":{"method":"GET","url":"/health","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":57148},"msg":"incoming request"}
+{"level":30,"time":1778937803544,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-2","res":{"statusCode":200},"responseTime":3.8069000020623207,"msg":"request completed"}
+{"level":30,"time":1778937803545,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-3","req":{"method":"GET","url":"/workshops","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":57149},"msg":"incoming request"}
+{"level":30,"time":1778937803546,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-4","req":{"method":"GET","url":"/bookings","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":57150},"msg":"incoming request"}
+{"level":30,"time":1778937803548,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-5","req":{"method":"GET","url":"/payments/currencies","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":57151},"msg":"incoming request"}
+{"level":30,"time":1778937803549,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-5","res":{"statusCode":200},"responseTime":0.8897999972105026,"msg":"request completed"}
+{"level":30,"time":1778937803549,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-6","req":{"method":"GET","url":"/solana/jobs","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":57152},"msg":"incoming request"}
+{"level":30,"time":1778937803584,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-6","res":{"statusCode":200},"responseTime":34.89070000499487,"msg":"request completed"}
+{"level":30,"time":1778937803585,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-3","res":{"statusCode":200},"responseTime":39.54909999668598,"msg":"request completed"}
+{"level":30,"time":1778937803599,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-1","res":{"statusCode":200},"responseTime":62.790199995040894,"msg":"request completed"}
+{"level":30,"time":1778937803603,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-4","res":{"statusCode":200},"responseTime":57.01030000299215,"msg":"request completed"}
+{"level":30,"time":1778947332257,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-7","req":{"method":"GET","url":"/vehicles","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":50465},"msg":"incoming request"}
+{"level":30,"time":1778947332302,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-7","res":{"statusCode":200},"responseTime":43.898900002241135,"msg":"request completed"}
+{"level":30,"time":1778947657125,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-8","req":{"method":"GET","url":"/vehicles/cmp7qzmr9000a00s0ju5sf64d","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":58941},"msg":"incoming request"}
+{"level":30,"time":1778947657174,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-8","res":{"statusCode":200},"responseTime":48.57549999654293,"msg":"request completed"}
+{"level":30,"time":1778948132195,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-9","req":{"method":"GET","url":"/vehicles/cmp7qzmr9000a00s0ju5sf64d","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":62809},"msg":"incoming request"}
+{"level":30,"time":1778948132239,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-9","res":{"statusCode":200},"responseTime":44.08519999682903,"msg":"request completed"}
+{"level":30,"time":1778948898924,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-a","req":{"method":"GET","url":"/vehicles/cmp7qzmr9000a00s0ju5sf64d","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":60590},"msg":"incoming request"}
+{"level":30,"time":1778948898975,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-a","res":{"statusCode":200},"responseTime":50.76950000226498,"msg":"request completed"}
+{"level":30,"time":1778949013868,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-b","req":{"method":"GET","url":"/vehicles/cmp7qzmr9000a00s0ju5sf64d","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":49685},"msg":"incoming request"}
+{"level":30,"time":1778949013880,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-b","res":{"statusCode":200},"responseTime":12.427499994635582,"msg":"request completed"}
+{"level":30,"time":1778949033544,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-c","req":{"method":"GET","url":"/vehicles","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":64229},"msg":"incoming request"}
+{"level":30,"time":1778949033546,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-d","req":{"method":"GET","url":"/health","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":64230},"msg":"incoming request"}
+{"level":30,"time":1778949033546,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-d","res":{"statusCode":200},"responseTime":0.7107000052928925,"msg":"request completed"}
+{"level":30,"time":1778949033547,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-e","req":{"method":"GET","url":"/bookings","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":64231},"msg":"incoming request"}
+{"level":30,"time":1778949033548,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-f","req":{"method":"GET","url":"/workshops","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":64232},"msg":"incoming request"}
+{"level":30,"time":1778949033549,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-g","req":{"method":"GET","url":"/payments/currencies","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":64233},"msg":"incoming request"}
+{"level":30,"time":1778949033550,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-g","res":{"statusCode":200},"responseTime":0.7144999951124191,"msg":"request completed"}
+{"level":30,"time":1778949033550,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-h","req":{"method":"GET","url":"/solana/jobs","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":64234},"msg":"incoming request"}
+{"level":30,"time":1778949033558,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-c","res":{"statusCode":200},"responseTime":13.807699993252754,"msg":"request completed"}
+{"level":30,"time":1778949033583,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-f","res":{"statusCode":200},"responseTime":35.14699999988079,"msg":"request completed"}
+{"level":30,"time":1778949033585,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-h","res":{"statusCode":200},"responseTime":34.58560000360012,"msg":"request completed"}
+{"level":30,"time":1778949033594,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-e","res":{"statusCode":200},"responseTime":47.44869999587536,"msg":"request completed"}
+{"level":30,"time":1778950741198,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-i","req":{"method":"GET","url":"/vehicles/cmp7qzmr9000a00s0ju5sf64d","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":55805},"msg":"incoming request"}
+{"level":30,"time":1778950741236,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-i","res":{"statusCode":200},"responseTime":38.14480000734329,"msg":"request completed"}
+{"level":30,"time":1778950894909,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-j","req":{"method":"GET","url":"/vehicles/cmp7qzmr9000a00s0ju5sf64d","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":57988},"msg":"incoming request"}
+{"level":30,"time":1778950894922,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-j","res":{"statusCode":200},"responseTime":12.603499993681908,"msg":"request completed"}
+{"level":30,"time":1778950941659,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-k","req":{"method":"GET","url":"/vehicles/cmp7qzmr9000a00s0ju5sf64d","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":52372},"msg":"incoming request"}
+{"level":30,"time":1778950941674,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-k","res":{"statusCode":200},"responseTime":14.753099992871284,"msg":"request completed"}
+{"level":30,"time":1778950966531,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-l","req":{"method":"GET","url":"/health","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":52389},"msg":"incoming request"}
+{"level":30,"time":1778950966532,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-l","res":{"statusCode":200},"responseTime":0.6722999960184097,"msg":"request completed"}
+{"level":30,"time":1778950966532,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-m","req":{"method":"GET","url":"/vehicles","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":52390},"msg":"incoming request"}
+{"level":30,"time":1778950966533,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-n","req":{"method":"GET","url":"/workshops","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":52392},"msg":"incoming request"}
+{"level":30,"time":1778950966533,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-o","req":{"method":"GET","url":"/bookings","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":52393},"msg":"incoming request"}
+{"level":30,"time":1778950966534,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-p","req":{"method":"GET","url":"/solana/jobs","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":52394},"msg":"incoming request"}
+{"level":30,"time":1778950966535,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-q","req":{"method":"GET","url":"/payments/currencies","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":52395},"msg":"incoming request"}
+{"level":30,"time":1778950966535,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-q","res":{"statusCode":200},"responseTime":0.6797000020742416,"msg":"request completed"}
+{"level":30,"time":1778950966550,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-m","res":{"statusCode":200},"responseTime":17.863000005483627,"msg":"request completed"}
+{"level":30,"time":1778950966564,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-p","res":{"statusCode":200},"responseTime":30.367900013923645,"msg":"request completed"}
+{"level":30,"time":1778950966571,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-n","res":{"statusCode":200},"responseTime":38.40589998662472,"msg":"request completed"}
+{"level":30,"time":1778950966589,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-o","res":{"statusCode":200},"responseTime":55.6858000010252,"msg":"request completed"}
+{"level":30,"time":1778951082958,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-r","req":{"method":"GET","url":"/vehicles","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":63518},"msg":"incoming request"}
+{"level":30,"time":1778951082976,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-r","res":{"statusCode":200},"responseTime":17.562199994921684,"msg":"request completed"}
+{"level":30,"time":1778951082981,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-s","req":{"method":"GET","url":"/bookings","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":63518},"msg":"incoming request"}
+{"level":30,"time":1778951082993,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-s","res":{"statusCode":200},"responseTime":12.384399995207787,"msg":"request completed"}
+{"level":30,"time":1778951082995,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-t","req":{"method":"GET","url":"/audits/vehicle-requests","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":63518},"msg":"incoming request"}
+{"level":30,"time":1778951083003,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-t","res":{"statusCode":200},"responseTime":8.145999997854233,"msg":"request completed"}
+{"level":30,"time":1778951083005,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-u","req":{"method":"GET","url":"/audits/reports","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":63518},"msg":"incoming request"}
+{"level":30,"time":1778951083011,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-u","res":{"statusCode":200},"responseTime":6.082699999213219,"msg":"request completed"}
+{"level":30,"time":1778951083013,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-v","req":{"method":"GET","url":"/trips/vehicles/vid-bmw-m4-g82-001","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":63518},"msg":"incoming request"}
+{"level":30,"time":1778951083018,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-v","res":{"statusCode":200},"responseTime":5.2722000032663345,"msg":"request completed"}
+{"level":30,"time":1778951083019,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-w","req":{"method":"GET","url":"/trips/vehicles/vid-harley-sportster-s-001","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":63518},"msg":"incoming request"}
+{"level":30,"time":1778951083023,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-w","res":{"statusCode":200},"responseTime":3.7386999875307083,"msg":"request completed"}
+{"level":30,"time":1778951083024,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-x","req":{"method":"GET","url":"/trips/vehicles/vid-honda-pcx-150-001","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":63518},"msg":"incoming request"}
+{"level":30,"time":1778951083027,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-x","res":{"statusCode":200},"responseTime":3.055299997329712,"msg":"request completed"}
+{"level":30,"time":1778951083028,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-y","req":{"method":"GET","url":"/trips/vehicles/vid-toyota-supra-veilside-001","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":63518},"msg":"incoming request"}
+{"level":30,"time":1778951083032,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-y","res":{"statusCode":200},"responseTime":3.374099999666214,"msg":"request completed"}
+{"level":30,"time":1778951273623,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-z","req":{"method":"OPTIONS","url":"/auth/nonce","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":63330},"msg":"incoming request"}
+{"level":30,"time":1778951273627,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-z","res":{"statusCode":204},"responseTime":3.287100002169609,"msg":"request completed"}
+{"level":30,"time":1778951275853,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-10","req":{"method":"OPTIONS","url":"/auth/nonce","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":63330},"msg":"incoming request"}
+{"level":30,"time":1778951275853,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-10","res":{"statusCode":204},"responseTime":0.482900008559227,"msg":"request completed"}
+{"level":30,"time":1778951276833,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-11","req":{"method":"OPTIONS","url":"/auth/nonce","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":63330},"msg":"incoming request"}
+{"level":30,"time":1778951276833,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-11","res":{"statusCode":204},"responseTime":0.33630000054836273,"msg":"request completed"}
+{"level":30,"time":1778954006117,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-12","req":{"method":"GET","url":"/vehicles","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":59154},"msg":"incoming request"}
+{"level":30,"time":1778954006177,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-12","res":{"statusCode":200},"responseTime":58.75680001080036,"msg":"request completed"}
+{"level":30,"time":1778954006182,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-13","req":{"method":"GET","url":"/bookings","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":59154},"msg":"incoming request"}
+{"level":30,"time":1778954006201,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-13","res":{"statusCode":200},"responseTime":18.58940000832081,"msg":"request completed"}
+{"level":30,"time":1778954006202,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-14","req":{"method":"GET","url":"/audits/vehicle-requests","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":59154},"msg":"incoming request"}
+{"level":30,"time":1778954006207,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-14","res":{"statusCode":200},"responseTime":4.792300000786781,"msg":"request completed"}
+{"level":30,"time":1778954006208,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-15","req":{"method":"GET","url":"/audits/reports","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":59154},"msg":"incoming request"}
+{"level":30,"time":1778954006212,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-15","res":{"statusCode":200},"responseTime":3.9298999905586243,"msg":"request completed"}
+{"level":30,"time":1778954006213,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-16","req":{"method":"GET","url":"/trips/vehicles/vid-bmw-m4-g82-001","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":59154},"msg":"incoming request"}
+{"level":30,"time":1778954006218,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-16","res":{"statusCode":200},"responseTime":4.9082000106573105,"msg":"request completed"}
+{"level":30,"time":1778954006219,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-17","req":{"method":"GET","url":"/trips/vehicles/vid-harley-sportster-s-001","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":59154},"msg":"incoming request"}
+{"level":30,"time":1778954006222,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-17","res":{"statusCode":200},"responseTime":3.0169000029563904,"msg":"request completed"}
+{"level":30,"time":1778954006224,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-18","req":{"method":"GET","url":"/trips/vehicles/vid-honda-pcx-150-001","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":59154},"msg":"incoming request"}
+{"level":30,"time":1778954006227,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-18","res":{"statusCode":200},"responseTime":2.899199992418289,"msg":"request completed"}
+{"level":30,"time":1778954006228,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-19","req":{"method":"GET","url":"/trips/vehicles/vid-toyota-supra-veilside-001","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":59154},"msg":"incoming request"}
+{"level":30,"time":1778954006231,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-19","res":{"statusCode":200},"responseTime":3.114999994635582,"msg":"request completed"}
+{"level":30,"time":1778954020640,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-1a","req":{"method":"GET","url":"/vehicles","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":59154},"msg":"incoming request"}
+{"level":30,"time":1778954020650,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-1a","res":{"statusCode":200},"responseTime":9.3851999938488,"msg":"request completed"}
+{"level":30,"time":1778954021753,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-1b","req":{"method":"GET","url":"/bookings","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":59154},"msg":"incoming request"}
+{"level":30,"time":1778954021754,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-1c","req":{"method":"GET","url":"/audits/vehicle-requests","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":55562},"msg":"incoming request"}
+{"level":30,"time":1778954021755,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-1d","req":{"method":"GET","url":"/audits/reports","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":63540},"msg":"incoming request"}
+{"level":30,"time":1778954021756,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-1e","req":{"method":"GET","url":"/trips/vehicles/vid-bmw-m4-g82-001","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":56681},"msg":"incoming request"}
+{"level":30,"time":1778954021756,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-1f","req":{"method":"GET","url":"/trips/vehicles/vid-harley-sportster-s-001","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":49786},"msg":"incoming request"}
+{"level":30,"time":1778954021759,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-1g","req":{"method":"GET","url":"/trips/vehicles/vid-honda-pcx-150-001","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":64461},"msg":"incoming request"}
+{"level":30,"time":1778954021768,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-1b","res":{"statusCode":200},"responseTime":15.420299991965294,"msg":"request completed"}
+{"level":30,"time":1778954021769,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-1h","req":{"method":"GET","url":"/trips/vehicles/vid-toyota-supra-veilside-001","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":59154},"msg":"incoming request"}
+{"level":30,"time":1778954021773,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-1h","res":{"statusCode":200},"responseTime":3.4640000015497208,"msg":"request completed"}
+{"level":30,"time":1778954021781,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-1c","res":{"statusCode":200},"responseTime":27.04119999706745,"msg":"request completed"}
+{"level":30,"time":1778954021785,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-1d","res":{"statusCode":200},"responseTime":30.217700004577637,"msg":"request completed"}
+{"level":30,"time":1778954021788,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-1g","res":{"statusCode":200},"responseTime":29.133100003004074,"msg":"request completed"}
+{"level":30,"time":1778954021788,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-1f","res":{"statusCode":200},"responseTime":31.844700008630753,"msg":"request completed"}
+{"level":30,"time":1778954021791,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-1e","res":{"statusCode":200},"responseTime":35.19219999015331,"msg":"request completed"}
+{"level":30,"time":1778955175496,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-1i","req":{"method":"GET","url":"/vehicles","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":52896},"msg":"incoming request"}
+{"level":30,"time":1778955175538,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-1i","res":{"statusCode":200},"responseTime":42.12219999730587,"msg":"request completed"}
+{"level":30,"time":1778955175542,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-1j","req":{"method":"GET","url":"/bookings","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":52896},"msg":"incoming request"}
+{"level":30,"time":1778955175560,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-1j","res":{"statusCode":200},"responseTime":17.231199994683266,"msg":"request completed"}
+{"level":30,"time":1778955175561,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-1k","req":{"method":"GET","url":"/audits/vehicle-requests","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":52896},"msg":"incoming request"}
+{"level":30,"time":1778955175566,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-1k","res":{"statusCode":200},"responseTime":4.733800008893013,"msg":"request completed"}
+{"level":30,"time":1778955175567,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-1l","req":{"method":"GET","url":"/audits/reports","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":52896},"msg":"incoming request"}
+{"level":30,"time":1778955175571,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-1l","res":{"statusCode":200},"responseTime":4.206200003623962,"msg":"request completed"}
+{"level":30,"time":1778955175572,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-1m","req":{"method":"GET","url":"/trips/vehicles/vid-bmw-m4-g82-001","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":52896},"msg":"incoming request"}
+{"level":30,"time":1778955175576,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-1m","res":{"statusCode":200},"responseTime":4.154400005936623,"msg":"request completed"}
+{"level":30,"time":1778955175578,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-1n","req":{"method":"GET","url":"/trips/vehicles/vid-harley-sportster-s-001","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":52896},"msg":"incoming request"}
+{"level":30,"time":1778955175581,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-1n","res":{"statusCode":200},"responseTime":2.6544000059366226,"msg":"request completed"}
+{"level":30,"time":1778955175582,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-1o","req":{"method":"GET","url":"/trips/vehicles/vid-honda-pcx-150-001","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":52896},"msg":"incoming request"}
+{"level":30,"time":1778955175584,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-1o","res":{"statusCode":200},"responseTime":2.5103999972343445,"msg":"request completed"}
+{"level":30,"time":1778955175585,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-1p","req":{"method":"GET","url":"/trips/vehicles/vid-toyota-supra-veilside-001","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":52896},"msg":"incoming request"}
+{"level":30,"time":1778955175588,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-1p","res":{"statusCode":200},"responseTime":2.789000004529953,"msg":"request completed"}
+{"level":30,"time":1778955389606,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-1q","req":{"method":"GET","url":"/vehicles","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":60155},"msg":"incoming request"}
+{"level":30,"time":1778955389615,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-1q","res":{"statusCode":200},"responseTime":8.780599996447563,"msg":"request completed"}
+{"level":30,"time":1778955390461,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-1r","req":{"method":"GET","url":"/bookings","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":60155},"msg":"incoming request"}
+{"level":30,"time":1778955390462,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-1s","req":{"method":"GET","url":"/audits/vehicle-requests","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":63309},"msg":"incoming request"}
+{"level":30,"time":1778955390473,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-1r","res":{"statusCode":200},"responseTime":12.820299997925758,"msg":"request completed"}
+{"level":30,"time":1778955390476,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-1t","req":{"method":"GET","url":"/audits/reports","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":60155},"msg":"incoming request"}
+{"level":30,"time":1778955390479,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-1t","res":{"statusCode":200},"responseTime":3.0511000007390976,"msg":"request completed"}
+{"level":30,"time":1778955390480,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-1u","req":{"method":"GET","url":"/trips/vehicles/vid-bmw-m4-g82-001","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":60155},"msg":"incoming request"}
+{"level":30,"time":1778955390483,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-1u","res":{"statusCode":200},"responseTime":2.6281999945640564,"msg":"request completed"}
+{"level":30,"time":1778955390485,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-1v","req":{"method":"GET","url":"/trips/vehicles/vid-harley-sportster-s-001","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":60155},"msg":"incoming request"}
+{"level":30,"time":1778955390486,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-1s","res":{"statusCode":200},"responseTime":23.142099991440773,"msg":"request completed"}
+{"level":30,"time":1778955390487,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-1w","req":{"method":"GET","url":"/trips/vehicles/vid-honda-pcx-150-001","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":63309},"msg":"incoming request"}
+{"level":30,"time":1778955390489,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-1v","res":{"statusCode":200},"responseTime":4.710899993777275,"msg":"request completed"}
+{"level":30,"time":1778955390490,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-1w","res":{"statusCode":200},"responseTime":2.822300001978874,"msg":"request completed"}
+{"level":30,"time":1778955390491,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-1x","req":{"method":"GET","url":"/trips/vehicles/vid-toyota-supra-veilside-001","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":60155},"msg":"incoming request"}
+{"level":30,"time":1778955390494,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-1x","res":{"statusCode":200},"responseTime":3.0097000002861023,"msg":"request completed"}
+{"level":30,"time":1778955428670,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-1y","req":{"method":"OPTIONS","url":"/auth/nonce","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":60155},"msg":"incoming request"}
+{"level":30,"time":1778955428671,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-1y","res":{"statusCode":204},"responseTime":0.8818000108003616,"msg":"request completed"}
+{"level":30,"time":1778955439671,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-1z","req":{"method":"GET","url":"/vehicles","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":60155},"msg":"incoming request"}
+{"level":30,"time":1778955439684,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-1z","res":{"statusCode":200},"responseTime":12.671800002455711,"msg":"request completed"}
+{"level":30,"time":1778955439688,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-20","req":{"method":"GET","url":"/bookings","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":60155},"msg":"incoming request"}
+{"level":30,"time":1778955439689,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-21","req":{"method":"GET","url":"/audits/vehicle-requests","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":63309},"msg":"incoming request"}
+{"level":30,"time":1778955439690,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-22","req":{"method":"GET","url":"/audits/reports","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":65282},"msg":"incoming request"}
+{"level":30,"time":1778955439691,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-23","req":{"method":"GET","url":"/trips/vehicles/vid-bmw-m4-g82-001","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":58811},"msg":"incoming request"}
+{"level":30,"time":1778955439692,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-24","req":{"method":"GET","url":"/trips/vehicles/vid-harley-sportster-s-001","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":53274},"msg":"incoming request"}
+{"level":30,"time":1778955439696,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-25","req":{"method":"GET","url":"/trips/vehicles/vid-honda-pcx-150-001","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":62978},"msg":"incoming request"}
+{"level":30,"time":1778955439698,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-21","res":{"statusCode":200},"responseTime":9.056400001049042,"msg":"request completed"}
+{"level":30,"time":1778955439699,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-24","res":{"statusCode":200},"responseTime":7.293200001120567,"msg":"request completed"}
+{"level":30,"time":1778955439703,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-25","res":{"statusCode":200},"responseTime":6.472800001502037,"msg":"request completed"}
+{"level":30,"time":1778955439703,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-26","req":{"method":"GET","url":"/trips/vehicles/vid-toyota-supra-veilside-001","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":63309},"msg":"incoming request"}
+{"level":30,"time":1778955439707,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-20","res":{"statusCode":200},"responseTime":18.169300004839897,"msg":"request completed"}
+{"level":30,"time":1778955439712,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-26","res":{"statusCode":200},"responseTime":8.690499991178513,"msg":"request completed"}
+{"level":30,"time":1778955439727,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-22","res":{"statusCode":200},"responseTime":37.528999999165535,"msg":"request completed"}
+{"level":30,"time":1778955439729,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-23","res":{"statusCode":200},"responseTime":37.43569999933243,"msg":"request completed"}
+{"level":30,"time":1778955461539,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-27","req":{"method":"GET","url":"/vehicles","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":58811},"msg":"incoming request"}
+{"level":30,"time":1778955461559,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-27","res":{"statusCode":200},"responseTime":20.73659999668598,"msg":"request completed"}
+{"level":30,"time":1778955461566,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-28","req":{"method":"GET","url":"/bookings","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":58811},"msg":"incoming request"}
+{"level":30,"time":1778955461567,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-29","req":{"method":"GET","url":"/audits/vehicle-requests","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":65282},"msg":"incoming request"}
+{"level":30,"time":1778955461568,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-2a","req":{"method":"GET","url":"/audits/reports","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":63309},"msg":"incoming request"}
+{"level":30,"time":1778955461569,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-2b","req":{"method":"GET","url":"/trips/vehicles/vid-bmw-m4-g82-001","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":60155},"msg":"incoming request"}
+{"level":30,"time":1778955461569,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-2c","req":{"method":"GET","url":"/trips/vehicles/vid-harley-sportster-s-001","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":62978},"msg":"incoming request"}
+{"level":30,"time":1778955461570,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-2d","req":{"method":"GET","url":"/trips/vehicles/vid-honda-pcx-150-001","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":53274},"msg":"incoming request"}
+{"level":30,"time":1778955461573,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-2b","res":{"statusCode":200},"responseTime":4.265499994158745,"msg":"request completed"}
+{"level":30,"time":1778955461574,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-2a","res":{"statusCode":200},"responseTime":5.861600011587143,"msg":"request completed"}
+{"level":30,"time":1778955461575,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-29","res":{"statusCode":200},"responseTime":7.987700000405312,"msg":"request completed"}
+{"level":30,"time":1778955461576,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-2e","req":{"method":"GET","url":"/trips/vehicles/vid-toyota-supra-veilside-001","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":60155},"msg":"incoming request"}
+{"level":30,"time":1778955461581,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-2e","res":{"statusCode":200},"responseTime":5.141299992799759,"msg":"request completed"}
+{"level":30,"time":1778955461591,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-28","res":{"statusCode":200},"responseTime":25.33110000193119,"msg":"request completed"}
+{"level":30,"time":1778955461594,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-2c","res":{"statusCode":200},"responseTime":24.41770000755787,"msg":"request completed"}
+{"level":30,"time":1778955461595,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-2d","res":{"statusCode":200},"responseTime":24.902300000190735,"msg":"request completed"}
+{"level":30,"time":1778955463152,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-2f","req":{"method":"GET","url":"/vehicles","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":53274},"msg":"incoming request"}
+{"level":30,"time":1778955463166,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-2f","res":{"statusCode":200},"responseTime":14.392300009727478,"msg":"request completed"}
+{"level":30,"time":1778955463217,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-2g","req":{"method":"GET","url":"/bookings","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":53274},"msg":"incoming request"}
+{"level":30,"time":1778955463218,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-2h","req":{"method":"GET","url":"/audits/vehicle-requests","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":62978},"msg":"incoming request"}
+{"level":30,"time":1778955463219,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-2i","req":{"method":"GET","url":"/audits/reports","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":58811},"msg":"incoming request"}
+{"level":30,"time":1778955463222,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-2j","req":{"method":"GET","url":"/trips/vehicles/vid-bmw-m4-g82-001","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":60155},"msg":"incoming request"}
+{"level":30,"time":1778955463223,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-2k","req":{"method":"GET","url":"/trips/vehicles/vid-harley-sportster-s-001","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":65282},"msg":"incoming request"}
+{"level":30,"time":1778955463224,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-2l","req":{"method":"GET","url":"/trips/vehicles/vid-honda-pcx-150-001","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":63309},"msg":"incoming request"}
+{"level":30,"time":1778955463225,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-2h","res":{"statusCode":200},"responseTime":6.230900004506111,"msg":"request completed"}
+{"level":30,"time":1778955463226,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-2i","res":{"statusCode":200},"responseTime":6.423099994659424,"msg":"request completed"}
+{"level":30,"time":1778955463227,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-2j","res":{"statusCode":200},"responseTime":4.194000005722046,"msg":"request completed"}
+{"level":30,"time":1778955463227,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-2k","res":{"statusCode":200},"responseTime":3.730300009250641,"msg":"request completed"}
+{"level":30,"time":1778955463227,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-2l","res":{"statusCode":200},"responseTime":3.249899998307228,"msg":"request completed"}
+{"level":30,"time":1778955463227,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-2m","req":{"method":"GET","url":"/trips/vehicles/vid-toyota-supra-veilside-001","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":62978},"msg":"incoming request"}
+{"level":30,"time":1778955463230,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-2m","res":{"statusCode":200},"responseTime":3.160199999809265,"msg":"request completed"}
+{"level":30,"time":1778955463237,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-2g","res":{"statusCode":200},"responseTime":20.060099989175797,"msg":"request completed"}
+{"level":30,"time":1778955888769,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-2n","req":{"method":"GET","url":"/vehicles","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":56628},"msg":"incoming request"}
+{"level":30,"time":1778955888799,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-2n","res":{"statusCode":200},"responseTime":29.821799993515015,"msg":"request completed"}
+{"level":30,"time":1778955888800,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-2o","req":{"method":"GET","url":"/vehicles","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":56628},"msg":"incoming request"}
+{"level":30,"time":1778955888808,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-2o","res":{"statusCode":200},"responseTime":7.359899997711182,"msg":"request completed"}
+{"level":30,"time":1778955888809,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-2p","req":{"method":"GET","url":"/bookings","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":56628},"msg":"incoming request"}
+{"level":30,"time":1778955888825,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-2p","res":{"statusCode":200},"responseTime":16.219300001859665,"msg":"request completed"}
+{"level":30,"time":1778955888827,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-2q","req":{"method":"GET","url":"/audits/vehicle-requests","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":56628},"msg":"incoming request"}
+{"level":30,"time":1778955888832,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-2q","res":{"statusCode":200},"responseTime":5.213300004601479,"msg":"request completed"}
+{"level":30,"time":1778955888834,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-2r","req":{"method":"GET","url":"/audits/reports","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":56628},"msg":"incoming request"}
+{"level":30,"time":1778955888839,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-2r","res":{"statusCode":200},"responseTime":5.040099993348122,"msg":"request completed"}
+{"level":30,"time":1778955888840,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-2s","req":{"method":"GET","url":"/trips/vehicles/vid-bmw-m4-g82-001","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":56628},"msg":"incoming request"}
+{"level":30,"time":1778955888845,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-2s","res":{"statusCode":200},"responseTime":4.759399995207787,"msg":"request completed"}
+{"level":30,"time":1778955888847,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-2t","req":{"method":"GET","url":"/trips/vehicles/vid-harley-sportster-s-001","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":56628},"msg":"incoming request"}
+{"level":30,"time":1778955888851,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-2t","res":{"statusCode":200},"responseTime":3.373199999332428,"msg":"request completed"}
+{"level":30,"time":1778955888852,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-2u","req":{"method":"GET","url":"/trips/vehicles/vid-honda-pcx-150-001","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":56628},"msg":"incoming request"}
+{"level":30,"time":1778955888855,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-2u","res":{"statusCode":200},"responseTime":2.889500007033348,"msg":"request completed"}
+{"level":30,"time":1778955888856,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-2v","req":{"method":"GET","url":"/trips/vehicles/vid-toyota-supra-veilside-001","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":56628},"msg":"incoming request"}
+{"level":30,"time":1778955888859,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-2v","res":{"statusCode":200},"responseTime":2.7088999897241592,"msg":"request completed"}
+{"level":30,"time":1778955888860,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-2w","req":{"method":"GET","url":"/bookings","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":56628},"msg":"incoming request"}
+{"level":30,"time":1778955888869,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-2w","res":{"statusCode":200},"responseTime":9.001000002026558,"msg":"request completed"}
+{"level":30,"time":1778955888871,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-2x","req":{"method":"GET","url":"/audits/vehicle-requests","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":56628},"msg":"incoming request"}
+{"level":30,"time":1778955888874,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-2x","res":{"statusCode":200},"responseTime":3.3291999995708466,"msg":"request completed"}
+{"level":30,"time":1778955888876,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-2y","req":{"method":"GET","url":"/audits/reports","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":56628},"msg":"incoming request"}
+{"level":30,"time":1778955888879,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-2y","res":{"statusCode":200},"responseTime":3.0830000042915344,"msg":"request completed"}
+{"level":30,"time":1778955888880,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-2z","req":{"method":"GET","url":"/trips/vehicles/vid-bmw-m4-g82-001","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":56628},"msg":"incoming request"}
+{"level":30,"time":1778955888884,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-2z","res":{"statusCode":200},"responseTime":2.948299989104271,"msg":"request completed"}
+{"level":30,"time":1778955888885,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-30","req":{"method":"GET","url":"/trips/vehicles/vid-harley-sportster-s-001","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":56628},"msg":"incoming request"}
+{"level":30,"time":1778955888888,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-30","res":{"statusCode":200},"responseTime":2.5872000008821487,"msg":"request completed"}
+{"level":30,"time":1778955888889,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-31","req":{"method":"GET","url":"/trips/vehicles/vid-honda-pcx-150-001","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":56628},"msg":"incoming request"}
+{"level":30,"time":1778955888892,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-31","res":{"statusCode":200},"responseTime":2.5573000013828278,"msg":"request completed"}
+{"level":30,"time":1778955888893,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-32","req":{"method":"GET","url":"/trips/vehicles/vid-toyota-supra-veilside-001","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":56628},"msg":"incoming request"}
+{"level":30,"time":1778955888896,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-32","res":{"statusCode":200},"responseTime":2.8075999915599823,"msg":"request completed"}
+{"level":30,"time":1778956030978,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-33","req":{"method":"GET","url":"/health","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":58489},"msg":"incoming request"}
+{"level":30,"time":1778956030979,"pid":33296,"hostname":"Selembar-Awan","reqId":"req-33","res":{"statusCode":200},"responseTime":0.6779999881982803,"msg":"request completed"}
+01.28.17 [tsx] change in ./src\config\env.ts Restarting...
+c{"level":30,"time":1778956098716,"pid":17728,"hostname":"Selembar-Awan","msg":"Server listening at http://127.0.0.1:4000"}
+{"level":30,"time":1778956098716,"pid":17728,"hostname":"Selembar-Awan","msg":"Server listening at http://20.20.20.5:4000"}
+{"level":30,"time":1778956098716,"pid":17728,"hostname":"Selembar-Awan","msg":"Server listening at http://192.168.128.1:4000"}
+{"level":30,"time":1778956625751,"pid":17728,"hostname":"Selembar-Awan","reqId":"req-1","req":{"method":"GET","url":"/vehicles","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":62649},"msg":"incoming request"}
+{"level":30,"time":1778956625814,"pid":17728,"hostname":"Selembar-Awan","reqId":"req-1","res":{"statusCode":200},"responseTime":62.32160000503063,"msg":"request completed"}
+{"level":30,"time":1778956625829,"pid":17728,"hostname":"Selembar-Awan","reqId":"req-2","req":{"method":"GET","url":"/bookings","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":62649},"msg":"incoming request"}
+{"level":30,"time":1778956625851,"pid":17728,"hostname":"Selembar-Awan","reqId":"req-2","res":{"statusCode":200},"responseTime":21.176100000739098,"msg":"request completed"}
+{"level":30,"time":1778956625852,"pid":17728,"hostname":"Selembar-Awan","reqId":"req-3","req":{"method":"GET","url":"/audits/vehicle-requests","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":62649},"msg":"incoming request"}
+{"level":30,"time":1778956625859,"pid":17728,"hostname":"Selembar-Awan","reqId":"req-3","res":{"statusCode":200},"responseTime":6.738600000739098,"msg":"request completed"}
+{"level":30,"time":1778956625860,"pid":17728,"hostname":"Selembar-Awan","reqId":"req-4","req":{"method":"GET","url":"/audits/reports","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":62649},"msg":"incoming request"}
+{"level":30,"time":1778956625867,"pid":17728,"hostname":"Selembar-Awan","reqId":"req-4","res":{"statusCode":200},"responseTime":6.543599992990494,"msg":"request completed"}
+{"level":30,"time":1778956625868,"pid":17728,"hostname":"Selembar-Awan","reqId":"req-5","req":{"method":"GET","url":"/trips/vehicles/vid-bmw-m4-g82-001","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":62649},"msg":"incoming request"}
+{"level":30,"time":1778956625875,"pid":17728,"hostname":"Selembar-Awan","reqId":"req-5","res":{"statusCode":200},"responseTime":7.266200006008148,"msg":"request completed"}
+{"level":30,"time":1778956625877,"pid":17728,"hostname":"Selembar-Awan","reqId":"req-6","req":{"method":"GET","url":"/trips/vehicles/vid-harley-sportster-s-001","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":62649},"msg":"incoming request"}
+{"level":30,"time":1778956625882,"pid":17728,"hostname":"Selembar-Awan","reqId":"req-6","res":{"statusCode":200},"responseTime":4.655000001192093,"msg":"request completed"}
+{"level":30,"time":1778956625884,"pid":17728,"hostname":"Selembar-Awan","reqId":"req-7","req":{"method":"GET","url":"/trips/vehicles/vid-honda-pcx-150-001","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":62649},"msg":"incoming request"}
+{"level":30,"time":1778956625888,"pid":17728,"hostname":"Selembar-Awan","reqId":"req-7","res":{"statusCode":200},"responseTime":4.32600000500679,"msg":"request completed"}
+{"level":30,"time":1778956625889,"pid":17728,"hostname":"Selembar-Awan","reqId":"req-8","req":{"method":"GET","url":"/trips/vehicles/vid-toyota-supra-veilside-001","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":62649},"msg":"incoming request"}
+{"level":30,"time":1778956625894,"pid":17728,"hostname":"Selembar-Awan","reqId":"req-8","res":{"statusCode":200},"responseTime":4.387700006365776,"msg":"request completed"}
+{"level":30,"time":1778956625895,"pid":17728,"hostname":"Selembar-Awan","reqId":"req-9","req":{"method":"GET","url":"/trips/vehicles/cmp7qzmr9000a00s0ju5sf64d","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":62649},"msg":"incoming request"}
+{"level":30,"time":1778956625899,"pid":17728,"hostname":"Selembar-Awan","reqId":"req-9","res":{"statusCode":200},"responseTime":3.862400010228157,"msg":"request completed"}
+{"level":30,"time":1778956627391,"pid":17728,"hostname":"Selembar-Awan","reqId":"req-a","req":{"method":"GET","url":"/vehicles","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":62649},"msg":"incoming request"}
+{"level":30,"time":1778956627399,"pid":17728,"hostname":"Selembar-Awan","reqId":"req-a","res":{"statusCode":200},"responseTime":8.149100005626678,"msg":"request completed"}
+{"level":30,"time":1778956627419,"pid":17728,"hostname":"Selembar-Awan","reqId":"req-b","req":{"method":"GET","url":"/bookings","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":62649},"msg":"incoming request"}
+{"level":30,"time":1778956627420,"pid":17728,"hostname":"Selembar-Awan","reqId":"req-c","req":{"method":"GET","url":"/audits/vehicle-requests","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":64322},"msg":"incoming request"}
+{"level":30,"time":1778956627421,"pid":17728,"hostname":"Selembar-Awan","reqId":"req-d","req":{"method":"GET","url":"/audits/reports","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":56972},"msg":"incoming request"}
+{"level":30,"time":1778956627422,"pid":17728,"hostname":"Selembar-Awan","reqId":"req-e","req":{"method":"GET","url":"/trips/vehicles/vid-bmw-m4-g82-001","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":50898},"msg":"incoming request"}
+{"level":30,"time":1778956627422,"pid":17728,"hostname":"Selembar-Awan","reqId":"req-f","req":{"method":"GET","url":"/trips/vehicles/vid-harley-sportster-s-001","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":59435},"msg":"incoming request"}
+{"level":30,"time":1778956627423,"pid":17728,"hostname":"Selembar-Awan","reqId":"req-g","req":{"method":"GET","url":"/trips/vehicles/vid-honda-pcx-150-001","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":57154},"msg":"incoming request"}
+{"level":30,"time":1778956627429,"pid":17728,"hostname":"Selembar-Awan","reqId":"req-b","res":{"statusCode":200},"responseTime":10.071700006723404,"msg":"request completed"}
+{"level":30,"time":1778956627431,"pid":17728,"hostname":"Selembar-Awan","reqId":"req-h","req":{"method":"GET","url":"/trips/vehicles/vid-toyota-supra-veilside-001","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":62649},"msg":"incoming request"}
+{"level":30,"time":1778956627438,"pid":17728,"hostname":"Selembar-Awan","reqId":"req-h","res":{"statusCode":200},"responseTime":7.412299990653992,"msg":"request completed"}
+{"level":30,"time":1778956627439,"pid":17728,"hostname":"Selembar-Awan","reqId":"req-i","req":{"method":"GET","url":"/trips/vehicles/cmp7qzmr9000a00s0ju5sf64d","host":"localhost:4000","remoteAddress":"127.0.0.1","remotePort":62649},"msg":"incoming request"}
+{"level":30,"time":1778956627442,"pid":17728,"hostname":"Selembar-Awan","reqId":"req-c","res":{"statusCode":200},"responseTime":21.636699989438057,"msg":"request completed"}
+{"level":30,"time":1778956627443,"pid":17728,"hostname":"Selembar-Awan","reqId":"req-i","res":{"statusCode":200},"responseTime":3.1985999941825867,"msg":"request completed"}
+{"level":30,"time":1778956627445,"pid":17728,"hostname":"Selembar-Awan","reqId":"req-d","res":{"statusCode":200},"responseTime":23.521599993109703,"msg":"request completed"}
+{"level":30,"time":1778956627449,"pid":17728,"hostname":"Selembar-Awan","reqId":"req-f","res":{"statusCode":200},"responseTime":27.26120001077652,"msg":"request completed"}
+{"level":30,"time":1778956627450,"pid":17728,"hostname":"Selembar-Awan","reqId":"req-g","res":{"statusCode":200},"responseTime":27.520400002598763,"msg":"request completed"}
+{"level":30,"time":1778956627451,"pid":17728,"hostname":"Selembar-Awan","reqId":"req-e","res":{"statusCode":200},"responseTime":28.905599996447563,"msg":"request completed"}
+04.37.18 [tsx] unlink in ./..\node_modules\.prisma\client\index.js Rerunning...
+c{"level":30,"time":1778967439952,"pid":59296,"hostname":"Selembar-Awan","msg":"Server listening at http://127.0.0.1:4000"}
+{"level":30,"time":1778967439953,"pid":59296,"hostname":"Selembar-Awan","msg":"Server listening at http://20.20.20.5:4000"}
+{"level":30,"time":1778967439953,"pid":59296,"hostname":"Selembar-Awan","msg":"Server listening at http://192.168.128.1:4000"}

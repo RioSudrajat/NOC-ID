@@ -6,36 +6,71 @@ import {
   Brain,
   CalendarCheck,
   Box,
+  Route,
   ChevronDown,
   CreditCard,
   Car,
+  PlusCircle,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { CheckCircle2 } from "lucide-react";
 import { PortalLayout } from "@/components/layout/PortalLayout";
+import { PortalGuard } from "@/components/guards/PortalGuard";
 import type { NavItem } from "@/components/layout/AppSidebar";
 import {
   ActiveVehicleProvider,
   useActiveVehicle,
   vehicleData,
-  VehicleKey,
 } from "@/context/ActiveVehicleContext";
+import type { VehicleKey } from "@/types/vehicle";
+import { formatMileageKm, getVehicleDisplayName } from "@/types/vehicle";
+import { useUserStore } from "@/store/useUserStore";
+import { useVehicleRegistryStore } from "@/store/useVehicleRegistryStore";
 
 const navItems: NavItem[] = [
   { href: "/dapp", label: "Dashboard", icon: LayoutDashboard },
   { href: "/dapp/timeline", label: "Service Timeline", icon: Clock },
+  { href: "/dapp/trips", label: "Trips", icon: Route },
   { href: "/dapp/insights", label: "AI Insights", icon: Brain },
   { href: "/dapp/viewer", label: "3D Digital Twin", icon: Box },
   { href: "/dapp/book", label: "Book Service", icon: CalendarCheck },
+  { href: "/dapp/register-vehicle", label: "Register Vehicle", icon: PlusCircle },
   { href: "/dapp/identity", label: "Identity Card", icon: CreditCard },
 ];
 
 function VehicleSelector() {
   const ctx = useActiveVehicle();
-  const activeVehicle = ctx?.activeVehicle || "avanza";
-  const currentVehicleData = ctx?.currentVehicleData || vehicleData.avanza;
+  const activeVehicle = ctx?.activeVehicle || "bmw_m4";
+  const currentVehicleData = ctx?.currentVehicleData || vehicleData.bmw_m4;
   const setActiveVehicle = ctx?.setActiveVehicle || (() => {});
+  const currentUser = useUserStore((state) => state.currentUser);
+  const registryVehicles = useVehicleRegistryStore((state) => state.vehicles);
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const userId = currentUser?.userId;
+  const ownedVehicleIds = currentUser?.ownedVehicleIds;
+  const visibleVehicles = useMemo(() => {
+    return registryVehicles
+      .filter((vehicle) => {
+        if (!vehicle.make || !vehicle.model || !vehicle.year || !vehicle.vin) return false;
+        if (userId) return vehicle.currentOwnerId === userId || ownedVehicleIds?.includes(vehicle.vehicleId);
+        if (vehicle.mintStatus === "transferred" || vehicle.mintStatus === "escrow") return false;
+        return vehicle.isDemo;
+      })
+      .filter((vehicle, index, list) => list.findIndex((item) => item.vin === vehicle.vin) === index);
+  }, [ownedVehicleIds, registryVehicles, userId]);
+  
+  const activeVehicleId = ctx?.activeVehicleId;
+  const safeCurrentVehicle =
+    visibleVehicles.find((vehicle) => vehicle.vehicleId === activeVehicleId) ??
+    visibleVehicles[0];
+
+  useEffect(() => {
+    if (!activeVehicleId || visibleVehicles.some((vehicle) => vehicle.vehicleId === activeVehicleId)) return;
+    const nextVehicleId = visibleVehicles[0]?.vehicleId;
+    if (nextVehicleId && nextVehicleId !== activeVehicleId) {
+        setActiveVehicle(nextVehicleId);
+    }
+  }, [activeVehicleId, setActiveVehicle, visibleVehicles]);
 
   return (
     <div className="relative">
@@ -50,10 +85,10 @@ function VehicleSelector() {
               Active Vehicle
             </p>
             <p className="font-semibold text-sm truncate max-w-[140px]">
-              {currentVehicleData.name}
+              {safeCurrentVehicle ? getVehicleDisplayName(safeCurrentVehicle) : currentVehicleData.name}
             </p>
             <p className="text-[10px] mono mt-1" style={{ color: "var(--solana-purple)" }}>
-              {currentVehicleData.vin.substring(0, 10)}...
+              {(safeCurrentVehicle?.vin ?? currentVehicleData.vin).substring(0, 10)}...
             </p>
           </div>
           <ChevronDown
@@ -68,13 +103,14 @@ function VehicleSelector() {
           <div className="fixed inset-0 z-40" onClick={() => setDropdownOpen(false)} />
           <div className="absolute top-full left-0 mt-2 w-full rounded-xl bg-slate-800 border border-slate-600 shadow-2xl z-50">
             <div className="p-1.5 flex flex-col gap-1">
-              {(Object.keys(vehicleData) as VehicleKey[]).map((key) => {
-                const isActive = activeVehicle === key;
+              {visibleVehicles.map((vehicle) => {
+                const key = vehicle.legacyKey as VehicleKey | undefined;
+                const isActive = activeVehicleId === vehicle.vehicleId || activeVehicle === key;
                 return (
                   <div
-                    key={key}
+                    key={vehicle.vehicleId}
                     onClick={() => {
-                      setActiveVehicle(key);
+                      setActiveVehicle(vehicle.vehicleId);
                       setDropdownOpen(false);
                     }}
                     className={`px-3 py-2.5 rounded-lg text-sm font-medium flex items-center justify-between cursor-pointer transition-colors ${
@@ -84,7 +120,8 @@ function VehicleSelector() {
                     }`}
                   >
                     <div className="truncate max-w-[150px]">
-                      <p className="truncate">{vehicleData[key].name}</p>
+                      <p className="truncate">{getVehicleDisplayName(vehicle)}</p>
+                      <p className="text-[10px] text-slate-500">{vehicle.vin.slice(0, 10)}... · {formatMileageKm(vehicle.currentMileageKm)} km</p>
                     </div>
                     {isActive && <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />}
                   </div>
@@ -118,6 +155,7 @@ function DAppSidebarAndContent({ children }: { children: React.ReactNode }) {
       }
       variant="dapp"
       mainLayout="wrapped"
+      useInlineActiveStyle
     >
       {children}
     </PortalLayout>
@@ -126,8 +164,10 @@ function DAppSidebarAndContent({ children }: { children: React.ReactNode }) {
 
 export default function DAppLayout({ children }: { children: React.ReactNode }) {
   return (
-    <ActiveVehicleProvider>
-      <DAppSidebarAndContent>{children}</DAppSidebarAndContent>
-    </ActiveVehicleProvider>
+    <PortalGuard requiredRole="user">
+      <ActiveVehicleProvider>
+        <DAppSidebarAndContent>{children}</DAppSidebarAndContent>
+      </ActiveVehicleProvider>
+    </PortalGuard>
   );
 }

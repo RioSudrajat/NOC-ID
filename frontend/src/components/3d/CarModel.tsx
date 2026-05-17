@@ -85,7 +85,7 @@ function VehiclePart({
   );
 }
 
-/* ——————————————— Toyota Avanza Car Model ——————————————— */
+/* ——————————————— Toyota BMW M4 Car Model ——————————————— */
 // Component health data (mock)
 const carParts: Record<string, number> = {
   "Body.Main": 92, "Body.Hood": 88, "Body.Trunk": 95,

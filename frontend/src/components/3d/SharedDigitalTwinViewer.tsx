@@ -2,26 +2,34 @@
 
 import { useState, Suspense, useEffect } from "react";
 import { Canvas } from "@react-three/fiber";
-import { OrbitControls, Environment, ContactShadows } from "@react-three/drei";
+import { OrbitControls, ContactShadows } from "@react-three/drei";
 import dynamic from "next/dynamic";
 import { Eye, EyeOff, Expand, RotateCcw, Car, Bike, X, ChevronUp, ChevronDown, Wrench, ChevronDown as DropdownIcon, ExternalLink } from "lucide-react";
 import { useActiveVehicle, vehicleData } from "@/context/ActiveVehicleContext";
+import type { VehicleIdentity } from "@/types/vehicle";
 
-const CarModel = dynamic(() => import("@/components/3d/CarModel"), { ssr: false });
-const MotorcycleModel = dynamic(() => import("@/components/3d/MotorcycleModel"), { ssr: false });
 const BMWM4Model = dynamic(() => import("@/components/3d/BMWM4Model"), { ssr: false });
 const HarleyDavidsonModel = dynamic(() => import("@/components/3d/HarleyDavidsonModel"), { ssr: false });
+const PCX150Model = dynamic(() => import("@/components/3d/PCX150Model"), { ssr: false });
 const SupraModel = dynamic(() => import("@/components/3d/SupraModel"), { ssr: false });
 
-type VehicleType = "avanza" | "beat" | "bmw_m4" | "harley" | "supra";
+type VehicleType = "bmw_m4" | "harley" | "pcx_150" | "supra";
 
-const vehicleLabels: Record<VehicleType, { label: string; subtitle: string; icon: typeof Car }> = {
-  avanza: { label: "Avanza", subtitle: "Toyota Avanza 2025", icon: Car },
-  bmw_m4: { label: "BMW M4", subtitle: "BMW M4 G82 2025", icon: Car },
-  beat: { label: "Beat", subtitle: "Honda Beat 2024", icon: Bike },
-  harley: { label: "Harley", subtitle: "Harley-Davidson Sportster S", icon: Bike },
+const vehicleLabels: Record<VehicleType, { label: string; subtitle: string; icon: typeof Car }> = {  bmw_m4: { label: "BMW M4", subtitle: "BMW M4 G82 2025", icon: Car },  harley: { label: "Harley", subtitle: "Harley-Davidson Sportster S", icon: Bike },  pcx_150: { label: "PCX 150", subtitle: "Honda PCX 150 2017", icon: Bike },
   supra: { label: "Supra", subtitle: "Toyota Supra Veilside", icon: Car },
 };
+
+function resolveVehicleType(vehicle?: VehicleIdentity): VehicleType | null {
+  const makeModel = `${vehicle?.make ?? ""} ${vehicle?.model ?? ""}`.toLowerCase();
+  if (makeModel.includes("pcx")) return "pcx_150";
+  if (makeModel.includes("supra")) return "supra";
+  if (makeModel.includes("harley") || makeModel.includes("sportster")) return "harley";
+  if (makeModel.includes("bmw") || makeModel.includes("m4")) return "bmw_m4";
+  if (vehicle?.category === "motorcycle_matic") return "pcx_150";
+  if (vehicle?.category === "motorcycle_big") return "harley";
+  if (vehicle?.category === "car") return "bmw_m4";
+  return null;
+}
 
 function getHealthColor(health: number): string {
   if (health >= 90) return "#86EFAC";
@@ -55,7 +63,7 @@ interface SharedViewerProps {
 
 export default function SharedDigitalTwinViewer({ mode, initialVehicle }: SharedViewerProps) {
   const [vehicleType, setVehicleType] = useState<VehicleType | null>(
-    mode === "owner" ? (initialVehicle || "avanza") : (initialVehicle || null)
+    mode === "owner" ? initialVehicle || "bmw_m4" : initialVehicle || null
   );
   
   const [selectedPart, setSelectedPart] = useState<string | null>(null);
@@ -72,16 +80,9 @@ export default function SharedDigitalTwinViewer({ mode, initialVehicle }: Shared
     const check = () => setIsMobile(window.innerWidth < 768);
     check();
     window.addEventListener("resize", check, { passive: true });
-    
-    // Sync active vehicle context for DApp users
-    if (mode === "owner" && activeVehicleCtx?.activeVehicle) {
-      if (vehicleLabels[activeVehicleCtx.activeVehicle]) {
-        setVehicleType(activeVehicleCtx.activeVehicle);
-      }
-    }
 
     return () => window.removeEventListener("resize", check);
-  }, [mode, activeVehicleCtx?.activeVehicle]);
+  }, []);
 
   const handleSelectPart = (name: string, health: number) => {
     setSelectedPart(name);
@@ -95,7 +96,18 @@ export default function SharedDigitalTwinViewer({ mode, initialVehicle }: Shared
     setSheetExpanded(false);
   };
 
-  const current = vehicleType ? vehicleLabels[vehicleType] : null;
+  const contextVehicleType = mode === "owner" ? resolveVehicleType(activeVehicleCtx?.activeVehicleIdentity) : null;
+  const displayVehicleType = contextVehicleType ?? vehicleType;
+  const current = displayVehicleType ? vehicleLabels[displayVehicleType] : null;
+  const ownerVehicleName = mode === "owner" ? activeVehicleCtx?.currentVehicleData.name : undefined;
+  const oemName =
+    displayVehicleType === "pcx_150"
+      ? "Honda Motor Co."
+      : displayVehicleType === "harley"
+        ? "Harley-Davidson"
+        : displayVehicleType === "bmw_m4"
+          ? "BMW Group"
+          : "Toyota Motor Corp";
 
   return (
     <div className="relative" style={{ height: "calc(100dvh - 64px)" }}>
@@ -131,11 +143,7 @@ export default function SharedDigitalTwinViewer({ mode, initialVehicle }: Shared
                     Active Service Queue
                   </div>
                   <div className="p-2 flex flex-col gap-1 max-h-64 overflow-y-auto">
-                    {[
-                      { vt: "avanza", label: vehicleData.avanza.name, vin: vehicleData.avanza.vin, owner: vehicleData.avanza.owner || "Pak Budi" },
-                      { vt: "bmw_m4", label: vehicleData.bmw_m4.name, vin: vehicleData.bmw_m4.vin, owner: vehicleData.bmw_m4.owner || "Andi Wijaya" },
-                      { vt: "beat", label: vehicleData.beat.name, vin: vehicleData.beat.vin, owner: vehicleData.beat.owner || "Siti Nur" },
-                      { vt: "harley", label: vehicleData.harley.name, vin: vehicleData.harley.vin, owner: vehicleData.harley.owner || "John Doe" },
+                    {[                      { vt: "bmw_m4", label: vehicleData.bmw_m4.name, vin: vehicleData.bmw_m4.vin, owner: vehicleData.bmw_m4.owner || "Andi Wijaya" },                      { vt: "harley", label: vehicleData.harley.name, vin: vehicleData.harley.vin, owner: vehicleData.harley.owner || "John Doe" },                      { vt: "pcx_150", label: vehicleData.pcx_150.name, vin: vehicleData.pcx_150.vin, owner: vehicleData.pcx_150.owner || "Budi Santoso" },
                       { vt: "supra", label: vehicleData.supra.name, vin: vehicleData.supra.vin, owner: vehicleData.supra.owner || "Ryo Takahashi" }
                     ].map((item, i) => (
                       <button 
@@ -161,7 +169,7 @@ export default function SharedDigitalTwinViewer({ mode, initialVehicle }: Shared
             <div className="bg-slate-900/80 backdrop-blur-md p-3 rounded-2xl border border-slate-700/50 shadow-lg">
               <h1 className="text-lg md:text-xl font-bold text-white flex items-center gap-2">
                 <Car className="w-5 h-5 text-teal-400" /> 
-                {current?.subtitle}
+                {ownerVehicleName ?? current?.subtitle}
               </h1>
               <p className="text-xs text-slate-400 mt-1">
                 Active Vehicle Dashboard Link
@@ -171,7 +179,7 @@ export default function SharedDigitalTwinViewer({ mode, initialVehicle }: Shared
         </div>
 
         {/* Action Controls (Right side) */}
-        {vehicleType && (
+        {displayVehicleType && (
           <div className="flex gap-2">
             {/* X-Ray */}
             <button onClick={() => setXray(!xray)} className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-medium transition-all cursor-pointer shadow-lg hover:scale-105"
@@ -195,7 +203,7 @@ export default function SharedDigitalTwinViewer({ mode, initialVehicle }: Shared
       </div>
 
       {/* 3D Canvas */}
-      {vehicleType ? (
+      {displayVehicleType ? (
         <Canvas
           camera={{ position: [5, 3, 5], fov: 50 }}
           style={{ background: "#0E0E1A" }}
@@ -227,21 +235,18 @@ export default function SharedDigitalTwinViewer({ mode, initialVehicle }: Shared
           <pointLight position={[3, 2, 3]} intensity={0.15} color="#5EEAD4" />
 
           <Suspense fallback={<LoadingFallback />}>
-            <group visible={vehicleType === "avanza"}>
-              <CarModel onSelectPart={handleSelectPart} selectedPart={selectedPart} xray={xray} exploded={exploded} />
-            </group>
-            <group visible={vehicleType === "bmw_m4"}>
+            {displayVehicleType === "bmw_m4" ? (
               <BMWM4Model onSelectPart={handleSelectPart} selectedPart={selectedPart} xray={xray} exploded={exploded} />
-            </group>
-            <group visible={vehicleType === "beat"}>
-              <MotorcycleModel onSelectPart={handleSelectPart} selectedPart={selectedPart} xray={xray} exploded={exploded} />
-            </group>
-            <group visible={vehicleType === "harley"}>
+            ) : null}
+            {displayVehicleType === "harley" ? (
               <HarleyDavidsonModel onSelectPart={handleSelectPart} selectedPart={selectedPart} xray={xray} exploded={exploded} />
-            </group>
-            <group visible={vehicleType === "supra"}>
+            ) : null}
+            {displayVehicleType === "pcx_150" ? (
+              <PCX150Model onSelectPart={handleSelectPart} selectedPart={selectedPart} xray={xray} exploded={exploded} />
+            ) : null}
+            {displayVehicleType === "supra" ? (
               <SupraModel onSelectPart={handleSelectPart} selectedPart={selectedPart} xray={xray} exploded={exploded} />
-            </group>
+            ) : null}
           </Suspense>
 
           <ContactShadows position={[0, -0.01, 0]} opacity={0.4} blur={2} far={4} />
@@ -258,7 +263,7 @@ export default function SharedDigitalTwinViewer({ mode, initialVehicle }: Shared
       )}
 
       {/* Part info panel — Desktop: floating card, Mobile: bottom sheet */}
-      {selectedPart && vehicleType && (
+      {selectedPart && displayVehicleType && (
         isMobile ? (
           /* Mobile bottom sheet */
           <div className="bottom-sheet z-20" style={{ maxHeight: sheetExpanded ? "65dvh" : "40dvh" }}>
@@ -309,7 +314,7 @@ export default function SharedDigitalTwinViewer({ mode, initialVehicle }: Shared
                         <div className="p-2.5 rounded-lg" style={{ background: "rgba(20,20,40,0.5)" }}><p style={{ color: "var(--solana-text-muted)" }}>Last Service</p><p className="font-semibold">2026-02-10</p></div>
                         <div className="p-2.5 rounded-lg" style={{ background: "rgba(20,20,40,0.5)" }}><p style={{ color: "var(--solana-text-muted)" }}>Service Count</p><p className="font-semibold">3</p></div>
                         <div className="p-2.5 rounded-lg" style={{ background: "rgba(20,20,40,0.5)" }}><p style={{ color: "var(--solana-text-muted)" }}>Mileage at Service</p><p className="font-semibold mono">28,000 km</p></div>
-                        <div className="p-2.5 rounded-lg" style={{ background: "rgba(20,20,40,0.5)" }}><p style={{ color: "var(--solana-text-muted)" }}>OEM Verified</p><a href="https://explorer.solana.com/address/NocPart1Toyota...mock" target="_blank" rel="noopener noreferrer" className="font-semibold flex items-center gap-1 hover:underline" style={{ color: "var(--solana-green)" }}>✓ Toyota Motor Corp <ExternalLink className="w-3 h-3" /></a></div>
+                        <div className="p-2.5 rounded-lg" style={{ background: "rgba(20,20,40,0.5)" }}><p style={{ color: "var(--solana-text-muted)" }}>OEM Verified</p><a href="https://explorer.solana.com/address/NocPartOEM...mock" target="_blank" rel="noopener noreferrer" className="font-semibold flex items-center gap-1 hover:underline" style={{ color: "var(--solana-green)" }}>✓ {oemName} <ExternalLink className="w-3 h-3" /></a></div>
                       </>
                     )}
                   </div>
@@ -349,7 +354,7 @@ export default function SharedDigitalTwinViewer({ mode, initialVehicle }: Shared
                   <div className="p-2.5 rounded-lg bg-white/5 border border-white/10"><p className="text-slate-400">Last Service</p><p className="font-semibold text-white">2026-02-10</p></div>
                   <div className="p-2.5 rounded-lg bg-white/5 border border-white/10"><p className="text-slate-400">Service Count</p><p className="font-semibold text-white">3</p></div>
                   <div className="p-2.5 rounded-lg bg-white/5 border border-white/10"><p className="text-slate-400">Mileage</p><p className="font-semibold mono text-white">28,000 km</p></div>
-                  <div className="p-2.5 rounded-lg bg-white/5 border border-white/10"><p className="text-slate-400">OEM Verified</p><a href="https://explorer.solana.com/address/NocPart1Toyota...mock" target="_blank" rel="noopener noreferrer" className="font-semibold text-teal-400 flex items-center gap-1 hover:underline">✓ Toyota Motor Corp <ExternalLink className="w-3 h-3" /></a></div>
+                  <div className="p-2.5 rounded-lg bg-white/5 border border-white/10"><p className="text-slate-400">OEM Verified</p><a href="https://explorer.solana.com/address/NocPartOEM...mock" target="_blank" rel="noopener noreferrer" className="font-semibold text-teal-400 flex items-center gap-1 hover:underline">✓ {oemName} <ExternalLink className="w-3 h-3" /></a></div>
                 </>
               )}
             </div>
@@ -361,7 +366,7 @@ export default function SharedDigitalTwinViewer({ mode, initialVehicle }: Shared
       )}
 
       {/* Legend — Desktop only, hidden when part selected */}
-      {!selectedPart && !isMobile && vehicleType && (
+      {!selectedPart && !isMobile && displayVehicleType && (
         <div className="absolute bottom-6 left-6 z-10 p-4 rounded-xl border border-slate-700/50" style={{ backdropFilter: "blur(20px)", background: "rgba(14,14,26,0.85)" }}>
           <p className="text-xs font-bold text-white mb-3">Health Legend</p>
           <div className="flex flex-col gap-2">

@@ -1,0 +1,43 @@
+{
+  "name": "noc-id",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": [
+    "frontend",
+    "backend",
+    "clients/ts/noc-registry"
+  ],
+  "scripts": {
+    "frontend:build": "npm --prefix frontend run build",
+    "backend:build": "npm --prefix backend run build",
+    "backend:dev": "npm --prefix backend run dev",
+    "backend:worker": "npm --prefix backend run worker:dev",
+    "backend:prisma:generate": "npm --prefix backend run prisma:generate",
+    "backend:prisma:migrate": "npm --prefix backend run prisma:migrate",
+    "client:build": "npm --prefix clients/ts/noc-registry run build",
+    "anchor:build": "powershell -ExecutionPolicy Bypass -File scripts/devnet/build-anchor-docker.ps1",
+    "anchor:build:wsl": "powershell -ExecutionPolicy Bypass -File scripts/devnet/build-anchor-wsl.ps1",
+    "devnet:deploy-program": "powershell -ExecutionPolicy Bypass -File scripts/devnet/deploy-program.ps1",
+    "devnet:smoke": "node --import tsx scripts/devnet/smoke-devnet.ts",
+    "devnet:preflight": "node --import tsx scripts/devnet/preflight-operator.ts",
+    "devnet:wallet:check": "node --import tsx scripts/devnet/check-wallet.ts",
+    "devnet:wallet:create": "powershell -ExecutionPolicy Bypass -File scripts/devnet/create-devnet-keypair.ps1",
+    "devnet:init-platform": "node --import tsx scripts/devnet/initialize-platform.ts",
+    "devnet:create-core-collection": "node --import tsx scripts/devnet/create-core-collection.ts",
+    "devnet:tree:preflight": "node --import tsx scripts/devnet/create-bubblegum-tree.ts",
+    "devnet:create-bubblegum-tree": "node --import tsx scripts/devnet/create-bubblegum-tree-real.ts",
+    "devnet:register-enterprise": "node --import tsx scripts/devnet/register-enterprise.ts",
+    "devnet:mint-vehicle-cnft": "node --import tsx scripts/devnet/mint-vehicle-cnft.ts",
+    "devnet:recover-last-mint": "node --import tsx scripts/devnet/recover-last-mint.ts",
+    "devnet:register-vehicle-record": "node --import tsx scripts/devnet/register-vehicle-record.ts",
+    "devnet:sync-vehicle-refs": "node --import tsx scripts/devnet/sync-vehicle-devnet-refs.ts"
+  },
+  "devDependencies": {
+    "@coral-xyz/anchor": "^0.32.1",
+    "@metaplex-foundation/mpl-bubblegum": "^5.0.2",
+    "@metaplex-foundation/mpl-core": "^1.10.0",
+    "@metaplex-foundation/umi": "^1.5.1",
+    "@metaplex-foundation/umi-bundle-defaults": "^1.5.1",
+    "@solana/web3.js": "^1.98.4"
+  }
+}

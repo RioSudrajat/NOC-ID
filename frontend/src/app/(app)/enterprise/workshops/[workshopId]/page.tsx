@@ -24,7 +24,7 @@ const MOCK_KYC_DOCS = [
 ];
 
 const MOCK_ASSIGNMENTS = [
-  { vin: "MHKA1BA1JFK000001", model: "Toyota Avanza 2025", type: "Warranty Claim", assignedDate: "2026-03-15", status: "pending" },
+  { vin: "MHKA1BA1JFK000001", model: "Toyota BMW M4 2025", type: "Warranty Claim", assignedDate: "2026-03-15", status: "pending" },
   { vin: "JT2BF28K6420S0001", model: "Toyota Supra Veilside", type: "Recall Service", assignedDate: "2026-03-20", status: "in_progress" },
 ];
 

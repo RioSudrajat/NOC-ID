@@ -2,24 +2,17 @@
 
 import { motion } from "framer-motion";
 import { MapPin, Calendar, Car, MessageSquare, FileText, Lock, LockOpen } from "lucide-react";
-import { isDataAccessActive, type BookingStatus, type SessionType } from "@/context/BookingContext";
-
-interface BookingData {
-  status: BookingStatus;
-  type: SessionType;
-  workshop: { name: string; address: string };
-  form: { date: string; time: string; complaint: string; shareHistory: boolean; shareDigitalTwin: boolean; vehicleKey: string };
-}
+import { isDataAccessActive, type BookingRequest } from "@/context/BookingContext";
 
 export interface ServiceDetailPanelProps {
-  booking: BookingData;
+  booking: BookingRequest;
   vehicleName: string;
   vehicleVin: string;
 }
 
 export default function ServiceDetailPanel({ booking, vehicleName, vehicleVin }: ServiceDetailPanelProps) {
   const isRejected = booking.status === "REJECTED";
-  const dataActive = isDataAccessActive(booking as any) || (booking.type === "walkin" && booking.status !== "COMPLETED" && booking.status !== "PAID");
+  const dataActive = isDataAccessActive(booking) || (booking.type === "walkin" && booking.status !== "COMPLETED" && booking.status !== "PAID");
 
   return (
     <div className="lg:col-span-2 space-y-4">

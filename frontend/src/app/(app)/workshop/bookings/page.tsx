@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
   CalendarCheck, CheckCircle2, XCircle, Clock, Loader2, Car,
@@ -10,11 +10,16 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useBooking, isDataAccessActive, type BookingStatus, type BookingRequest } from "@/context/BookingContext";
 import { vehicleData } from "@/context/ActiveVehicleContext";
+import { api } from "@/lib/api/client";
+import { requestDevnetNetworkFeeSignature } from "@/lib/devnetWalletFee";
+import { useVehicleRegistryStore } from "@/store/useVehicleRegistryStore";
+import { useBookingStore } from "@/store/useBookingStore";
+import { getVehicleDisplayName } from "@/types/vehicle";
 
 // Static past bookings for display filler
 const pastBookings = [
-  { id: "BK-HIST-001", vehicleName: "Honda Beat 2024", complaint: "Suara kasar saat akselerasi", date: "2026-03-10", time: "09:00", status: "COMPLETED" as BookingStatus, rating: 5 },
-  { id: "BK-HIST-002", vehicleName: "Toyota Avanza 2023", complaint: "AC tidak dingin", date: "2026-03-05", time: "10:00", status: "COMPLETED" as BookingStatus, rating: 4 },
+  { id: "BK-HIST-001", vehicleName: "Honda Harley 2024", complaint: "Suara kasar saat akselerasi", date: "2026-03-10", time: "09:00", status: "COMPLETED" as BookingStatus, rating: 5 },
+  { id: "BK-HIST-002", vehicleName: "Toyota BMW M4 2023", complaint: "AC tidak dingin", date: "2026-03-05", time: "10:00", status: "COMPLETED" as BookingStatus, rating: 4 },
   { id: "BK-HIST-003", vehicleName: "Suzuki Ertiga 2025", complaint: "Rem berderit", date: "2026-02-28", time: "14:00", status: "REJECTED" as BookingStatus, rating: 0 },
 ];
 
@@ -25,6 +30,8 @@ const STATUS_BADGE_MAP: Record<string, { bg: string; color: string; label: strin
   IN_SERVICE: { bg: "rgba(20,209,255,0.1)", color: "var(--solana-cyan)", label: "Dalam Servis" },
   INVOICE_SENT: { bg: "rgba(94, 234, 212,0.1)", color: "#5EEAD4", label: "Invoice Terkirim" },
   PAID: { bg: "rgba(94, 234, 212,0.1)", color: "#5EEAD4", label: "Dibayar" },
+  ANCHORING: { bg: "rgba(94, 234, 212,0.1)", color: "#5EEAD4", label: "Anchoring" },
+  ANCHORED: { bg: "rgba(94, 234, 212,0.1)", color: "#5EEAD4", label: "Anchored" },
   COMPLETED: { bg: "rgba(94, 234, 212,0.1)", color: "#5EEAD4", label: "Selesai" },
 };
 
@@ -41,11 +48,16 @@ export default function WorkshopBookingsPage() {
   const ctx = useBooking();
   const activeBookings = ctx?.activeBookings || [];
   const router = useRouter();
+  const getVehicleById = useVehicleRegistryStore((state) => state.getVehicleById);
+  const registryVehicles = useVehicleRegistryStore((state) => state.vehicles);
   const [activeTab, setActiveTab] = useState("Semua");
   const [rejectConfirmId, setRejectConfirmId] = useState<string | null>(null);
   const [resubmitId, setResubmitId] = useState<string | null>(null);
   const [resubmitReason, setResubmitReason] = useState("");
   const [resubmitPhotos, setResubmitPhotos] = useState<string[]>([]);
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => setIsMounted(true), []);
 
   const rejectedClaims = (ctx?.warrantyClaims || []).filter(c => c.status === "Rejected");
 
@@ -68,14 +80,73 @@ export default function WorkshopBookingsPage() {
 
   const visibleBookings = activeBookings.filter((b) => matchesTab(b.status));
 
-  // statusBadge hoisted to StatusBadge component above
-
   const handleSendInvoice = (booking: BookingRequest) => {
-    const vehicle = vehicleData[booking.form.vehicleKey];
+    const registryVehicle = getVehicleById(booking.form.vehicleKey);
+    const vehicle = registryVehicle ? { vin: registryVehicle.vin } : vehicleData[booking.form.vehicleKey] ?? { vin: booking.form.vehicleVin };
     if (!vehicle) return;
-    // Redirect to maintenance page with booking context
     router.push(`/workshop/maintenance?fromBooking=true&vin=${vehicle.vin}`);
   };
+
+  const handleSignAnchoring = async (booking: BookingRequest) => {
+    if (!ctx) return;
+    try {
+      let backendBookingId = booking.id;
+      if (booking.id.startsWith("BK-")) {
+        const registryVehicle = getVehicleById(booking.form.vehicleKey) ?? registryVehicles.find((vehicle) => vehicle.vin === booking.form.vehicleVin);
+        if (!registryVehicle) {
+          throw new Error("Vehicle backend record belum tersinkron. Refresh kendaraan lalu coba lagi.");
+        }
+        const created = await api.createBooking({
+          vehicleId: registryVehicle.vehicleId,
+          workshopId: booking.workshop.id,
+          date: booking.form.date,
+          time: booking.form.time,
+          complaint: booking.form.complaint,
+        });
+        backendBookingId = created.bookingId;
+        await api.updateBookingStatus(backendBookingId, "ACCEPTED");
+        await api.updateBookingStatus(backendBookingId, "IN_SERVICE");
+        if (booking.invoice) {
+          await api.createInvoice({
+            bookingId: backendBookingId,
+            serviceType: booking.invoice.serviceType,
+            serviceCost: booking.invoice.serviceCost,
+            gasFee: booking.invoice.gasFee,
+            totalIdr: booking.invoice.totalIDR,
+            mechanicNotes: booking.invoice.mechanicNotes,
+            parts: booking.invoice.parts.map((part) => ({
+              name: part.name,
+              partNumber: part.partNumber,
+              manufacturer: part.manufacturer,
+              price: part.price,
+              isOEM: part.isOEM,
+              componentId: part.componentId,
+              componentName: part.componentName,
+              componentZone: part.componentZone,
+              serviceAction: part.serviceAction,
+            })),
+          });
+        }
+        await api.updateBookingStatus(backendBookingId, "PAID");
+        await useBookingStore.getState().syncFromBackend();
+      }
+      const approval = await requestDevnetNetworkFeeSignature("anchor_service_log");
+      ctx.startAnchoring(booking.form.vehicleKey);
+      const result = await api.anchorServiceLogDevnet({
+        bookingId: backendBookingId,
+        odometerKm: 15000,
+        feeSignature: approval.signature,
+        feePayer: approval.feePayer,
+      });
+      ctx.completeAnchoring(booking.form.vehicleKey, result.signature);
+    } catch (err: any) {
+      console.error("Anchoring failed:", err);
+      ctx.failAnchoring(booking.form.vehicleKey);
+      alert("Failed to sign anchoring transaction: " + err.message);
+    }
+  };
+
+  if (!isMounted) return null;
 
   return (
     <div>
@@ -146,7 +217,11 @@ export default function WorkshopBookingsPage() {
 
       {/* Active booking cards — one per vehicle that currently has a session */}
       {visibleBookings.map((booking) => {
-        const vehicle = vehicleData[booking.form.vehicleKey];
+        const registryVehicle = getVehicleById(booking.form.vehicleKey);
+        const legacyVehicle = vehicleData[booking.form.vehicleKey];
+        const vehicle = registryVehicle
+          ? { name: getVehicleDisplayName(registryVehicle), vin: registryVehicle.vin }
+          : legacyVehicle ?? { name: booking.form.vehicleName, vin: booking.form.vehicleVin };
         const dataActive = isDataAccessActive(booking);
         return (
           <motion.div
@@ -258,7 +333,7 @@ export default function WorkshopBookingsPage() {
                   <CheckCircle2 className="w-3.5 h-3.5" />
                   Pembayaran diterima. Tandatangani transaksi anchoring untuk mencatat log servis on-chain.
                 </div>
-                <button onClick={() => ctx?.signAnchoring(booking.form.vehicleKey)} className="glow-btn px-5 py-2.5 text-xs cursor-pointer flex items-center gap-1.5">
+                <button onClick={() => handleSignAnchoring(booking)} className="glow-btn px-5 py-2.5 text-xs cursor-pointer flex items-center gap-1.5">
                   <FileText className="w-3.5 h-3.5" /> Sign Anchoring Transaction
                 </button>
               </div>

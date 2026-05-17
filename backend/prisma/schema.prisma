@@ -1,0 +1,475 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  user
+  workshop_owner
+  enterprise_admin
+  admin
+}
+
+enum WalletState {
+  none
+  embedded
+  self_custody
+}
+
+enum WorkshopStatus {
+  unregistered
+  draft
+  pending_kyc
+  approved
+  rejected
+  suspended
+}
+
+enum WorkshopCredentialType {
+  verified_signer
+  oem_certified
+  manufacturer_audit_partner
+  recall_executor
+}
+
+enum VehicleCategory {
+  car
+  motorcycle_matic
+  motorcycle_big
+}
+
+enum MintStatus {
+  demo
+  pending
+  minted
+  escrow
+  transferred
+}
+
+enum BookingStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  IN_SERVICE
+  INVOICE_SENT
+  PAID
+  ANCHORING
+  ANCHORED
+  COMPLETED
+}
+
+enum PaymentCurrency {
+  IDR
+  IDRX
+  USDC
+  NOC
+}
+
+enum PaymentStatus {
+  PENDING
+  REQUIRES_SIGNATURE
+  CONFIRMING
+  CONFIRMED
+  FAILED
+  CANCELLED
+}
+
+enum OnchainJobStatus {
+  QUEUED
+  RUNNING
+  CONFIRMED
+  FAILED
+  CANCELLED
+}
+
+model User {
+  id                    String      @id @default(cuid())
+  username              String?     @unique
+  displayName           String
+  email                 String?     @unique
+  phone                 String?     @unique
+  passwordHash          String?
+  role                  UserRole    @default(user)
+  walletState           WalletState @default(none)
+  embeddedWalletAddress String?     @unique
+  embeddedWalletEncryptedSecret String?
+  embeddedWalletNonce   String?
+  embeddedWalletTag     String?
+  selfCustodyAddress    String?     @unique
+  workshopId            String?
+  enterpriseId          String?
+  createdAt             DateTime    @default(now())
+  updatedAt             DateTime    @updatedAt
+  sessions              Session[]
+  wallets               Wallet[]
+  ownedVehicles         Vehicle[]   @relation("VehicleOwner")
+  mintRequests          VehicleMintRequest[]
+}
+
+model Wallet {
+  id         String   @id @default(cuid())
+  address    String   @unique
+  role       UserRole
+  status     String   @default("active")
+  entityName String?
+  userId     String?
+  user       User?    @relation(fields: [userId], references: [id])
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  tokenHash String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
+
+model Enterprise {
+  id             String     @id @default(cuid())
+  name           String
+  authorityWallet String
+  status         String     @default("active")
+  metadataHash   String?
+  recordPda      String?
+  vehicles       Vehicle[]
+  workshops      WorkshopCredential[]
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+}
+
+model Workshop {
+  id              String                 @id @default(cuid())
+  name            String
+  city            String
+  address         String
+  phone           String
+  authorityWallet String?
+  treasuryWallet  String?
+  status          WorkshopStatus         @default(unregistered)
+  recordPda       String?
+  metadataHash    String?
+  registrations   WorkshopRegistration[]
+  credentials     WorkshopCredential[]
+  bookings        Booking[]
+  serviceLogs     ServiceLog[]
+  audits          VehicleAudit[]
+  createdAt       DateTime               @default(now())
+  updatedAt       DateTime               @updatedAt
+}
+
+model WorkshopRegistration {
+  id             String         @id @default(cuid())
+  workshopId     String?
+  workshop       Workshop?      @relation(fields: [workshopId], references: [id])
+  submittedById  String?
+  businessName   String
+  businessType   String
+  npwp           String?
+  nib            String?
+  address        String
+  city           String
+  province       String
+  phone          String
+  picName        String
+  picPhone       String
+  signerMode     String
+  signerWallet   String?
+  status         WorkshopStatus @default(pending_kyc)
+  rejectionReason String?
+  privateEvidence Json?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+}
+
+model WorkshopCredential {
+  id           String                 @id @default(cuid())
+  workshopId   String
+  workshop     Workshop               @relation(fields: [workshopId], references: [id])
+  credential   WorkshopCredentialType
+  issuedBy     String
+  enterpriseId String?
+  enterprise   Enterprise?            @relation(fields: [enterpriseId], references: [id])
+  recordPda    String?
+  txSignature  String?
+  validUntil   DateTime?
+  revokedAt    DateTime?
+  reason       String?
+  createdAt    DateTime               @default(now())
+}
+
+model Vehicle {
+  id               String          @id @default(cuid())
+  vin              String          @unique
+  frameNumber      String?
+  engineNumber     String?
+  make             String
+  model            String
+  year             Int
+  color            String
+  category         VehicleCategory
+  transmissionType String
+  fuelType         String
+  licensePlate     String
+  mintStatus       MintStatus      @default(pending)
+  currentOwnerId   String?
+  currentOwner     User?           @relation("VehicleOwner", fields: [currentOwnerId], references: [id])
+  enterpriseId     String?
+  enterprise       Enterprise?     @relation(fields: [enterpriseId], references: [id])
+  currentMileageKm Int             @default(0)
+  healthScore      Int             @default(100)
+  metadataUri      String?
+  metadataHash     String?
+  cnftAssetId      String?
+  treeAddress      String?
+  leafIndex        Int?
+  vehicleRecordPda String?
+  serviceLogs      ServiceLog[]
+  bookings         Booking[]
+  trips            Trip[]
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+}
+
+model PartCatalogItem {
+  id           String   @id @default(cuid())
+  enterpriseId String
+  name         String
+  partNumber   String
+  category     String
+  manufacturer String
+  compatibleModels String[]
+  priceIdr     Int
+  metadataUri  String?
+  metadataHash String?
+  cnftAssetId  String?
+  treeAddress  String?
+  leafIndex    Int?
+  createdAt    DateTime @default(now())
+}
+
+model Booking {
+  id         String        @id @default(cuid())
+  type       String        @default("booking")
+  vehicleId  String
+  vehicle    Vehicle       @relation(fields: [vehicleId], references: [id])
+  workshopId String
+  workshop   Workshop      @relation(fields: [workshopId], references: [id])
+  date       String
+  time       String
+  complaint  String
+  status     BookingStatus @default(PENDING)
+  invoice    Invoice?
+  serviceLog ServiceLog?
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+}
+
+model Invoice {
+  id            String    @id @default(cuid())
+  bookingId     String    @unique
+  booking       Booking   @relation(fields: [bookingId], references: [id])
+  serviceType   String
+  serviceCost   Int
+  gasFee         Int       @default(0)
+  totalIdr       Int
+  mechanicNotes String?
+  parts          Json
+  payments       Payment[]
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+}
+
+model Payment {
+  id              String          @id @default(cuid())
+  invoiceId       String
+  invoice         Invoice         @relation(fields: [invoiceId], references: [id])
+  currency        PaymentCurrency
+  amountAtomic    BigInt
+  amountDisplay   Decimal         @db.Decimal(18, 6)
+  mint            String?
+  payerWallet     String?
+  recipientWallet String
+  status          PaymentStatus   @default(PENDING)
+  signature       String?
+  receiptRecordPda String?
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+}
+
+model ServiceLog {
+  id             String    @id @default(cuid())
+  bookingId      String?   @unique
+  booking        Booking?  @relation(fields: [bookingId], references: [id])
+  vehicleId      String
+  vehicle        Vehicle   @relation(fields: [vehicleId], references: [id])
+  workshopId     String
+  workshop       Workshop  @relation(fields: [workshopId], references: [id])
+  odometerKm     Int
+  invoiceHash    String
+  partsHash      String
+  evidenceHash   String?
+  recordPda      String?
+  txSignature    String?
+  createdAt      DateTime  @default(now())
+}
+
+model VehicleMintRequest {
+  id             String    @id @default(cuid())
+  userId         String
+  user           User      @relation(fields: [userId], references: [id])
+  workshopId     String
+  make           String
+  model          String
+  year           Int
+  vin            String
+  licensePlate   String?
+  status         String    @default("requested")
+  auditId        String?
+  mintedVehicleId String?
+  rejectionReason String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+}
+
+model VehicleAudit {
+  id                    String   @id @default(cuid())
+  requestId             String?
+  workshopId            String
+  workshop              Workshop @relation(fields: [workshopId], references: [id])
+  submittedForUserId    String
+  vin                   String
+  make                  String
+  model                 String
+  year                  Int
+  licensePlate          String
+  odometerKm            Int
+  componentHealth       Json
+  overallConditionScore Int
+  evidenceHash          String?
+  status                String   @default("submitted")
+  reviewedByEnterpriseId String?
+  mintedVehicleId       String?
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+}
+
+model WarrantyClaim {
+  id          String   @id @default(cuid())
+  bookingId   String
+  vin         String
+  status      String   @default("Pending")
+  description String
+  amountIdr   Int
+  evidenceHash String?
+  caseRecordPda String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Dispute {
+  id          String   @id @default(cuid())
+  type        String
+  bookingId   String?
+  workshopId  String?
+  status      String   @default("open")
+  amountIdr   Int      @default(0)
+  resolution  String?
+  caseRecordPda String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Recall {
+  id          String   @id @default(cuid())
+  enterpriseId String
+  title       String
+  severity    String
+  affectedVinHashes String[]
+  caseRecordPda String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Trip {
+  id          String   @id @default(cuid())
+  vehicleId   String
+  vehicle     Vehicle  @relation(fields: [vehicleId], references: [id])
+  startedAt   DateTime
+  completedAt DateTime?
+  metrics     Json
+  summaryHash String?
+  recordPda   String?
+  points      TripPoint[]
+  createdAt   DateTime @default(now())
+}
+
+model TripPoint {
+  id        String   @id @default(cuid())
+  tripId    String
+  trip      Trip     @relation(fields: [tripId], references: [id])
+  lat       Decimal  @db.Decimal(10, 7)
+  lng       Decimal  @db.Decimal(10, 7)
+  speedKmh  Decimal? @db.Decimal(8, 2)
+  timestamp DateTime
+}
+
+model ComponentWearSnapshot {
+  id        String   @id @default(cuid())
+  vehicleId String
+  componentId String
+  wearScore Int
+  source    String
+  createdAt DateTime @default(now())
+}
+
+model Notification {
+  id         String   @id @default(cuid())
+  targetRole String
+  userId     String?
+  type       String
+  title      String
+  message    String
+  read       Boolean  @default(false)
+  createdAt  DateTime @default(now())
+}
+
+model TxReceipt {
+  id                 String   @id @default(cuid())
+  signature          String   @unique
+  cluster            String
+  programId          String?
+  slot               BigInt?
+  confirmationStatus String
+  explorerUrl        String
+  raw                Json?
+  createdAt          DateTime @default(now())
+}
+
+model OnchainJob {
+  id          String           @id @default(cuid())
+  name        String
+  status      OnchainJobStatus @default(QUEUED)
+  payload     Json
+  signature   String?
+  error       String?
+  attempts    Int              @default(0)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+}
+
+model AuditEvent {
+  id          String   @id @default(cuid())
+  actorUserId String?
+  action      String
+  target      String
+  details     Json
+  txSignature String?
+  createdAt   DateTime @default(now())
+}

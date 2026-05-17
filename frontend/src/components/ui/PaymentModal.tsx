@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Wallet, CreditCard, Coins, CheckCircle, X, Loader2, CheckCircle2 } from "lucide-react";
+import { api } from "@/lib/api/client";
+import { useUserStore } from "@/store/useUserStore";
 import type { PartItem } from "./SharedServiceCard";
 
 interface PaymentModalProps {
@@ -13,47 +15,70 @@ interface PaymentModalProps {
     description: string;
     amountIDR: number;
     amountUSDC: number;
+    amountIDRX?: number;
     amountNOC: number;
     parts?: PartItem[];
     serviceCost?: number;
     gasFee?: number;
   };
+  paymentContext?: {
+    invoiceId: string;
+    bookingId: string;
+    recipientWallet: string;
+  };
   onPaymentComplete: () => void;
 }
 
-type PaymentMethod = "web3" | "fiat" | "noc" | null;
+type PaymentMethod = "web3" | "fiat" | "idrx" | "noc" | null;
 
 export function PaymentModal({
   isOpen,
   onClose,
   serviceDetails,
+  paymentContext,
   onPaymentComplete,
 }: PaymentModalProps) {
+  const currentUser = useUserStore((state) => state.currentUser);
   const [selectedMethod, setSelectedMethod] = useState<PaymentMethod>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
 
   const formatIDR = (amount: number) =>
     new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR" }).format(amount);
+  const amountIDRX = serviceDetails.amountIDRX ?? serviceDetails.amountIDR;
 
   const handlePayment = async () => {
     if (!selectedMethod) return;
     
     setIsProcessing(true);
-    
-    // Simulate API call and blockchain anchoring
-    await new Promise((resolve) => setTimeout(resolve, 3000));
-    
-    setIsProcessing(false);
-    setIsSuccess(true);
-    
-    // Auto close after success
-    setTimeout(() => {
-      setIsSuccess(false);
-      setSelectedMethod(null);
-      onPaymentComplete();
-      onClose();
-    }, 2000);
+    try {
+      if (selectedMethod === "idrx" && paymentContext) {
+        const intent = await api.createPaymentIntent({
+          invoiceId: paymentContext.invoiceId,
+          bookingId: paymentContext.bookingId,
+          amountIdr: serviceDetails.amountIDR,
+          currency: "IDRX",
+          payerWallet: currentUser?.embeddedWalletAddress,
+          recipientWallet: paymentContext.recipientWallet,
+        });
+        await api.confirmDevnetPayment(intent.paymentIntentId, {
+          payerWallet: currentUser?.embeddedWalletAddress,
+        });
+      } else {
+        await new Promise((resolve) => setTimeout(resolve, 1200));
+      }
+      setIsProcessing(false);
+      setIsSuccess(true);
+      setTimeout(() => {
+        setIsSuccess(false);
+        setSelectedMethod(null);
+        onPaymentComplete();
+        onClose();
+      }, 1200);
+    } catch (error) {
+      console.warn("[payment-modal] payment failed", error);
+      setIsProcessing(false);
+    }
   };
 
   const resetState = () => {
@@ -176,7 +201,31 @@ export function PaymentModal({
                   </div>
                 </button>
 
-                {/* 2. Web3 Wallet */}
+                {/* 2. IDRX on Solana */}
+                <button
+                  onClick={() => setSelectedMethod("idrx")}
+                  disabled={isProcessing}
+                  className={`w-full flex items-center justify-between p-4 rounded-xl border transition-all ${
+                    selectedMethod === "idrx"
+                      ? "border-emerald-500 bg-emerald-500/10"
+                      : "border-slate-700 bg-slate-800/50 hover:border-slate-600"
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-lg bg-emerald-500/20 text-emerald-400">
+                      <Wallet className="w-5 h-5" />
+                    </div>
+                    <div className="text-left">
+                      <div className="font-medium text-white">IDRX on Solana</div>
+                      <div className="text-xs text-slate-400">Pay with IDR-pegged SPL token</div>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-sm font-medium text-white">{amountIDRX.toLocaleString("id-ID")} IDRX</div>
+                  </div>
+                </button>
+
+                {/* 3. Web3 Wallet */}
                 <button
                   onClick={() => setSelectedMethod("web3")}
                   disabled={isProcessing}
@@ -200,7 +249,7 @@ export function PaymentModal({
                   </div>
                 </button>
 
-                {/* 3. NOC Token (Disabled) */}
+                {/* 4. NOC Token (Disabled) */}
                 <button
                   disabled={true}
                   className="w-full flex items-center justify-between p-4 rounded-xl border border-slate-700 bg-slate-800/30 opacity-60 cursor-not-allowed"

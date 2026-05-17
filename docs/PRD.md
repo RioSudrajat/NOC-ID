@@ -383,7 +383,7 @@ interface PlatformConfig {
   "attributes": [
     { "trait_type": "VIN", "value": "MHKA1BA1JFK000001" },
     { "trait_type": "Make", "value": "Toyota" },
-    { "trait_type": "Model", "value": "Avanza" },
+    { "trait_type": "Model", "value": "BMW M4" },
     { "trait_type": "Year", "value": "2025" },
     { "trait_type": "Color", "value": "Silver Metallic" },
     { "trait_type": "Engine_Type", "value": "1.5L 2NR-VE" },
@@ -579,9 +579,9 @@ For each part prediction, the UI renders:
 
 | Component | File | Vehicle |
 |---|---|---|
-| `CarModel` | `CarModel.tsx` | Toyota Avanza 2025 |
+| `CarModel` | `CarModel.tsx` | BMW M4 G82 2025 |
 | `BMWM4Model` | `BMWM4Model.tsx` | BMW M4 G82 2025 |
-| `MotorcycleModel` | `MotorcycleModel.tsx` | Honda Beat 2024 |
+| `MotorcycleModel` | `MotorcycleModel.tsx` | Harley-Davidson Sportster S |
 | `HarleyDavidsonModel` | `HarleyDavidsonModel.tsx` | Harley-Davidson Sportster S |
 | `SharedDigitalTwinViewer` | `SharedDigitalTwinViewer.tsx` | Unified viewer wrapping all models with shared controls |
 
@@ -688,7 +688,7 @@ When a user clicks a 3D part, the following context payload is assembled and inj
   "vehicle": {
     "vin": "MHKA1BA1JFK000001",
     "make": "Toyota",
-    "model": "Avanza",
+    "model": "BMW M4",
     "year": 2025,
     "current_mileage_km": 34521
   },
@@ -1087,12 +1087,12 @@ interface EnterpriseMetrics {
 
 ```typescript
 const vehicleData = {
-  avanza: { name: "Toyota Avanza 2025", vin: "MHKA1BA1JFK000001", health: 87, ... },
+  BMW M4: { name: "BMW M4 G82 2025", vin: "MHKA1BA1JFK000001", health: 87, ... },
   bmw_m4: { name: "BMW M4 G82 2025", vin: "WBA43AZ0X0CH00001", health: 95, ... },
-  beat:   { name: "Honda Beat 2024", vin: "MH1JFZ110K000042", health: 92, ... },
+  Harley-Davidson:   { name: "Harley-Davidson Sportster S", vin: "MH1JFZ110K000042", health: 92, ... },
   harley: { name: "Harley-Davidson Sportster S", vin: "HD1ME23145K998212", health: 98, ... },
 };
-type VehicleKey = "avanza" | "bmw_m4" | "beat" | "harley";
+type VehicleKey = "BMW M4" | "bmw_m4" | "Harley-Davidson" | "harley";
 ```
 
 #### PartCatalogContext (`frontend/src/context/PartCatalogContext.tsx`)
@@ -1409,7 +1409,7 @@ Anonymized, aggregated fleet data sold to third-party consumers:
 - [x] User DApp: wallet connection, vehicle dashboard, identity, timeline, booking flow, notifications (13 pages)
 - [x] Workshop Portal: NFC/QR scan, queue management, maintenance form, booking management, verification, analytics, reputation, wallet, notifications (13 pages)
 - [x] Enterprise Dashboard: mint console, fleet map, analytics, warranty, workshops, recalls, transactions, disputes, settings (12 pages)
-- [x] 3D Digital Twin: 4 vehicle models (Avanza, BMW M4, Beat, Harley-Davidson), SharedDigitalTwinViewer
+- [x] 3D Digital Twin: 4 vehicle models (BMW M4, BMW M4, Harley-Davidson, Harley-Davidson), SharedDigitalTwinViewer
 - [x] Booking lifecycle: PENDING → ACCEPTED → IN_SERVICE → INVOICE_SENT → PAID → COMPLETED
 - [x] Cross-portal notification system (12 types, 4 target roles)
 - [x] Shared components: ConnectWalletButton (4 variants), LeafletMap, FleetLeafletMap, CopilotChatPanel, Toast, PaymentModal, etc.
@@ -1779,7 +1779,7 @@ Anonymized, aggregated fleet data sold to third-party consumers:
 | `CarModel` | `CarModel.tsx` | Generic car (base geometry / fallback) |
 | `SupraModel` | `SupraModel.tsx` | Toyota Supra |
 | `BMWM4Model` | `BMWM4Model.tsx` | BMW M4 G82 2025 |
-| `MotorcycleModel` | `MotorcycleModel.tsx` | Honda Beat 2024 |
+| `MotorcycleModel` | `MotorcycleModel.tsx` | Harley-Davidson Sportster S |
 | `HarleyDavidsonModel` | `HarleyDavidsonModel.tsx` | Harley-Davidson Sportster S |
 | `SharedDigitalTwinViewer` | `SharedDigitalTwinViewer.tsx` | Unified viewer wrapping all models |
 
@@ -1939,7 +1939,7 @@ frontend/src/
 │   │   ├── CarModel.tsx                          # Generic car geometry
 │   │   ├── SupraModel.tsx                        # Toyota Supra
 │   │   ├── BMWM4Model.tsx                        # BMW M4 G82
-│   │   ├── MotorcycleModel.tsx                   # Honda Beat
+│   │   ├── MotorcycleModel.tsx                   # Harley-Davidson
 │   │   ├── HarleyDavidsonModel.tsx               # Harley-Davidson Sportster S
 │   │   └── fix_rounded_box.js                    # Three.js geometry utility
 │   │

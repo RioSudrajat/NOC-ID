@@ -7,7 +7,7 @@ import {
   Bell, WifiIcon,
 } from "lucide-react";
 import Link from "next/link";
-import { useBooking, type BookingStatus, type SessionType } from "@/context/BookingContext";
+import { useBooking, type BookingRequest, type BookingStatus, type SessionType } from "@/context/BookingContext";
 import { useActiveVehicle, vehicleData } from "@/context/ActiveVehicleContext";
 import dynamic from "next/dynamic";
 import StatusCards from "@/components/dapp/status/StatusCards";
@@ -110,7 +110,7 @@ function StatusSidebarPanel({ status, type, workshopName, bookingDate, bookingTi
 export default function BookingStatusPage() {
   const ctx = useBooking();
   const activeVehicleCtx = useActiveVehicle();
-  const activeVehicle = activeVehicleCtx?.activeVehicle || "avanza";
+  const activeVehicle = activeVehicleCtx?.activeVehicleId || activeVehicleCtx?.activeVehicle || "bmw_m4";
   const booking = ctx?.bookings[activeVehicle] || null;
   const unreadNotifCount = (ctx?.bookingNotifications || []).filter(n => n.targetRole === "user" && !n.read).length;
   const [paymentOpen, setPaymentOpen] = useState(false);
@@ -134,7 +134,7 @@ export default function BookingStatusPage() {
     );
   }
 
-  const vehicle = vehicleData[booking.form.vehicleKey];
+  const vehicle = activeVehicleCtx?.currentVehicleData ?? vehicleData[booking.form.vehicleKey] ?? vehicleData.bmw_m4;
   const stepIndex = getStepIndex(booking.status, booking.type);
   const isRejected = booking.status === "REJECTED";
 
@@ -180,7 +180,7 @@ export default function BookingStatusPage() {
         <div className="flex-1 min-w-0 grid grid-cols-1 lg:grid-cols-5 gap-6">
           <div className="lg:col-span-3">
             <StatusCards
-              booking={booking as any}
+              booking={booking as BookingRequest}
               activeVehicle={activeVehicle}
               rating={rating}
               reviewComment={reviewComment}
@@ -192,7 +192,7 @@ export default function BookingStatusPage() {
               onReset={() => ctx?.reset(activeVehicle)}
             />
           </div>
-          <ServiceDetailPanel booking={booking as any} vehicleName={vehicle.name} vehicleVin={vehicle.vin} />
+          <ServiceDetailPanel booking={booking as BookingRequest} vehicleName={vehicle.name} vehicleVin={vehicle.vin} />
         </div>
       </div>
 
@@ -209,6 +209,11 @@ export default function BookingStatusPage() {
             parts: booking.invoice.parts.map((p) => ({ name: p.name, partNumber: p.partNumber, manufacturer: p.manufacturer, priceIDR: p.price, isOem: p.isOEM })),
             serviceCost: booking.invoice.serviceCost,
           }}
+          paymentContext={booking.invoice.invoiceId ? {
+            invoiceId: booking.invoice.invoiceId,
+            bookingId: booking.id,
+            recipientWallet: booking.workshop.treasuryWallet ?? "DemoWorkshop111111111111111111111111111111",
+          } : undefined}
           onPaymentComplete={() => { ctx?.payInvoice(activeVehicle); setPaymentOpen(false); }}
         />
       )}

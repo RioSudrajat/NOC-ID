@@ -1,33 +1,36 @@
+import type { ServiceAction } from "@/data/vehicleServiceComponents";
+
 export interface PartRow {
+  componentId: string;
+  componentName: string;
+  componentZone: string;
+  serviceAction: ServiceAction;
   name: string;
   partNumber: string;
   isOem: boolean;
   manufacturer: string;
   priceIDR: number | "";
   scanned: boolean;
+  oemLocked: boolean;
 }
 
 export const emptyPart = (): PartRow => ({
+  componentId: "",
+  componentName: "",
+  componentZone: "",
+  serviceAction: "service",
   name: "",
   partNumber: "",
   isOem: false,
   manufacturer: "",
   priceIDR: "",
   scanned: false,
+  oemLocked: false,
 });
 
-export const serviceTypes = [
-  "Oil Change",
-  "Brake Pad Replacement",
-  "Full Inspection",
-  "CVT Fluid Replacement",
-  "Tire Rotation",
-  "Air Filter Replacement",
-  "Coolant Flush",
-  "Battery Replacement",
-  "Spark Plug Replacement",
-  "Timing Belt Replacement",
-];
+export const serviceLevels = ["Servis Ringan", "Servis Rutin", "Servis Berat", "Other"] as const;
+
+export type ServiceLevel = (typeof serviceLevels)[number];
 
 // Mock OEM Part Catalog -- simulates data pulled from on-chain NFT catalog after scanning
 export const oemCatalog = [

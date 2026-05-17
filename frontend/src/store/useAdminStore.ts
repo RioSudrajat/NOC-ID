@@ -1,10 +1,15 @@
 import { create } from "zustand";
+import { CREDENTIAL_PERMISSIONS } from "@/types/admin";
+import { useUserStore } from "@/store/useUserStore";
 import type {
   PlatformRole,
   WalletEntry,
   PlatformConfig,
   AuditLogEntry,
   DisputeEntry,
+  WorkshopRegistrationData,
+  WorkshopCredential,
+  WorkshopCredentialRecord,
 } from "@/types/admin";
 
 /* ── Storage helpers ── */
@@ -13,6 +18,8 @@ const WALLETS_KEY = "noc-admin-wallets";
 const CONFIG_KEY = "noc-admin-config";
 const AUDIT_KEY = "noc-admin-audit";
 const DISPUTES_KEY = "noc-admin-disputes";
+const REGISTRATIONS_KEY = "noc-workshop-registrations-v1";
+const CREDENTIALS_KEY = "noc-workshop-credentials-v1";
 
 function loadJSON<T>(key: string, fallback: T): T {
   if (typeof window === "undefined") return fallback;
@@ -75,6 +82,32 @@ const seedDisputes: DisputeEntry[] = [
   { id: "DSP-003", type: "payment", userWallet: "BUD1...usr1", workshopId: "ws-1", workshopName: "Bengkel Hendra Motor", bookingId: "BK-003", amountIDR: 300000, status: "resolved", createdAt: "2026-03-10", resolvedAt: "2026-03-12", resolution: "Partial refund Rp 150,000 issued to user.", assignedAdmin: "NOC1...adm1" },
 ];
 
+const seedCredentials: WorkshopCredentialRecord[] = [
+  {
+    credentialId: "cred-ws-1-verified",
+    workshopId: "ws-1",
+    credential: "verified_signer",
+    issuedBy: "platform",
+    issuedAt: "2026-01-10T00:00:00.000Z",
+  },
+  {
+    credentialId: "cred-ws-1-oem",
+    workshopId: "ws-1",
+    credential: "oem_certified",
+    issuedBy: "ent-astra",
+    grantedByEnterpriseId: "ent-astra",
+    issuedAt: "2026-01-11T00:00:00.000Z",
+  },
+  {
+    credentialId: "cred-ws-3-audit",
+    workshopId: "ws-3",
+    credential: "manufacturer_audit_partner",
+    issuedBy: "ent-astra",
+    grantedByEnterpriseId: "ent-astra",
+    issuedAt: "2026-02-01T00:00:00.000Z",
+  },
+];
+
 /* ── Store ── */
 
 interface AdminState {
@@ -82,6 +115,8 @@ interface AdminState {
   platformConfig: PlatformConfig;
   auditLogs: AuditLogEntry[];
   disputes: DisputeEntry[];
+  pendingRegistrations: WorkshopRegistrationData[];
+  credentials: WorkshopCredentialRecord[];
   hydrated: boolean;
 }
 
@@ -95,6 +130,13 @@ interface AdminActions {
   updateConfig: (updates: Partial<PlatformConfig>) => void;
   fileDispute: (dispute: Omit<DisputeEntry, "id" | "createdAt" | "resolvedAt" | "resolution" | "assignedAdmin">) => void;
   resolveDispute: (id: string, resolution: string) => void;
+  submitRegistration: (data: WorkshopRegistrationData) => void;
+  approveWorkshop: (workshopId: string, adminId: string) => void;
+  rejectWorkshop: (workshopId: string, reason: string) => void;
+  grantCredential: (workshopId: string, credential: WorkshopCredential, issuedBy: string, enterpriseId?: string) => void;
+  revokeCredential: (credentialId: string, reason: string) => void;
+  getWorkshopCredentials: (workshopId: string) => WorkshopCredentialRecord[];
+  hasPermission: (workshopId: string, permission: string) => boolean;
 }
 
 export type AdminStore = AdminState & AdminActions;
@@ -118,6 +160,8 @@ export const useAdminStore = create<AdminStore>((set, get) => ({
   platformConfig: defaultConfig,
   auditLogs: [],
   disputes: [],
+  pendingRegistrations: [],
+  credentials: [],
   hydrated: false,
 
   hydrate: () => {
@@ -127,6 +171,8 @@ export const useAdminStore = create<AdminStore>((set, get) => ({
       platformConfig: loadJSON(CONFIG_KEY, defaultConfig),
       auditLogs: loadJSON(AUDIT_KEY, seedAuditLogs),
       disputes: loadJSON(DISPUTES_KEY, seedDisputes),
+      pendingRegistrations: loadJSON(REGISTRATIONS_KEY, []),
+      credentials: loadJSON(CREDENTIALS_KEY, seedCredentials),
       hydrated: true,
     });
   },
@@ -236,4 +282,101 @@ export const useAdminStore = create<AdminStore>((set, get) => ({
       return { disputes, auditLogs };
     });
   },
+
+  submitRegistration: (data) => {
+    set(state => {
+      const entry: WorkshopRegistrationData = {
+        ...data,
+        status: "pending_kyc",
+        submittedAt: new Date().toISOString(),
+        savedAt: Date.now(),
+      };
+      const pendingRegistrations = [
+        entry,
+        ...state.pendingRegistrations.filter(item => item.workshopId !== data.workshopId),
+      ];
+      const auditLogs = addAuditEntry(state.auditLogs, "workshop_registration", entry.businessName, "Workshop registration submitted for KYC.");
+      saveJSON(REGISTRATIONS_KEY, pendingRegistrations);
+      return { pendingRegistrations, auditLogs };
+    });
+  },
+
+  approveWorkshop: (workshopId, adminId) => {
+    set(state => {
+      const pendingRegistrations = state.pendingRegistrations.map(item =>
+        item.workshopId === workshopId
+          ? { ...item, status: "approved" as const, reviewedAt: new Date().toISOString(), reviewedBy: adminId }
+          : item,
+      );
+      const auditLogs = addAuditEntry(state.auditLogs, "kyc_approval", workshopId, "Workshop registration approved.");
+      saveJSON(REGISTRATIONS_KEY, pendingRegistrations);
+      const approved = pendingRegistrations.find(item => item.workshopId === workshopId);
+      const user = useUserStore.getState().currentUser;
+      if (approved?.submittedByUserId && user?.userId === approved.submittedByUserId) {
+        useUserStore.getState().setWorkshopStatus("approved", workshopId);
+      }
+      return { pendingRegistrations, auditLogs };
+    });
+  },
+
+  rejectWorkshop: (workshopId, reason) => {
+    set(state => {
+      const pendingRegistrations = state.pendingRegistrations.map(item =>
+        item.workshopId === workshopId
+          ? {
+              ...item,
+              status: "rejected" as const,
+              reviewedAt: new Date().toISOString(),
+              rejectionReason: reason,
+            }
+          : item,
+      );
+      const auditLogs = addAuditEntry(state.auditLogs, "kyc_rejection", workshopId, reason);
+      saveJSON(REGISTRATIONS_KEY, pendingRegistrations);
+      const rejected = pendingRegistrations.find(item => item.workshopId === workshopId);
+      const user = useUserStore.getState().currentUser;
+      if (rejected?.submittedByUserId && user?.userId === rejected.submittedByUserId) {
+        useUserStore.getState().setWorkshopStatus("rejected", workshopId);
+      }
+      return { pendingRegistrations, auditLogs };
+    });
+  },
+
+  grantCredential: (workshopId, credential, issuedBy, enterpriseId) => {
+    set(state => {
+      const record: WorkshopCredentialRecord = {
+        credentialId: `cred-${workshopId}-${credential}-${Date.now()}`,
+        workshopId,
+        credential,
+        issuedBy,
+        grantedByEnterpriseId: enterpriseId,
+        issuedAt: new Date().toISOString(),
+      };
+      const credentials = [record, ...state.credentials];
+      const auditLogs = addAuditEntry(state.auditLogs, "credential_grant", workshopId, `Granted ${credential}.`);
+      saveJSON(CREDENTIALS_KEY, credentials);
+      return { credentials, auditLogs };
+    });
+  },
+
+  revokeCredential: (credentialId, reason) => {
+    set(state => {
+      const credentials = state.credentials.map(item =>
+        item.credentialId === credentialId
+          ? { ...item, revokedAt: new Date().toISOString(), revocationReason: reason }
+          : item,
+      );
+      const auditLogs = addAuditEntry(state.auditLogs, "credential_revoke", credentialId, reason);
+      saveJSON(CREDENTIALS_KEY, credentials);
+      return { credentials, auditLogs };
+    });
+  },
+
+  getWorkshopCredentials: (workshopId) =>
+    get().credentials.filter(item => item.workshopId === workshopId && !item.revokedAt),
+
+  hasPermission: (workshopId, permission) =>
+    get()
+      .getWorkshopCredentials(workshopId)
+      .some(item => CREDENTIAL_PERMISSIONS[item.credential].includes(permission)),
 }));

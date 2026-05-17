@@ -5,8 +5,9 @@ import { User, Wallet, QrCode, Shield, Sparkles } from "lucide-react";
 import type { BuyerInfoStepProps } from "./types";
 
 export default function BuyerInfoStep({
-  selectedVehicle, saleData, buyerData, onBuyerDataChange, buyerMode, onBuyerModeChange, onSimulateMockBuyer, onBack, onNext,
+  selectedVehicle, saleData, buyerData, onBuyerDataChange, buyerMode, onBuyerModeChange, onSimulateMockBuyer, registeredBuyers, onBack, onNext,
 }: BuyerInfoStepProps) {
+  const selectedBuyer = registeredBuyers.find((buyer) => buyer.userId === buyerData.userId);
   return (
     <motion.div key="step3" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
       <div className="glass-card p-6 rounded-2xl">
@@ -34,17 +35,40 @@ export default function BuyerInfoStep({
         {buyerMode === "manual" ? (
           <div className="grid grid-cols-1 gap-4">
             <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: "var(--solana-text-muted)" }}>Nama Pembeli</label>
-              <input type="text" className="input-field" placeholder="e.g. John Doe" value={buyerData.name} onChange={e => onBuyerDataChange(b => ({ ...b, name: e.target.value }))} />
+              <label className="block text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: "var(--solana-text-muted)" }}>NOC ID Buyer Account</label>
+              <select
+                className="input-field"
+                value={buyerData.userId ?? ""}
+                onChange={(event) => {
+                  const buyer = registeredBuyers.find((item) => item.userId === event.target.value);
+                  onBuyerDataChange((current) => buyer ? ({
+                    ...current,
+                    userId: buyer.userId,
+                    name: buyer.displayName,
+                    email: buyer.email,
+                    wallet: buyer.walletAddress,
+                    nik: buyer.nik ?? "",
+                  }) : { userId: "", name: "", email: "", wallet: "", nik: "" });
+                }}
+              >
+                <option value="">Select registered NOC ID user</option>
+                {registeredBuyers.map((buyer) => (
+                  <option key={buyer.userId} value={buyer.userId}>{buyer.displayName} - {buyer.email}</option>
+                ))}
+              </select>
+              <p className="text-xs mt-1" style={{ color: "var(--solana-text-muted)" }}>Transfer hanya bisa ke user/email/wallet yang sudah terdaftar di NOC ID.</p>
             </div>
             <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: "var(--solana-text-muted)" }}>Solana Wallet Address</label>
-              <input type="text" className="input-field mono" placeholder="e.g. 5YNmS1R5yjLezYF..." value={buyerData.wallet} onChange={e => onBuyerDataChange(b => ({ ...b, wallet: e.target.value }))} />
-              <p className="text-xs mt-1" style={{ color: "var(--solana-text-muted)" }}>Alamat wallet Phantom / Solflare pembeli</p>
+              <label className="block text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: "var(--solana-text-muted)" }}>Buyer Email</label>
+              <input type="text" className="input-field" readOnly value={selectedBuyer?.email ?? buyerData.email ?? ""} />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: "var(--solana-text-muted)" }}>Registered Wallet</label>
+              <input type="text" className="input-field mono" readOnly value={buyerData.wallet} />
             </div>
             <div>
               <label className="block text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: "var(--solana-text-muted)" }}>NIK / ID Pembeli</label>
-              <input type="text" className="input-field mono" placeholder="16 digit NIK" maxLength={16} value={buyerData.nik} onChange={e => onBuyerDataChange(b => ({ ...b, nik: e.target.value }))} />
+              <input type="text" className="input-field mono" readOnly value={buyerData.nik} />
             </div>
           </div>
         ) : (
@@ -86,7 +110,7 @@ export default function BuyerInfoStep({
       </div>
       <div className="flex gap-3 mt-4">
         <button onClick={onBack} className="glow-btn-outline flex-1">Kembali</button>
-        <button onClick={onNext} disabled={buyerMode === "manual" && (!buyerData.name || !buyerData.wallet)} className="glow-btn flex-1 disabled:opacity-40">
+        <button onClick={onNext} disabled={buyerMode === "manual" && (!buyerData.userId || !buyerData.wallet)} className="glow-btn flex-1 disabled:opacity-40">
           Lanjut: Konfirmasi
         </button>
       </div>

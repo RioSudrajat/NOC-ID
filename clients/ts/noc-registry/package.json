@@ -1,0 +1,17 @@
+{
+  "name": "@noc-id/noc-registry-client",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@solana/kit": "^6.9.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  }
+}

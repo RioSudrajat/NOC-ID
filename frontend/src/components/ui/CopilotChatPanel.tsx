@@ -18,6 +18,7 @@ export function CopilotChatPanel({ isOpen, onClose, partName }: CopilotChatPanel
   // Initialize generic chat when a new part is selected
   useEffect(() => {
     if (isOpen && partName) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setMessages([
         { 
           role: "assistant", 

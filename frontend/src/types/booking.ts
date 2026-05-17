@@ -1,5 +1,3 @@
-import { VehicleKey } from "@/context/ActiveVehicleContext";
-
 export interface Workshop {
   id: string;
   name: string;
@@ -13,6 +11,7 @@ export interface Workshop {
   oem: boolean;
   specialization: string;
   phone: string;
+  treasuryWallet?: string;
   operatingHours: { weekday: string; weekend: string };
   coordinates: { lat: number; lng: number };
   badges: string[];
@@ -72,15 +71,22 @@ export interface InvoicePart {
   manufacturer: string;
   price: number;
   isOEM: boolean;
+  componentId?: string;
+  componentName?: string;
+  componentZone?: string;
+  serviceAction?: "inspect" | "service" | "repair" | "replace";
 }
 
 export interface InvoiceData {
+  invoiceId?: string;
   parts: InvoicePart[];
   serviceCost: number;
   /** Internal workshop overhead (anchoring gas). NOT billed to customer -- kept for accounting. */
   gasFee: number;
   totalIDR: number;
   serviceType: string;
+  serviceLevel?: string;
+  serviceFocus?: string;
   mechanicNotes: string;
 }
 
@@ -96,7 +102,9 @@ export interface BookingForm {
   complaint: string;
   shareHistory: boolean;
   shareDigitalTwin: boolean;
-  vehicleKey: VehicleKey;
+  vehicleKey: string;
+  vehicleName?: string;
+  vehicleVin?: string;
 }
 
 export interface BookingRequest {
@@ -119,7 +127,7 @@ export interface CompletedBooking {
   workshopName: string;
   workshopId: string;
   vehicleName: string;
-  vehicleKey: VehicleKey;
+  vehicleKey: string;
   vin: string;
   serviceType: string;
   date: string;
@@ -136,7 +144,7 @@ export interface CompletedBooking {
 // Notification item for booking events
 export interface BookingNotification {
   id: string;
-  type: "booking_pending" | "booking_accepted" | "booking_rejected" | "booking_service" | "booking_invoice" | "booking_paid" | "booking_completed" | "service_anchoring" | "service_anchored" | "warranty_submitted" | "warranty_update" | "recall_notice" | "kyc_change" | "dispute_filed" | "dispute_resolved";
+  type: "booking_pending" | "booking_accepted" | "booking_rejected" | "booking_service" | "booking_invoice" | "booking_paid" | "booking_completed" | "service_anchoring" | "service_anchored" | "warranty_submitted" | "warranty_update" | "recall_notice" | "kyc_change" | "audit_request" | "audit_submitted" | "mint_ready" | "vehicle_claimed" | "dispute_filed" | "dispute_resolved";
   title: string;
   message: string;
   time: string;
@@ -145,11 +153,11 @@ export interface BookingNotification {
 }
 
 export interface WalkinParams {
-  vehicleKey: VehicleKey;
+  vehicleKey: string;
   vehicleName: string;
   vin: string;
   workshopName: string;
 }
 
 /** Per-vehicle booking slot map. Independent sessions coexist without overwriting each other. */
-export type BookingMap = Record<VehicleKey, BookingRequest | null>;
+export type BookingMap = Record<string, BookingRequest | null>;

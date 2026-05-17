@@ -1,4 +1,5 @@
 import type { Workshop } from "@/types/booking";
+import type { WorkshopRegistrationData } from "@/types/admin";
 
 export const workshopsData: Workshop[] = [
   {
@@ -19,9 +20,9 @@ export const workshopsData: Workshop[] = [
     badges: ["Verified Signer", "OEM Certified"],
     serviceBreakdown: { "Oil Change": 420, "Brake Service": 280, "Full Inspection": 190, "Transmission": 150, "Electrical": 120, "Others": 124 },
     reviews: [
-      { name: "Pak Ahmad", rating: 5, date: "2026-03-10", comment: "Servis sangat profesional, mekanik berpengalaman. CVT Belt langsung ketahuan harus ganti.", onChainVerified: true, vehicleType: "Toyota Avanza 2024" },
+      { name: "Pak Ahmad", rating: 5, date: "2026-03-10", comment: "Servis sangat profesional, mekanik berpengalaman. CVT Belt langsung ketahuan harus ganti.", onChainVerified: true, vehicleType: "BMW M4 G82 2025" },
       { name: "Ibu Sari", rating: 5, date: "2026-02-28", comment: "Harga wajar dan transparan. Suku cadang OEM asli semua.", onChainVerified: true, vehicleType: "Daihatsu Xenia 2023" },
-      { name: "Mas Doni", rating: 4, date: "2026-02-15", comment: "Bagus tapi antrian agak panjang di hari Sabtu.", onChainVerified: true, vehicleType: "Toyota Avanza 2025" },
+      { name: "Mas Doni", rating: 4, date: "2026-02-15", comment: "Bagus tapi antrian agak panjang di hari Sabtu.", onChainVerified: true, vehicleType: "BMW M4 G82 2025" },
     ],
   },
   {
@@ -42,7 +43,7 @@ export const workshopsData: Workshop[] = [
     badges: ["Verified Signer"],
     serviceBreakdown: { "Oil Change": 310, "Brake Service": 180, "CVT Service": 140, "Full Inspection": 110, "Electrical": 80, "Others": 56 },
     reviews: [
-      { name: "Pak Rudi", rating: 5, date: "2026-03-05", comment: "Spesialis Honda Beat memang terpercaya. V-Belt langsung diganti dengan yang OEM.", onChainVerified: true, vehicleType: "Honda Beat 2024" },
+      { name: "Pak Rudi", rating: 5, date: "2026-03-05", comment: "Spesialis Harley-Davidson memang terpercaya. V-Belt langsung diganti dengan yang OEM.", onChainVerified: true, vehicleType: "Harley-Davidson Sportster S" },
       { name: "Mbak Lia", rating: 4, date: "2026-02-20", comment: "Cepat dan rapi, harga kompetitif dibanding bengkel resmi.", onChainVerified: true },
     ],
   },
@@ -86,7 +87,7 @@ export const workshopsData: Workshop[] = [
     badges: ["Verified Signer", "OEM Certified"],
     serviceBreakdown: { "Oil Change": 520, "CVT Service": 380, "Brake Service": 240, "Injection Cleaning": 200, "Electrical": 120, "Others": 100 },
     reviews: [
-      { name: "Siti Nur", rating: 4, date: "2026-02-12", comment: "Bengkel resmi Honda, pelayanan standar tapi terjamin kualitasnya.", onChainVerified: true, vehicleType: "Honda Beat 2024" },
+      { name: "Siti Nur", rating: 4, date: "2026-02-12", comment: "Bengkel resmi Honda, pelayanan standar tapi terjamin kualitasnya.", onChainVerified: true, vehicleType: "Harley-Davidson Sportster S" },
       { name: "Pak Joko", rating: 5, date: "2026-01-25", comment: "Service rutin selalu di sini. Mekanik Honda memang paling ngerti.", onChainVerified: true },
     ],
   },
@@ -137,3 +138,34 @@ export const workshopsData: Workshop[] = [
 ];
 
 export const workshopsById = new Map(workshopsData.map(ws => [ws.id, ws]));
+
+export function workshopFromRegistration(registration: WorkshopRegistrationData): Workshop {
+  const approved = registration.status === "approved";
+  return {
+    id: registration.workshopId,
+    name: registration.businessName || "Registered Workshop",
+    location: registration.city || registration.province || "Indonesia",
+    city: registration.city || "Unknown",
+    address: registration.address || "-",
+    rating: 0,
+    totalReviews: 0,
+    totalServices: 0,
+    verified: approved,
+    oem: registration.oemBrandClaims.length > 0,
+    specialization: registration.oemBrandClaims.length > 0 ? registration.oemBrandClaims.join(", ") : "General Service",
+    phone: registration.phone,
+    operatingHours: registration.operatingHours,
+    coordinates: registration.coordinates,
+    badges: approved ? ["Verified Signer"] : ["Pending KYC"],
+    serviceBreakdown: {},
+    reviews: [],
+  };
+}
+
+export function mergeRegisteredWorkshops(registrations: WorkshopRegistrationData[]) {
+  const byId = new Map(workshopsData.map((workshop) => [workshop.id, workshop]));
+  for (const registration of registrations) {
+    byId.set(registration.workshopId, workshopFromRegistration(registration));
+  }
+  return Array.from(byId.values());
+}

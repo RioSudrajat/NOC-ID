@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Providers } from "@/context/Providers";
+import { SolanaAppProvider } from "@/providers/SolanaAppProvider";
 import { Orbitron, Exo_2 } from "next/font/google";
 import "./globals.css";
 
@@ -24,10 +25,12 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${orbitron.variable} ${exo2.variable}`}>
+    <html lang="en" data-scroll-behavior="smooth" className={`${orbitron.variable} ${exo2.variable}`}>
       <body className="font-exo bg-[#1A1D23] text-zinc-100 antialiased selection:bg-teal-400/25 selection:text-teal-900">
         <Providers>
-          {children}
+          <SolanaAppProvider>
+            {children}
+          </SolanaAppProvider>
         </Providers>
       </body>
     </html>

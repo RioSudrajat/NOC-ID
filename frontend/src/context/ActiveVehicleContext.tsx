@@ -1,50 +1,129 @@
 "use client";
-import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 
-export const vehicleData = {
-  avanza: { name: "Toyota Avanza 2025", vin: "MHKA1BA1JFK000001", health: 87, nextService: "In 15 days", owner: "Pak Budi", licensePlate: "B 1234 CD", mileage: "34,521" },
-  bmw_m4: { name: "BMW M4 G82 2025", vin: "WBA43AZ0X0CH00001", health: 95, nextService: "In 45 days", owner: "Andi Wijaya", licensePlate: "B 4 M", mileage: "12,400" },
-  beat: { name: "Honda Beat 2024", vin: "MH1JFZ110K000042", health: 92, nextService: "In 60 days", owner: "Siti Nur", licensePlate: "D 5678 EF", mileage: "14,200" },
-  harley: { name: "Harley-Davidson Sportster S", vin: "HD1ME23145K998212", health: 98, nextService: "In 120 days", owner: "John Doe", licensePlate: "B 8888 HD", mileage: "8,900" },
-  supra: { name: "Toyota Supra Veilside", vin: "JT2BF28K6420S0001", health: 94, nextService: "In 30 days", owner: "Ryo Takahashi", licensePlate: "B 80 PRA", mileage: "8,500" }
-};
+import { createContext, useCallback, useContext, useEffect, useMemo, type ReactNode } from "react";
+import { useVehicleRegistryStore } from "@/store/useVehicleRegistryStore";
+import {
+  DEMO_VEHICLES,
+  LEGACY_VEHICLE_ID_MAP,
+  VEHICLE_ID_LEGACY_KEY_MAP,
+  formatMileageKm,
+  getVehicleDisplayName,
+  type VehicleIdentity,
+  type VehicleKey,
+} from "@/types/vehicle";
 
-export type VehicleKey = keyof typeof vehicleData;
+export type { VehicleKey } from "@/types/vehicle";
+
+export interface LegacyVehicleData {
+  vehicleId: string;
+  name: string;
+  vin: string;
+  health: number;
+  nextService: string;
+  owner: string;
+  licensePlate: string;
+  mileage: string;
+  fuelType: "gasoline" | "diesel" | "electric" | "hybrid";
+  category: VehicleIdentity["category"];
+  baseConsumptionPerKm: number;
+  fuelPricePerLiter: number;
+  make: string;
+  model: string;
+  year: number;
+  color: string;
+}
+
+function toLegacyVehicleData(vehicle: VehicleIdentity): LegacyVehicleData {
+  return {
+    vehicleId: vehicle.vehicleId,
+    name: getVehicleDisplayName(vehicle),
+    vin: vehicle.vin,
+    health: vehicle.healthScore,
+    nextService: vehicle.nextServiceDue ?? "Due soon",
+    owner: vehicle.currentOwnerId === "demo" ? "Demo Owner" : vehicle.currentOwnerId,
+    licensePlate: vehicle.licensePlate,
+    mileage: formatMileageKm(vehicle.currentMileageKm),
+    fuelType: vehicle.fuelType,
+    category: vehicle.category,
+    baseConsumptionPerKm: vehicle.baseConsumptionPerKm,
+    fuelPricePerLiter: vehicle.fuelPricePerLiter,
+    make: vehicle.make,
+    model: vehicle.model,
+    year: vehicle.year,
+    color: vehicle.color,
+  };
+}
+
+export const vehicleData = Object.fromEntries(
+  DEMO_VEHICLES.map((vehicle) => [vehicle.legacyKey, toLegacyVehicleData(vehicle)]),
+) as Record<string, LegacyVehicleData>;
 
 interface ActiveVehicleContextType {
   activeVehicle: VehicleKey;
-  setActiveVehicle: (key: VehicleKey) => void;
-  currentVehicleData: typeof vehicleData[VehicleKey];
+  activeVehicleId: string;
+  activeVehicleIdentity: VehicleIdentity;
+  setActiveVehicle: (keyOrId: VehicleKey | string) => void;
+  currentVehicleData: LegacyVehicleData;
 }
 
 const ActiveVehicleContext = createContext<ActiveVehicleContextType | undefined>(undefined);
 
+function getLegacyKey(vehicleId: string | null): VehicleKey {
+  return VEHICLE_ID_LEGACY_KEY_MAP[vehicleId ?? ""] ?? "bmw_m4";
+}
+
+function normalizeToVehicleId(keyOrId: VehicleKey | string) {
+  return LEGACY_VEHICLE_ID_MAP[keyOrId as VehicleKey] ?? keyOrId;
+}
+
 export function ActiveVehicleProvider({ children }: { children: ReactNode }) {
-  const [activeVehicle, setActiveVehicleState] = useState<VehicleKey>("avanza");
+  const hydrate = useVehicleRegistryStore((state) => state.hydrate);
+  const vehicles = useVehicleRegistryStore((state) => state.vehicles);
+  const activeVehicleId = useVehicleRegistryStore((state) => state.activeVehicleId);
+  const setActiveVehicleId = useVehicleRegistryStore((state) => state.setActiveVehicle);
 
   useEffect(() => {
-    const saved = localStorage.getItem("noc_active_vehicle") as VehicleKey;
-    if (saved && vehicleData[saved]) {
-      setActiveVehicleState(saved);
-    }
-  }, []);
+    hydrate();
+  }, [hydrate]);
 
-  const setActiveVehicle = (key: VehicleKey) => {
-    setActiveVehicleState(key);
-    localStorage.setItem("noc_active_vehicle", key);
-  };
+  const selected = useMemo(
+    () =>
+      vehicles.find((vehicle) => vehicle.vehicleId === activeVehicleId) ??
+      vehicles[0] ??
+      DEMO_VEHICLES[0],
+    [activeVehicleId, vehicles],
+  );
+  const activeVehicle = useMemo(() => getLegacyKey(selected.vehicleId), [selected.vehicleId]);
+
+  const setActiveVehicle = useCallback((keyOrId: VehicleKey | string) => {
+    setActiveVehicleId(normalizeToVehicleId(keyOrId));
+  }, [setActiveVehicleId]);
+
+  const currentVehicleData = useMemo(() => toLegacyVehicleData(selected), [selected]);
+  const contextValue = useMemo(
+    () => ({
+      activeVehicle,
+      activeVehicleId: selected.vehicleId,
+      activeVehicleIdentity: selected,
+      setActiveVehicle,
+      currentVehicleData,
+    }),
+    [activeVehicle, currentVehicleData, selected, setActiveVehicle],
+  );
 
   return (
-    <ActiveVehicleContext.Provider value={{
-      activeVehicle,
-      setActiveVehicle,
-      currentVehicleData: vehicleData[activeVehicle]
-    }}>
+    <ActiveVehicleContext.Provider value={contextValue}>
       {children}
     </ActiveVehicleContext.Provider>
   );
 }
 
+// TODO: Remove shim after all pages migrate directly to useVehicleRegistryStore().
 export function useActiveVehicle() {
   return useContext(ActiveVehicleContext);
+}
+
+export function getLegacyVehicleDataById(vehicleId: string) {
+  const legacyKey = getLegacyKey(vehicleId);
+  return vehicleData[legacyKey];
 }

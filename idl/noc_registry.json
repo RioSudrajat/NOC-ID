@@ -1,0 +1,1806 @@
+{
+  "address": "GpQrQR2pQnA7ihao7yJoCceas2x1nLor1nfB5QPPhHJU",
+  "metadata": {
+    "name": "noc_registry",
+    "version": "0.1.0",
+    "spec": "0.1.0",
+    "description": "NOC ID registry, credential, payment receipt, and lifecycle hash anchors"
+  },
+  "instructions": [
+    {
+      "name": "anchor_case_event",
+      "discriminator": [
+        21,
+        187,
+        217,
+        199,
+        188,
+        106,
+        118,
+        72
+      ],
+      "accounts": [
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "actor",
+          "signer": true
+        },
+        {
+          "name": "platform_config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  108,
+                  97,
+                  116,
+                  102,
+                  111,
+                  114,
+                  109
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "vehicle_record"
+        },
+        {
+          "name": "case_record",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  97,
+                  115,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "vehicle_record"
+              },
+              {
+                "kind": "arg",
+                "path": "case_id_hash"
+              }
+            ]
+          }
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "case_id_hash",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "case_kind",
+          "type": {
+            "defined": {
+              "name": "CaseKind"
+            }
+          }
+        },
+        {
+          "name": "payload_hash",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "status_code",
+          "type": "u8"
+        }
+      ]
+    },
+    {
+      "name": "anchor_service_log",
+      "discriminator": [
+        178,
+        6,
+        54,
+        23,
+        156,
+        198,
+        72,
+        219
+      ],
+      "accounts": [
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "workshop_authority",
+          "signer": true
+        },
+        {
+          "name": "platform_config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  108,
+                  97,
+                  116,
+                  102,
+                  111,
+                  114,
+                  109
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "vehicle_record",
+          "writable": true
+        },
+        {
+          "name": "workshop_record"
+        },
+        {
+          "name": "credential_record"
+        },
+        {
+          "name": "service_log_record",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  101,
+                  114,
+                  118,
+                  105,
+                  99,
+                  101,
+                  45,
+                  108,
+                  111,
+                  103
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "vehicle_record"
+              },
+              {
+                "kind": "arg",
+                "path": "service_id_hash"
+              }
+            ]
+          }
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "service_id_hash",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "odometer_km",
+          "type": "u32"
+        },
+        {
+          "name": "invoice_hash",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "parts_hash",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "evidence_hash",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "anchor_trip_summary",
+      "discriminator": [
+        175,
+        152,
+        76,
+        84,
+        205,
+        95,
+        243,
+        63
+      ],
+      "accounts": [
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "owner",
+          "signer": true
+        },
+        {
+          "name": "platform_config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  108,
+                  97,
+                  116,
+                  102,
+                  111,
+                  114,
+                  109
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "vehicle_record"
+        },
+        {
+          "name": "trip_summary_record",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  116,
+                  114,
+                  105,
+                  112
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "vehicle_record"
+              },
+              {
+                "kind": "arg",
+                "path": "trip_id_hash"
+              }
+            ]
+          }
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "trip_id_hash",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "metrics_hash",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "approve_workshop",
+      "discriminator": [
+        125,
+        27,
+        111,
+        111,
+        153,
+        24,
+        231,
+        68
+      ],
+      "accounts": [
+        {
+          "name": "superadmin",
+          "signer": true,
+          "relations": [
+            "platform_config"
+          ]
+        },
+        {
+          "name": "platform_config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  108,
+                  97,
+                  116,
+                  102,
+                  111,
+                  114,
+                  109
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "workshop_record",
+          "writable": true
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "claim_vehicle",
+      "discriminator": [
+        204,
+        115,
+        160,
+        246,
+        172,
+        119,
+        226,
+        169
+      ],
+      "accounts": [
+        {
+          "name": "owner",
+          "signer": true
+        },
+        {
+          "name": "platform_config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  108,
+                  97,
+                  116,
+                  102,
+                  111,
+                  114,
+                  109
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "vehicle_record",
+          "writable": true
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "grant_credential",
+      "discriminator": [
+        7,
+        230,
+        26,
+        246,
+        80,
+        81,
+        166,
+        218
+      ],
+      "accounts": [
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "issuer",
+          "signer": true
+        },
+        {
+          "name": "platform_config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  108,
+                  97,
+                  116,
+                  102,
+                  111,
+                  114,
+                  109
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "workshop_record",
+          "writable": true
+        },
+        {
+          "name": "credential_record",
+          "writable": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "credential",
+          "type": {
+            "defined": {
+              "name": "CredentialKind"
+            }
+          }
+        },
+        {
+          "name": "valid_until_unix",
+          "type": "i64"
+        }
+      ]
+    },
+    {
+      "name": "initialize_platform",
+      "discriminator": [
+        119,
+        201,
+        101,
+        45,
+        75,
+        122,
+        89,
+        3
+      ],
+      "accounts": [
+        {
+          "name": "superadmin",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "platform_config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  108,
+                  97,
+                  116,
+                  102,
+                  111,
+                  114,
+                  109
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "platform_fee_bps",
+          "type": "u16"
+        },
+        {
+          "name": "gas_subsidy_bps",
+          "type": "u16"
+        },
+        {
+          "name": "max_batch_mint_size",
+          "type": "u32"
+        }
+      ]
+    },
+    {
+      "name": "mark_vehicle_transferred",
+      "discriminator": [
+        133,
+        78,
+        185,
+        242,
+        219,
+        155,
+        54,
+        221
+      ],
+      "accounts": [
+        {
+          "name": "enterprise_authority",
+          "signer": true
+        },
+        {
+          "name": "platform_config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  108,
+                  97,
+                  116,
+                  102,
+                  111,
+                  114,
+                  109
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "enterprise_record"
+        },
+        {
+          "name": "vehicle_record",
+          "writable": true
+        }
+      ],
+      "args": [
+        {
+          "name": "new_owner",
+          "type": "pubkey"
+        }
+      ]
+    },
+    {
+      "name": "record_payment_receipt",
+      "discriminator": [
+        106,
+        250,
+        246,
+        119,
+        96,
+        176,
+        222,
+        30
+      ],
+      "accounts": [
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "payment_payer"
+        },
+        {
+          "name": "recipient"
+        },
+        {
+          "name": "platform_config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  108,
+                  97,
+                  116,
+                  102,
+                  111,
+                  114,
+                  109
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "vehicle_record"
+        },
+        {
+          "name": "payment_receipt_record",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  97,
+                  121,
+                  109,
+                  101,
+                  110,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "vehicle_record"
+              },
+              {
+                "kind": "arg",
+                "path": "payment_id_hash"
+              }
+            ]
+          }
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "payment_id_hash",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "invoice_hash",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "mint",
+          "type": "pubkey"
+        },
+        {
+          "name": "amount_atomic",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "register_enterprise",
+      "discriminator": [
+        114,
+        163,
+        129,
+        163,
+        219,
+        79,
+        123,
+        149
+      ],
+      "accounts": [
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "superadmin",
+          "signer": true,
+          "relations": [
+            "platform_config"
+          ]
+        },
+        {
+          "name": "platform_config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  108,
+                  97,
+                  116,
+                  102,
+                  111,
+                  114,
+                  109
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "enterprise_authority"
+        },
+        {
+          "name": "enterprise_record",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  101,
+                  110,
+                  116,
+                  101,
+                  114,
+                  112,
+                  114,
+                  105,
+                  115,
+                  101
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "enterprise_id_hash"
+              }
+            ]
+          }
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "enterprise_id_hash",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "metadata_hash",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "register_vehicle_record",
+      "discriminator": [
+        192,
+        0,
+        108,
+        216,
+        165,
+        70,
+        245,
+        196
+      ],
+      "accounts": [
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "enterprise_authority",
+          "signer": true
+        },
+        {
+          "name": "platform_config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  108,
+                  97,
+                  116,
+                  102,
+                  111,
+                  114,
+                  109
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "enterprise_record"
+        },
+        {
+          "name": "initial_owner"
+        },
+        {
+          "name": "vehicle_record",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  118,
+                  101,
+                  104,
+                  105,
+                  99,
+                  108,
+                  101
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "vin_hash"
+              }
+            ]
+          }
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "vin_hash",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "metadata_hash",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "cnft_asset",
+          "type": "pubkey"
+        },
+        {
+          "name": "merkle_tree",
+          "type": "pubkey"
+        },
+        {
+          "name": "leaf_index",
+          "type": "u32"
+        }
+      ]
+    },
+    {
+      "name": "register_workshop",
+      "discriminator": [
+        216,
+        0,
+        194,
+        207,
+        143,
+        248,
+        134,
+        116
+      ],
+      "accounts": [
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "superadmin",
+          "signer": true,
+          "relations": [
+            "platform_config"
+          ]
+        },
+        {
+          "name": "platform_config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  108,
+                  97,
+                  116,
+                  102,
+                  111,
+                  114,
+                  109
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "workshop_authority"
+        },
+        {
+          "name": "workshop_record",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  119,
+                  111,
+                  114,
+                  107,
+                  115,
+                  104,
+                  111,
+                  112
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "workshop_id_hash"
+              }
+            ]
+          }
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "workshop_id_hash",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "metadata_hash",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "revoke_credential",
+      "discriminator": [
+        38,
+        123,
+        95,
+        95,
+        223,
+        158,
+        169,
+        87
+      ],
+      "accounts": [
+        {
+          "name": "issuer",
+          "signer": true,
+          "relations": [
+            "credential_record"
+          ]
+        },
+        {
+          "name": "platform_config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  108,
+                  97,
+                  116,
+                  102,
+                  111,
+                  114,
+                  109
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "credential_record",
+          "writable": true
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "set_platform_config",
+      "discriminator": [
+        101,
+        174,
+        224,
+        248,
+        61,
+        199,
+        25,
+        216
+      ],
+      "accounts": [
+        {
+          "name": "superadmin",
+          "signer": true,
+          "relations": [
+            "platform_config"
+          ]
+        },
+        {
+          "name": "platform_config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  108,
+                  97,
+                  116,
+                  102,
+                  111,
+                  114,
+                  109
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "args": [
+        {
+          "name": "platform_fee_bps",
+          "type": "u16"
+        },
+        {
+          "name": "gas_subsidy_bps",
+          "type": "u16"
+        },
+        {
+          "name": "max_batch_mint_size",
+          "type": "u32"
+        },
+        {
+          "name": "paused",
+          "type": "bool"
+        }
+      ]
+    }
+  ],
+  "accounts": [
+    {
+      "name": "CaseRecord",
+      "discriminator": [
+        98,
+        172,
+        46,
+        158,
+        88,
+        134,
+        10,
+        138
+      ]
+    },
+    {
+      "name": "CredentialRecord",
+      "discriminator": [
+        115,
+        231,
+        45,
+        163,
+        248,
+        224,
+        106,
+        207
+      ]
+    },
+    {
+      "name": "EnterpriseRecord",
+      "discriminator": [
+        93,
+        204,
+        86,
+        48,
+        49,
+        40,
+        51,
+        155
+      ]
+    },
+    {
+      "name": "PaymentReceiptRecord",
+      "discriminator": [
+        78,
+        215,
+        32,
+        59,
+        195,
+        219,
+        144,
+        155
+      ]
+    },
+    {
+      "name": "PlatformConfig",
+      "discriminator": [
+        160,
+        78,
+        128,
+        0,
+        248,
+        83,
+        230,
+        160
+      ]
+    },
+    {
+      "name": "ServiceLogRecord",
+      "discriminator": [
+        210,
+        94,
+        72,
+        174,
+        201,
+        84,
+        110,
+        105
+      ]
+    },
+    {
+      "name": "TripSummaryRecord",
+      "discriminator": [
+        201,
+        168,
+        252,
+        124,
+        161,
+        162,
+        197,
+        177
+      ]
+    },
+    {
+      "name": "VehicleRecord",
+      "discriminator": [
+        193,
+        90,
+        97,
+        158,
+        129,
+        151,
+        10,
+        189
+      ]
+    },
+    {
+      "name": "WorkshopRecord",
+      "discriminator": [
+        154,
+        172,
+        73,
+        135,
+        55,
+        184,
+        15,
+        66
+      ]
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "PlatformPaused",
+      "msg": "Platform is paused."
+    },
+    {
+      "code": 6001,
+      "name": "Unauthorized",
+      "msg": "The caller is not authorized for this operation."
+    },
+    {
+      "code": 6002,
+      "name": "InvalidBasisPoints",
+      "msg": "Basis points must be <= 10000."
+    },
+    {
+      "code": 6003,
+      "name": "WorkshopNotApproved",
+      "msg": "Workshop is not approved."
+    },
+    {
+      "code": 6004,
+      "name": "CredentialRevoked",
+      "msg": "Credential is revoked."
+    },
+    {
+      "code": 6005,
+      "name": "CredentialExpired",
+      "msg": "Credential is expired."
+    },
+    {
+      "code": 6006,
+      "name": "InvalidCredential",
+      "msg": "Credential does not permit this action."
+    },
+    {
+      "code": 6007,
+      "name": "InvalidOwner",
+      "msg": "Owner does not match the vehicle record."
+    }
+  ],
+  "types": [
+    {
+      "name": "CaseKind",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Warranty"
+          },
+          {
+            "name": "Dispute"
+          },
+          {
+            "name": "Recall"
+          }
+        ]
+      }
+    },
+    {
+      "name": "CaseRecord",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "vehicle",
+            "type": "pubkey"
+          },
+          {
+            "name": "actor",
+            "type": "pubkey"
+          },
+          {
+            "name": "case_id_hash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "case_kind",
+            "type": {
+              "defined": {
+                "name": "CaseKind"
+              }
+            }
+          },
+          {
+            "name": "payload_hash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "status_code",
+            "type": "u8"
+          },
+          {
+            "name": "created_at_unix",
+            "type": "i64"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "CredentialKind",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "VerifiedSigner"
+          },
+          {
+            "name": "OemCertified"
+          },
+          {
+            "name": "ManufacturerAuditPartner"
+          },
+          {
+            "name": "RecallExecutor"
+          }
+        ]
+      }
+    },
+    {
+      "name": "CredentialRecord",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "workshop",
+            "type": "pubkey"
+          },
+          {
+            "name": "issuer",
+            "type": "pubkey"
+          },
+          {
+            "name": "credential",
+            "type": {
+              "defined": {
+                "name": "CredentialKind"
+              }
+            }
+          },
+          {
+            "name": "valid_until_unix",
+            "type": "i64"
+          },
+          {
+            "name": "revoked",
+            "type": "bool"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "EnterpriseRecord",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "enterprise_id_hash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "authority",
+            "type": "pubkey"
+          },
+          {
+            "name": "metadata_hash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "active",
+            "type": "bool"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "PaymentReceiptRecord",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "vehicle",
+            "type": "pubkey"
+          },
+          {
+            "name": "payer",
+            "type": "pubkey"
+          },
+          {
+            "name": "recipient",
+            "type": "pubkey"
+          },
+          {
+            "name": "payment_id_hash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "invoice_hash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "amount_atomic",
+            "type": "u64"
+          },
+          {
+            "name": "created_at_unix",
+            "type": "i64"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "PlatformConfig",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "superadmin",
+            "type": "pubkey"
+          },
+          {
+            "name": "platform_fee_bps",
+            "type": "u16"
+          },
+          {
+            "name": "gas_subsidy_bps",
+            "type": "u16"
+          },
+          {
+            "name": "max_batch_mint_size",
+            "type": "u32"
+          },
+          {
+            "name": "paused",
+            "type": "bool"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ServiceLogRecord",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "vehicle",
+            "type": "pubkey"
+          },
+          {
+            "name": "workshop",
+            "type": "pubkey"
+          },
+          {
+            "name": "service_id_hash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "odometer_km",
+            "type": "u32"
+          },
+          {
+            "name": "invoice_hash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "parts_hash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "evidence_hash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "created_at_unix",
+            "type": "i64"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "TripSummaryRecord",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "vehicle",
+            "type": "pubkey"
+          },
+          {
+            "name": "owner",
+            "type": "pubkey"
+          },
+          {
+            "name": "trip_id_hash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "metrics_hash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "created_at_unix",
+            "type": "i64"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "VehicleRecord",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "vin_hash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "enterprise",
+            "type": "pubkey"
+          },
+          {
+            "name": "current_owner",
+            "type": "pubkey"
+          },
+          {
+            "name": "metadata_hash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "cnft_asset",
+            "type": "pubkey"
+          },
+          {
+            "name": "merkle_tree",
+            "type": "pubkey"
+          },
+          {
+            "name": "leaf_index",
+            "type": "u32"
+          },
+          {
+            "name": "status",
+            "type": {
+              "defined": {
+                "name": "VehicleStatus"
+              }
+            }
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "VehicleStatus",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Pending"
+          },
+          {
+            "name": "Escrow"
+          },
+          {
+            "name": "Minted"
+          },
+          {
+            "name": "Transferred"
+          }
+        ]
+      }
+    },
+    {
+      "name": "WorkshopRecord",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "workshop_id_hash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "authority",
+            "type": "pubkey"
+          },
+          {
+            "name": "metadata_hash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "status",
+            "type": {
+              "defined": {
+                "name": "WorkshopStatus"
+              }
+            }
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "WorkshopStatus",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "PendingKyc"
+          },
+          {
+            "name": "Approved"
+          },
+          {
+            "name": "Rejected"
+          },
+          {
+            "name": "Suspended"
+          }
+        ]
+      }
+    }
+  ]
+}

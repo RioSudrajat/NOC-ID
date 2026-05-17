@@ -1,0 +1,19 @@
+[package]
+name = "noc_registry"
+version = "0.1.0"
+description = "NOC ID registry, credential, payment receipt, and lifecycle hash anchors"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "lib"]
+name = "noc_registry"
+
+[features]
+no-entrypoint = []
+no-idl = []
+cpi = ["no-entrypoint"]
+idl-build = ["anchor-lang/idl-build"]
+default = []
+
+[dependencies]
+anchor-lang = "0.31.1"

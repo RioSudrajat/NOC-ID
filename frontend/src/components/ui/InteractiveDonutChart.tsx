@@ -41,6 +41,7 @@ export function InteractiveDonutChart({ data = defaultData }: { data?: ChartData
     // We adjust it by -90 deg because the SVG starts at top
     const trueMidAngle = midAngle - 90;
     
+    // eslint-disable-next-line react-hooks/immutability
     currentAccumulated += item.value;
 
     return { ...item, percentage, dashLength, dashGap, offset, trueMidAngle, index };

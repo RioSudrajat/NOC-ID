@@ -58,6 +58,7 @@ export default function WorkshopGlobalHistory() {
   useEffect(() => {
     const merged = [...initialHistory, ...completedAsEvents];
     merged.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setData(merged);
   }, [completedAsEvents]);
 

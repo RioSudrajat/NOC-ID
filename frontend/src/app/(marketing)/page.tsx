@@ -1,9 +1,8 @@
 "use client";
 
-import { useState, useEffect, useRef, Suspense } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import dynamic from "next/dynamic";
 import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
 import {
   ArrowRight,
@@ -33,16 +32,8 @@ import {
 } from "lucide-react";
 
 /* ——————————————— HeroVehicle (tilt parallax + 3D fallback) ——————————————— */
-const HeroCanvas = dynamic(() => import("@/components/landing/HeroCanvas"), {
-  ssr: false,
-  loading: () => (
-    <div className="absolute inset-0 animate-pulse bg-zinc-100 rounded-[28px]" />
-  ),
-});
-
 function HeroVehicle() {
   const ref = useRef<HTMLDivElement>(null);
-  const [imgError, setImgError] = useState(false);
 
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
@@ -81,24 +72,24 @@ function HeroVehicle() {
         style={{ rotateX, rotateY, x: translateX, transformStyle: "preserve-3d" }}
         className="relative h-full w-full"
       >
-        {imgError ? (
-          <div className="absolute inset-0 rounded-[28px] overflow-hidden">
-            <Suspense
-              fallback={<div className="h-full w-full bg-zinc-100 animate-pulse" />}
-            >
-              <HeroCanvas />
-            </Suspense>
+        <div className="absolute inset-0 overflow-hidden rounded-[28px] border border-zinc-200 bg-[linear-gradient(145deg,#ffffff_0%,#f4f4f5_48%,#e4f7f3_100%)] shadow-[0_40px_70px_rgba(15,23,42,0.14)]">
+          <div className="absolute inset-x-8 bottom-16 h-7 rounded-full bg-zinc-900/20 blur-2xl" />
+          <div className="absolute inset-0 [background-image:radial-gradient(circle_at_1px_1px,rgba(15,23,42,0.08)_1px,transparent_0)] [background-size:24px_24px] opacity-60" />
+
+          <div className="absolute left-1/2 top-1/2 flex w-[78%] -translate-x-1/2 -translate-y-1/2 flex-col items-center">
+            <div className="relative w-full max-w-[380px]">
+              <div className="absolute -top-8 left-[18%] h-20 w-[54%] rounded-t-[80px] border border-zinc-300 bg-white/90 shadow-inner" />
+              <div className="relative mt-10 h-28 rounded-[42px] border border-zinc-300 bg-zinc-900 shadow-[0_24px_50px_rgba(15,23,42,0.22)]">
+                <div className="absolute left-[18%] top-4 h-8 w-[24%] -skew-x-12 rounded-md bg-teal-300/80" />
+                <div className="absolute right-[18%] top-4 h-8 w-[24%] skew-x-12 rounded-md bg-teal-300/80" />
+                <div className="absolute left-5 top-12 h-4 w-12 rounded-full bg-teal-300 shadow-[0_0_24px_rgba(94,234,212,0.8)]" />
+                <div className="absolute right-5 top-12 h-4 w-12 rounded-full bg-teal-300 shadow-[0_0_24px_rgba(94,234,212,0.8)]" />
+                <div className="absolute -bottom-8 left-[18%] h-16 w-16 rounded-full border-[10px] border-zinc-950 bg-zinc-700" />
+                <div className="absolute -bottom-8 right-[18%] h-16 w-16 rounded-full border-[10px] border-zinc-950 bg-zinc-700" />
+              </div>
+            </div>
           </div>
-        ) : (
-          <Image
-            src="/images/hero-vehicle.png"
-            alt="Vehicle render"
-            fill
-            priority
-            onError={() => setImgError(true)}
-            className="object-contain drop-shadow-[0_40px_40px_rgba(15,23,42,0.22)]"
-          />
-        )}
+        </div>
 
         {/* Floating info chips — translateZ for a subtle 3D pop */}
         <motion.div
@@ -171,7 +162,7 @@ function Navbar() {
       >
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2.5 shrink-0">
-          <Image src="/noc_logo.png" alt="NOC Logo" width={32} height={32} className="object-contain" />
+          <Image src="/noc_logo.png" alt="NOC Logo" width={32} height={32} className="h-auto w-auto object-contain" />
           <span className="font-semibold text-zinc-900 tracking-tight">NOC ID</span>
         </Link>
 
@@ -191,13 +182,7 @@ function Navbar() {
         {/* Right side: dApp dropdown + CTA */}
         <div className="flex items-center gap-2">
           <Link
-            href="/dapp"
-            className="hidden md:inline-flex items-center gap-1.5 px-4 py-2 text-sm text-zinc-600 hover:text-zinc-900 transition-colors rounded-full"
-          >
-            Sign in
-          </Link>
-          <Link
-            href="/dapp"
+            href="/login"
             className="inline-flex items-center gap-1.5 bg-zinc-900 hover:bg-zinc-800 text-white text-sm font-medium px-5 py-2.5 rounded-full transition-colors"
           >
             Get Started
@@ -228,7 +213,7 @@ function Navbar() {
               </a>
             ))}
             <Link
-              href="/dapp"
+              href="/login"
               className="mt-2 text-center bg-zinc-900 text-white text-sm font-medium px-5 py-3 rounded-full"
             >
               Get Started

@@ -13,8 +13,10 @@ import {
   Scale,
   ArrowRightLeft,
   Box,
+  ClipboardList,
 } from "lucide-react";
 import { PortalLayout } from "@/components/layout/PortalLayout";
+import { PortalGuard } from "@/components/guards/PortalGuard";
 import type { NavItem } from "@/components/layout/AppSidebar";
 import { ENTERPRISE_NAME, ENTERPRISE_ROLE } from "@/data/enterprise-models";
 
@@ -27,6 +29,7 @@ const navItems: NavItem[] = [
   { href: "/enterprise/analytics", label: "Analytics", icon: BarChart3 },
   { href: "/enterprise/transactions", label: "Transactions", icon: Receipt },
   { href: "/enterprise/warranties", label: "Warranty", icon: ShieldCheck },
+  { href: "/enterprise/audits", label: "Audits", icon: ClipboardList },
   { href: "/enterprise/workshops", label: "Workshops", icon: Users },
   { href: "/enterprise/recalls", label: "Recalls", icon: AlertOctagon },
   { href: "/enterprise/disputes", label: "Disputes", icon: Scale },
@@ -35,7 +38,8 @@ const navItems: NavItem[] = [
 
 export default function EnterpriseLayout({ children }: { children: React.ReactNode }) {
   return (
-    <PortalLayout
+    <PortalGuard requiredRole="enterprise_admin">
+      <PortalLayout
       navItems={navItems}
       portalName={<><span className="gradient-text">NOC</span> ID</>}
       portalLabel={<><span className="gradient-text">NOC</span> Enterprise</>}
@@ -61,8 +65,9 @@ export default function EnterpriseLayout({ children }: { children: React.ReactNo
       variant="enterprise"
       mainLayout="flat"
       mobileNavCount={3}
-    >
-      {children}
-    </PortalLayout>
+      >
+        {children}
+      </PortalLayout>
+    </PortalGuard>
   );
 }

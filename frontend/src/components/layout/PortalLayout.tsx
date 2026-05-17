@@ -11,10 +11,10 @@ const GlobalCopilotSidebar = dynamic(
     })),
   { ssr: false }
 );
-const ConnectWalletButton = dynamic(
+const UserAccountButton = dynamic(
   () =>
-    import("@/components/ui/ConnectWalletButton").then((m) => ({
-      default: m.ConnectWalletButton,
+    import("@/components/ui/UserAccountButton").then((m) => ({
+      default: m.UserAccountButton,
     })),
   { ssr: false }
 );
@@ -22,7 +22,7 @@ const ConnectWalletButton = dynamic(
 type PortalVariant = "dapp" | "workshop" | "enterprise" | "admin";
 
 export interface PortalLayoutProps extends AppSidebarProps {
-  /** Variant passed to ConnectWalletButton */
+  /** Variant passed to UserAccountButton */
   variant: PortalVariant;
   /**
    * "wrapped" (default) — header + children each inside a max-w-7xl container (dapp, workshop style)
@@ -48,7 +48,7 @@ export function PortalLayout({
           style={{ maxHeight: "100dvh" }}
         >
           <header className="hidden md:flex justify-end p-6 pb-0 max-w-7xl mx-auto w-full">
-            <ConnectWalletButton variant={variant} />
+            <UserAccountButton variant={variant} />
           </header>
           <div className="max-w-7xl mx-auto w-full flex-1 p-6 md:p-12 pt-24 md:pt-6">
             {children}
@@ -60,7 +60,7 @@ export function PortalLayout({
           style={{ maxHeight: "100dvh" }}
         >
           <header className="hidden md:flex justify-end mb-0 -mt-4 pb-4">
-            <ConnectWalletButton variant={variant} />
+            <UserAccountButton variant={variant} />
           </header>
           {children}
         </main>

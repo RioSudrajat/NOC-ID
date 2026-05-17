@@ -4,6 +4,10 @@ import { useState } from "react";
 import { AnimatePresence } from "framer-motion";
 import { Cpu } from "lucide-react";
 import { useToast } from "@/components/ui/Toast";
+import { api } from "@/lib/api/client";
+import { requestDevnetNetworkFeeSignature } from "@/lib/devnetWalletFee";
+import { useUserStore } from "@/store/useUserStore";
+import { useVehicleRegistryStore } from "@/store/useVehicleRegistryStore";
 import {
   ENTERPRISE_MODEL_LABELS,
   EnterpriseModelKey,
@@ -56,6 +60,8 @@ function mockVehicles(n = 3): VehicleEntry[] {
 // ─── Component ───────────────────────────────────────────────────────────
 export default function MintPage() {
   const { showToast } = useToast();
+  const currentUser = useUserStore((state) => state.currentUser);
+  const syncVehicles = useVehicleRegistryStore((state) => state.syncFromBackend);
   const [minting, setMinting] = useState(false);
   const [activeTab, setActiveTab] = useState<"vehicle" | "parts">("vehicle");
   const [vehicles, setVehicles] = useState<VehicleEntry[]>([emptyVehicle()]);
@@ -90,22 +96,59 @@ export default function MintPage() {
 
   // ─── Simulate ──────────────────────────────────────────────────────────
   const simulateVehicles = () => { setVehicles(mockVehicles(3)); showToast("success", "Mock Data Loaded", "3 kendaraan + manifest contoh sudah terisi."); };
-  const simulatePartCatalog = () => { setPartEntries([{ name: "Front Brake Pad Set", partNumber: "04465-AZ-001", category: "Brakes", models: ["avanza", "bmw_m4"], batchQty: "500", priceIDR: "450000" }]); showToast("success", "Mock Data Loaded", "Contoh part catalog terisi otomatis."); };
+  const simulatePartCatalog = () => { setPartEntries([{ name: "Front Brake Pad Set", partNumber: "04465-AZ-001", category: "Brakes", models: ["bmw_m4", "bmw_m4"], batchQty: "500", priceIDR: "450000" }]); showToast("success", "Mock Data Loaded", "Contoh part catalog terisi otomatis."); };
   const simulateCsv = () => { setCsvOpen(true); setCsvUploaded(true); showToast("success", "Mock CSV Loaded", "File CSV mock sudah ter-parse."); };
 
   // ─── Mint ──────────────────────────────────────────────────────────────
   const totalCount = activeTab === "vehicle" ? (csvUploaded ? 1250 : vehicles.length) : partEntries.length;
-  const handleMint = () => {
+  const handleMint = async () => {
     setMinting(true);
-    setTimeout(() => {
+    try {
+      if (activeTab === "vehicle") {
+        const validVehicles = vehicles.filter((vehicle) => vehicle.vin.trim() && vehicle.modelKey && vehicle.year);
+        if (validVehicles.length === 0) {
+          showToast("error", "Data belum lengkap", "Isi VIN, model, tahun, dan warna kendaraan.");
+          return;
+        }
+        const fee = await requestDevnetNetworkFeeSignature(`NOC ID mint ${validVehicles.length} vehicle(s)`);
+        const response = await api.mintVehicleBatch({
+          enterpriseId: currentUser?.enterpriseId,
+          feeSignature: fee.signature,
+          feePayer: fee.feePayer,
+          vehicles: validVehicles.map((vehicle) => {
+            const label = ENTERPRISE_MODEL_LABELS[vehicle.modelKey as EnterpriseModelKey] ?? vehicle.modelKey;
+            const [make, ...modelParts] = label.split(" ");
+            return {
+              vin: vehicle.vin.trim().toUpperCase(),
+              make: make || "NOC",
+              model: modelParts.join(" ") || label,
+              modelKey: vehicle.modelKey,
+              year: Number(vehicle.year),
+              color: vehicle.color || "Unknown",
+              category: vehicle.modelKey === "harley" || vehicle.modelKey === "pcx_150" ? "motorcycle_matic" : "car",
+              transmissionType: vehicle.modelKey === "pcx_150" ? "cvt" : "automatic",
+              fuelType: "gasoline",
+              licensePlate: "TBD",
+              manifest: vehicle.manifest,
+            };
+          }),
+        });
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+        await syncVehicles();
+        setVehicles([emptyVehicle()]);
+        setCsvUploaded(false);
+        setCsvOpen(false);
+        showToast("success", "Genesis Mint Signed", `${response.count} kendaraan minted. Network fee paid by Phantom. Sig ${response.signature.slice(0, 8)}...`);
+      } else {
+        await new Promise((resolve) => setTimeout(resolve, 800));
+        setPartEntries([emptyPartCatalog()]);
+        showToast("success", "Part Catalog Queued", `${totalCount} part catalog siap diproses backend.`);
+      }
+    } catch (error) {
+      showToast("error", "Mint gagal", error instanceof Error ? error.message : "Backend mint endpoint gagal.");
+    } finally {
       setMinting(false);
-      if (activeTab === "vehicle") { setVehicles([emptyVehicle()]); setCsvUploaded(false); setCsvOpen(false); }
-      else { setPartEntries([emptyPartCatalog()]); }
-      const msg = activeTab === "parts"
-        ? `${totalCount} part catalog(s) minted as NFTs on Solana`
-        : `${totalCount} vehicle(s) minted as cNFTs on Solana · ~$${(totalCount * 0.005).toFixed(3)}`;
-      showToast("success", activeTab === "parts" ? "Part Catalog Minted!" : "Genesis Mint Complete!", msg);
-    }, 4000);
+    }
   };
 
   return (

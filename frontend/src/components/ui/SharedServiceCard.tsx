@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import type { ComponentType, CSSProperties } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Star, CheckCircle, CheckCircle2, XCircle, AlertCircle, Camera, ExternalLink, X, CreditCard, FileText } from "lucide-react";
 import { PaymentModal } from "./PaymentModal";
@@ -19,7 +20,7 @@ export interface ServiceEvent {
   date: string;
   type: string;
   category: string;
-  icon: any;
+  icon: ComponentType<{ className?: string; style?: CSSProperties }>;
   mechanic: string;
   workshop: string;
   rating: number;
@@ -243,7 +244,7 @@ export function SharedServiceCard({ event, userRole, onPayNow, onDispute, onCanc
                 <div>
                   <h3 className="text-sm font-semibold text-slate-300 mb-3 border-b border-slate-700/50 pb-2">Technician Notes</h3>
                   <div className="p-4 rounded-xl bg-slate-800/30 border border-slate-700/50">
-                    <p className="text-sm text-slate-300 leading-relaxed italic">"{event.notes}"</p>
+                    <p className="text-sm text-slate-300 leading-relaxed italic">&quot;{event.notes}&quot;</p>
                   </div>
                 </div>
 

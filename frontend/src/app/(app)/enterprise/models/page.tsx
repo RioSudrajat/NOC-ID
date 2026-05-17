@@ -20,7 +20,7 @@ const SharedDigitalTwinViewer = dynamic(
   { ssr: false }
 );
 
-const MODEL_KEYS = ["avanza", "bmw_m4", "beat", "harley", "supra"] as const;
+const MODEL_KEYS = ["bmw_m4", "harley", "pcx_150", "supra"] as const;
 const MODEL_LABELS = ENTERPRISE_MODEL_LABELS;
 
 type UploadedModel = EnterpriseModel;
@@ -38,7 +38,7 @@ export default function ModelsPage() {
   const [form, setForm] = useState({
     name: "",
     category: "car" as "car" | "motorcycle" | "truck",
-    modelKey: "avanza",
+    modelKey: "bmw_m4",
     file: null as File | null,
   });
 
@@ -81,7 +81,7 @@ export default function ModelsPage() {
       setSelectedModel(newModel);
       setUploading(false);
       setShowUpload(false);
-      setForm({ name: "", category: "car", modelKey: "avanza", file: null });
+      setForm({ name: "", category: "car", modelKey: "bmw_m4", file: null });
       showToast("success", "Model Uploaded!", `${newModel.name} berhasil diupload dan siap di-preview.`);
     }, 2000);
   };
