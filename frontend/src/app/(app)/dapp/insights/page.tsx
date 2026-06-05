@@ -89,6 +89,7 @@ function FactorsChart({ factors, showAdvanced }: { factors: { feature: string; i
 
 export default function InsightsPage() {
   const ctx = useActiveVehicle();
+  const hasActiveVehicle = ctx?.hasActiveVehicle ?? false;
   const currentKey = ctx?.activeVehicle || "bmw_m4";
   const currentVehicleData = ctx?.currentVehicleData || vehicleData.bmw_m4;
 
@@ -96,6 +97,16 @@ export default function InsightsPage() {
 
   const [advancedView, setAdvancedView] = useState(false);
   const [expandedInsight, setExpandedInsight] = useState<number | null>(null);
+
+  if (!hasActiveVehicle) {
+    return (
+      <div className="glass-card p-8 text-center">
+        <Brain className="mx-auto mb-4 h-10 w-10 text-teal-300" />
+        <h1 className="text-2xl font-bold">Belum ada AI insight</h1>
+        <p className="mt-2 text-sm text-slate-400">AI insight akan aktif setelah akun ini punya kendaraan digital hasil mint program baru.</p>
+      </div>
+    );
+  }
 
   return (
     <div>

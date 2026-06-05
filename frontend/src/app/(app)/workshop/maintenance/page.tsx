@@ -19,6 +19,8 @@ import { useAdminStore } from "@/store/useAdminStore";
 import { useUserStore } from "@/store/useUserStore";
 import { useVehicleRegistryStore } from "@/store/useVehicleRegistryStore";
 import { getVehicleDisplayName, type LegacyVehicleKey, type VehicleIdentity } from "@/types/vehicle";
+import { api, type ApiVehicle } from "@/lib/api/client";
+import { getConnectedPhantomAddress, signAndSendSerializedTransaction } from "@/lib/phantomTransactions";
 
 function inferLegacyVehicleKey(vehicle: Pick<VehicleIdentity, "make" | "model" | "category">): LegacyVehicleKey {
   const makeModel = `${vehicle.make} ${vehicle.model}`.toLowerCase();
@@ -29,6 +31,10 @@ function inferLegacyVehicleKey(vehicle: Pick<VehicleIdentity, "make" | "model" |
   if (vehicle.category === "motorcycle_matic") return "pcx_150";
   if (vehicle.category === "motorcycle_big") return "harley";
   return "bmw_m4";
+}
+
+function requiresOriginVerification(part: Pick<PartRow, "serviceAction">) {
+  return part.serviceAction === "replace" || part.serviceAction === "inspect";
 }
 
 function MaintenanceContent() {
@@ -43,6 +49,7 @@ function MaintenanceContent() {
   const fromBooking = searchParams.get("fromBooking") === "true";
   const workshopId = currentUser?.workshopId ?? "ws-3";
   const registryVehicles = useVehicleRegistryStore((state) => state.vehicles);
+  const [backendVehicle, setBackendVehicle] = useState<ApiVehicle | null>(null);
   const registryVehicle = useMemo(
     () => registryVehicles.find((vehicle) => vehicle.vin === vin || vehicle.vehicleId === ctx?.activeVehicleId),
     [ctx?.activeVehicleId, registryVehicles, vin],
@@ -52,9 +59,29 @@ function MaintenanceContent() {
     hydrateAdmin();
   }, [hydrateAdmin]);
 
+  useEffect(() => {
+    let cancelled = false;
+    if (!vin || registryVehicle) {
+      setBackendVehicle(null);
+      return () => { cancelled = true; };
+    }
+    void api.resolveVehicle(vin)
+      .then((response) => {
+        if (!cancelled) setBackendVehicle(response.vehicle);
+      })
+      .catch((error) => {
+        if (!cancelled) {
+          console.warn("[maintenance] backend vehicle resolve skipped", { vin, error });
+          setBackendVehicle(null);
+        }
+      });
+    return () => { cancelled = true; };
+  }, [registryVehicle, vin]);
+
   const canSignServiceLog = fromBooking || hasPermission(workshopId, "sign_service_log");
 
-  let currentVehicleKey: VehicleKey = registryVehicle ? inferLegacyVehicleKey(registryVehicle) : ctx?.activeVehicle || "bmw_m4";
+  const resolvedVehicle = registryVehicle ?? backendVehicle;
+  let currentVehicleKey: VehicleKey = resolvedVehicle ? inferLegacyVehicleKey(resolvedVehicle) : ctx?.activeVehicle || "bmw_m4";
   let currentVehicleData = ctx?.currentVehicleData || vehicleData.bmw_m4;
   if (vin) {
     const entry = Object.entries(vehicleData).find(([, vehicle]) => vehicle.vin === vin);
@@ -63,24 +90,24 @@ function MaintenanceContent() {
       currentVehicleData = entry[1];
     }
   }
-  if (registryVehicle) {
+  if (resolvedVehicle) {
     currentVehicleData = {
-      vehicleId: registryVehicle.vehicleId,
-      name: getVehicleDisplayName(registryVehicle),
-      vin: registryVehicle.vin,
-      health: registryVehicle.healthScore,
-      nextService: registryVehicle.nextServiceDue ?? "Due soon",
-      owner: registryVehicle.currentOwnerId,
-      licensePlate: registryVehicle.licensePlate,
-      mileage: registryVehicle.currentMileageKm.toLocaleString("id-ID"),
-      fuelType: registryVehicle.fuelType,
-      category: registryVehicle.category,
-      baseConsumptionPerKm: registryVehicle.baseConsumptionPerKm,
-      fuelPricePerLiter: registryVehicle.fuelPricePerLiter,
-      make: registryVehicle.make,
-      model: registryVehicle.model,
-      year: registryVehicle.year,
-      color: registryVehicle.color,
+      vehicleId: "vehicleId" in resolvedVehicle ? resolvedVehicle.vehicleId : resolvedVehicle.id,
+      name: getVehicleDisplayName(resolvedVehicle),
+      vin: resolvedVehicle.vin,
+      health: resolvedVehicle.healthScore,
+      nextService: "nextServiceDue" in resolvedVehicle ? resolvedVehicle.nextServiceDue ?? "Due soon" : "Due soon",
+      owner: resolvedVehicle.currentOwnerId ?? "NOC User",
+      licensePlate: resolvedVehicle.licensePlate,
+      mileage: resolvedVehicle.currentMileageKm.toLocaleString("id-ID"),
+      fuelType: resolvedVehicle.fuelType.toLowerCase() as typeof currentVehicleData.fuelType,
+      category: resolvedVehicle.category,
+      baseConsumptionPerKm: "baseConsumptionPerKm" in resolvedVehicle ? resolvedVehicle.baseConsumptionPerKm : resolvedVehicle.category === "car" ? 0.1 : 0.04,
+      fuelPricePerLiter: "fuelPricePerLiter" in resolvedVehicle ? resolvedVehicle.fuelPricePerLiter : 18000,
+      make: resolvedVehicle.make,
+      model: resolvedVehicle.model,
+      year: resolvedVehicle.year,
+      color: resolvedVehicle.color,
     };
   }
 
@@ -99,6 +126,7 @@ function MaintenanceContent() {
   const [serviceCost, setServiceCost] = useState<number | "">("");
   const [techNotes, setTechNotes] = useState(booking ? `Keluhan pelanggan: ${booking.form.complaint}` : "");
   const [scanningIndex, setScanningIndex] = useState<number | null>(null);
+  const [originVerifying, setOriginVerifying] = useState(false);
   const [scanModalOpen, setScanModalOpen] = useState(false);
   const [scanModalScanning, setScanModalScanning] = useState(false);
   const [warrantyEnabled, setWarrantyEnabled] = useState(false);
@@ -112,7 +140,20 @@ function MaintenanceContent() {
   const addPart = () => setParts((prev) => [...prev, emptyPart()]);
   const removePart = (i: number) => setParts((prev) => prev.filter((_, idx) => idx !== i));
   const updatePart = (i: number, field: keyof PartRow, value: PartRow[keyof PartRow]) => {
-    setParts((prev) => prev.map((part, idx) => idx === i ? { ...part, [field]: value } : part));
+    setParts((prev) => prev.map((part, idx) => {
+      if (idx !== i) return part;
+      const next = { ...part, [field]: value };
+      if (["componentId", "componentName", "name", "partNumber", "manufacturer", "isOem", "serviceAction"].includes(field)) {
+        next.originStatus = requiresOriginVerification(next) && (next.componentId || next.name.trim() || next.partNumber)
+          ? "unverified"
+          : undefined;
+        next.originSignature = undefined;
+        next.originRecordPda = undefined;
+        next.originCatalogItemId = undefined;
+        next.originError = undefined;
+      }
+      return next;
+    }));
   };
 
   const handleScanPart = () => {
@@ -146,12 +187,86 @@ function MaintenanceContent() {
           priceIDR: randomPart.estimatedPriceIDR,
           scanned: true,
           oemLocked: true,
+          originStatus: "unverified",
         };
         return newParts;
       });
       setScanningIndex(null); setScanModalOpen(false); setScanModalScanning(false);
-      showToast("success", "Part Verified", `${randomPart.name} - OEM verified by ${randomPart.manufacturer}`);
+      showToast("info", "Part Scanned", `${randomPart.name} siap diverifikasi origin lewat Phantom.`);
     }, 2000);
+  };
+
+  const originParts = parts.filter((part) => requiresOriginVerification(part) && (part.partNumber || part.componentId || part.name.trim()));
+  const unverifiedOriginParts = originParts.filter((part) => part.originStatus !== "verified" && part.originStatus !== "non_oem");
+  const hasUnverifiedOriginParts = unverifiedOriginParts.length > 0;
+
+  const invoicePartsPayload = () => parts.filter(p => p.componentId || p.name.trim()).map(p => ({
+    name: p.serviceAction === "replace" ? p.name : p.componentName,
+    partNumber: p.partNumber || "-",
+    manufacturer: p.manufacturer || currentVehicleData.name.split(" ")[0],
+    price: p.serviceAction === "replace" && typeof p.priceIDR === "number" ? p.priceIDR : 0,
+    isOEM: p.originStatus === "verified" ? true : p.originStatus === "non_oem" ? false : p.isOem,
+    componentId: p.componentId,
+    componentName: p.componentName,
+    componentZone: p.componentZone,
+    serviceAction: p.serviceAction,
+    originStatus: requiresOriginVerification(p) ? (p.originStatus ?? "unverified") : p.originStatus,
+    originSignature: p.originSignature,
+    originRecordPda: p.originRecordPda,
+    originCatalogItemId: p.originCatalogItemId,
+  }));
+
+  const handleVerifyComponentOrigin = async () => {
+    if (!fromBooking || !booking || booking.id.startsWith("BK-")) {
+      showToast("error", "Booking belum tersinkron", "Component origin verification hanya bisa untuk booking backend.");
+      return;
+    }
+    if (originParts.length === 0) {
+      showToast("info", "Tidak ada part relevan", "Origin verification hanya untuk action replace atau inspect.");
+      return;
+    }
+    setOriginVerifying(true);
+    try {
+      const workshopWallet = await getConnectedPhantomAddress();
+      const draft = await api.createComponentOriginDraft({
+        bookingId: booking.id,
+        workshopWallet,
+        parts: invoicePartsPayload(),
+      });
+      const signed = await signAndSendSerializedTransaction(draft.transactionBase64);
+      const confirmed = await api.confirmComponentOrigin({
+        bookingId: booking.id,
+        signature: signed.signature,
+        signerWallet: workshopWallet,
+        componentOriginRecordPda: draft.componentOriginRecordPda,
+        invoiceHash: draft.invoiceHash,
+        partsHash: draft.partsHash,
+        catalogHash: draft.catalogHash,
+      });
+      setParts((prev) => prev.map((part) => {
+        if (!requiresOriginVerification(part)) return part;
+        const matched = draft.parts.find((item) =>
+          (part.partNumber && String(item.partNumber ?? "") === part.partNumber) ||
+          (part.componentId && String(item.componentId ?? "") === part.componentId) ||
+          String(item.name ?? "") === part.name
+        );
+        if (!matched) return part;
+        return {
+          ...part,
+          originStatus: matched?.originStatus === "verified_oem" ? "verified" : matched?.originStatus === "verified_non_oem" ? "non_oem" : part.originStatus,
+          originSignature: confirmed.signature,
+          originRecordPda: confirmed.componentOriginRecordPda,
+          originCatalogItemId: typeof matched?.catalogItemId === "string" ? matched.catalogItemId : part.originCatalogItemId,
+          originError: undefined,
+        };
+      }));
+      showToast("success", "Component Origin Verified", `${draft.verifiedPartCount} part diperiksa on-chain.`);
+    } catch (error) {
+      setParts((prev) => prev.map((part) => requiresOriginVerification(part) ? { ...part, originStatus: part.originStatus === "verified" || part.originStatus === "non_oem" ? part.originStatus : "failed", originError: error instanceof Error ? error.message : "Verification failed" } : part));
+      showToast("error", "Origin verification gagal", error instanceof Error ? error.message : "Tidak bisa verify component origin.");
+    } finally {
+      setOriginVerifying(false);
+    }
   };
 
   const partsTotal = parts.reduce((sum, p) => sum + (typeof p.priceIDR === "number" ? p.priceIDR : 0), 0);
@@ -169,17 +284,7 @@ function MaintenanceContent() {
     setTimeout(() => {
       setSubmitting(false);
       if (fromBooking && bookingCtx && booking) {
-        const invoiceParts: InvoicePart[] = parts.filter(p => p.componentId || p.name.trim()).map(p => ({
-          name: p.serviceAction === "replace" ? p.name : p.componentName,
-          partNumber: p.partNumber || "-",
-          manufacturer: p.manufacturer || currentVehicleData.name.split(" ")[0],
-          price: p.serviceAction === "replace" && typeof p.priceIDR === "number" ? p.priceIDR : 0,
-          isOEM: p.serviceAction === "replace" ? p.isOem : true,
-          componentId: p.componentId,
-          componentName: p.componentName,
-          componentZone: p.componentZone,
-          serviceAction: p.serviceAction,
-        }));
+        const invoiceParts: InvoicePart[] = invoicePartsPayload();
         const invoice: InvoiceData = { parts: invoiceParts, serviceCost: serviceCostNum, gasFee: INTERNAL_GAS_FEE, totalIDR: grandTotal, serviceType: resolvedServiceLevel, serviceLevel: resolvedServiceLevel, serviceFocus: serviceFocus || undefined, mechanicNotes: techNotes };
         bookingCtx.sendInvoice(booking.form.vehicleKey, invoice);
         if (warrantyEnabled) {
@@ -275,6 +380,28 @@ function MaintenanceContent() {
         </div>
 
         <PartsTable parts={parts} scanningIndex={scanningIndex} onAddPart={addPart} onRemovePart={removePart} onUpdatePart={updatePart} onOpenScanModal={() => { setScanModalOpen(true); setScanModalScanning(false); }} componentOptions={componentOptions} />
+
+        {fromBooking && originParts.length > 0 && (
+          <div className="glass-card-static p-6 border" style={{ borderColor: hasUnverifiedOriginParts ? "rgba(250,204,21,0.35)" : "rgba(94,234,212,0.35)" }}>
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="font-semibold text-white">Component Origin Verification</p>
+                <p className="mt-1 text-sm" style={{ color: "var(--solana-text-muted)" }}>
+                  {hasUnverifiedOriginParts
+                    ? `${unverifiedOriginParts.length} part replace/inspect belum verified. Invoice tetap bisa dikirim; statusnya akan tampil tidak terverifikasi di timeline.`
+                    : `${originParts.length} part sudah punya status origin on-chain.`}
+                </p>
+              </div>
+              <button onClick={handleVerifyComponentOrigin} disabled={originVerifying || !hasUnverifiedOriginParts} className="glow-btn gap-2 disabled:opacity-50">
+                {originVerifying ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShieldCheck className="h-4 w-4" />}
+                Verify Component Origin
+              </button>
+            </div>
+            {parts.some((part) => part.originStatus === "failed" && part.originError) && (
+              <p className="mt-3 text-xs text-red-200">{parts.find((part) => part.originError)?.originError}</p>
+            )}
+          </div>
+        )}
 
         <div className="glass-card-static p-8">
           <label className="block text-base font-semibold mb-4">OBD-II Diagnostic Codes (optional)</label>

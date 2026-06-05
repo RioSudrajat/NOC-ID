@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
-import { Filter, Search, Wrench, Droplets, ShieldCheck, Gauge, Settings } from "lucide-react";
-import { SharedServiceCard, ServiceEvent, type PartItem } from "@/components/ui/SharedServiceCard";
+import { useState, useEffect } from "react";
+import { Filter, Search, Wrench, Gauge } from "lucide-react";
+import { SharedServiceCard, ServiceEvent } from "@/components/ui/SharedServiceCard";
 import dynamic from "next/dynamic";
 
 const PaymentModal = dynamic(
@@ -11,8 +11,8 @@ const PaymentModal = dynamic(
 );
 import { useToast } from "@/components/ui/Toast";
 import { useActiveVehicle, vehicleData } from "@/context/ActiveVehicleContext";
-import { useBooking } from "@/context/BookingContext";
 import { api } from "@/lib/api/client";
+import { mapBackendServiceTimelineEntry } from "@/lib/serviceEvents";
 
 const timelineData: Record<string, ServiceEvent[]> = {
   bmw_m4: [
@@ -30,32 +30,9 @@ const timelineData: Record<string, ServiceEvent[]> = {
   ]
 };
 
-function readText(value: unknown, fallback: string) {
-  return typeof value === "string" && value.trim() ? value : fallback;
-}
-
-function readNumber(value: unknown, fallback = 0) {
-  const parsed = Number(value);
-  return Number.isFinite(parsed) ? parsed : fallback;
-}
-
-function mapInvoiceParts(parts: unknown): PartItem[] {
-  if (!Array.isArray(parts)) return [];
-  return parts.map((raw, index) => {
-    const part = raw && typeof raw === "object" ? raw as Record<string, unknown> : {};
-    return {
-      name: readText(part.name ?? part.componentName, `Part ${index + 1}`),
-      partNumber: readText(part.partNumber, "-"),
-      isOem: Boolean(part.isOem ?? part.isOEM ?? true),
-      manufacturer: readText(part.manufacturer, "NOC"),
-      priceIDR: readNumber(part.priceIDR ?? part.priceIdr ?? part.price),
-    };
-  }).filter((part) => part.name !== "-" || part.priceIDR > 0);
-}
-
 export default function TimelinePage() {
   const ctx = useActiveVehicle();
-  const bookingCtx = useBooking();
+  const hasActiveVehicle = ctx?.hasActiveVehicle ?? false;
   const currentKey = ctx?.activeVehicle || "bmw_m4";
   const activeVehicleId = ctx?.activeVehicleId;
   const isDemoVehicle = ctx?.activeVehicleIdentity.isDemo ?? true;
@@ -64,48 +41,12 @@ export default function TimelinePage() {
 
   const { showToast } = useToast();
 
-  // Convert completed bookings to ServiceEvent format
-  const completedAsEvents: ServiceEvent[] = useMemo(() => {
-    return (bookingCtx?.completedBookings || [])
-      .filter(cb => cb.vehicleKey === currentKey || cb.vehicleKey === activeVehicleId)
-      .map(cb => ({
-        id: cb.id,
-        status: "ANCHORED" as const,
-        date: cb.date,
-        type: cb.serviceType,
-        category: "Booking Service",
-        icon: Wrench,
-        mechanic: cb.workshopName,
-        workshop: cb.workshopName,
-        rating: cb.review?.rating || 0,
-        mileage: vehicleData[cb.vehicleKey]?.mileage || "-",
-        parts: cb.parts.map(p => ({
-          name: p.name,
-          partNumber: p.partNumber,
-          isOem: p.isOEM,
-          manufacturer: p.manufacturer,
-          priceIDR: p.price,
-        })),
-        serviceCost: cb.serviceCost,
-        gasFee: cb.gasFee,
-        costIDR: cb.totalIDR,
-        costUSDC: Math.round(cb.totalIDR / 16000 * 100) / 100,
-        costNOC: Math.round(cb.totalIDR / 52),
-        costStr: `Rp ${cb.totalIDR.toLocaleString("id-ID")}`,
-        txSig: cb.txSig,
-        healthBefore: 60,
-        healthAfter: 95,
-        notes: cb.mechanicNotes || "Servis via booking NOC ID.",
-        images: [],
-      }));
-  }, [activeVehicleId, bookingCtx?.completedBookings, currentKey]);
-
   const [data, setData] = useState(currentEvents);
 
   useEffect(() => {
     let cancelled = false;
     async function loadTimeline() {
-      const staticEvents = [...(isDemoVehicle ? (timelineData[currentKey] || timelineData.bmw_m4) : []), ...completedAsEvents];
+      const staticEvents = isDemoVehicle ? (timelineData[currentKey] || timelineData.bmw_m4) : [];
       if (!activeVehicleId) {
         setData(staticEvents);
         return;
@@ -113,38 +54,8 @@ export default function TimelinePage() {
       try {
         const response = await api.vehicleTimeline(activeVehicleId);
         const backendEvents = response.items
-          .filter((entry) => entry.type === "service_log")
-          .map((entry, index) => {
-            const item = entry.item as Record<string, any>;
-            const booking = item.booking as Record<string, any> | undefined;
-            const invoice = booking?.invoice as Record<string, any> | undefined;
-            const txSig = typeof item.txSignature === "string" ? item.txSignature : null;
-            const parts = mapInvoiceParts(invoice?.parts);
-            return {
-              id: item.id ?? `backend-${index}`,
-              status: "ANCHORED" as const,
-              date: String(entry.at).slice(0, 10),
-              type: invoice?.serviceType ?? "Service Log",
-              category: "Devnet Anchored",
-              icon: Wrench,
-              mechanic: item.workshop?.name ?? "Verified Workshop",
-              workshop: item.workshop?.name ?? "Verified Workshop",
-              rating: 0,
-              mileage: `${item.odometerKm ?? currentVehicleData.mileage} km`,
-              parts,
-              serviceCost: invoice?.serviceCost ?? 0,
-              gasFee: invoice?.gasFee ?? 0,
-              costIDR: invoice?.totalIdr ?? 0,
-              costUSDC: invoice?.totalIdr ? Math.round(Number(invoice.totalIdr) / 16000 * 100) / 100 : 0,
-              costNOC: invoice?.totalIdr ? Math.round(Number(invoice.totalIdr) / 52) : 0,
-              costStr: invoice?.totalIdr ? `Rp ${Number(invoice.totalIdr).toLocaleString("id-ID")}` : "Rp 0",
-              txSig,
-              healthBefore: 70,
-              healthAfter: currentVehicleData.health,
-              notes: invoice?.mechanicNotes ?? "Service log anchored via backend devnet flow.",
-              images: [],
-            } satisfies ServiceEvent;
-          });
+          .map((entry, index) => mapBackendServiceTimelineEntry(entry, index, { health: currentVehicleData.health, mileage: currentVehicleData.mileage }))
+          .filter((event): event is ServiceEvent => Boolean(event));
         const merged = [...backendEvents, ...staticEvents];
         merged.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
         if (!cancelled) setData(merged);
@@ -155,7 +66,7 @@ export default function TimelinePage() {
     }
     void loadTimeline();
     return () => { cancelled = true; };
-  }, [activeVehicleId, currentKey, completedAsEvents, currentVehicleData.health, currentVehicleData.mileage, isDemoVehicle]);
+  }, [activeVehicleId, currentKey, currentVehicleData.health, currentVehicleData.mileage, isDemoVehicle]);
 
   const [paymentModalOpen, setPaymentModalOpen] = useState(false);
   const [selectedEventId, setSelectedEventId] = useState<string | number | null>(null);
@@ -188,6 +99,16 @@ export default function TimelinePage() {
        showToast("info", "Invoice Rejected", "The workshop has been notified of your dispute.");
     }
   };
+
+  if (!hasActiveVehicle) {
+    return (
+      <div className="glass-card p-8 text-center">
+        <Wrench className="mx-auto mb-4 h-10 w-10 text-teal-300" />
+        <h1 className="text-2xl font-bold">Belum ada service timeline</h1>
+        <p className="mt-2 text-sm text-slate-400">Service timeline akan muncul setelah kendaraan digital sudah dimint dan ditransfer ke akun ini.</p>
+      </div>
+    );
+  }
 
   return (
     <div>

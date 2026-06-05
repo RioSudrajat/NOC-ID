@@ -1,280 +1,321 @@
 # NOC ID
 
-NOC ID is a vehicle identity and service-history dApp. The current devnet implementation is a monorepo with:
+**One-liner:** NOC ID is a verifiable vehicle identity network for ownership, service history, component origin, and digital twin state on Solana.
 
-- `frontend/`: Next.js app for owner, workshop, enterprise, and admin portals.
-- `backend/`: Fastify API, Prisma/PostgreSQL, BullMQ/Redis worker, storage/payment policies.
-- `programs/noc_registry/`: Rust + Anchor program for registry, credentials, service logs, case events, and payment receipts.
-- `clients/ts/noc-registry/`: typed TypeScript client package.
-- `infra/`: Docker Compose services and Anchor build image.
-- `scripts/devnet/`: Anchor Docker build and devnet smoke helpers.
+**TL;DR:** every vehicle gets a tamper-evident digital passport. Enterprises mint vehicle passports as compressed NFTs, workshops sign service and component-origin proofs, and owners see the resulting identity, timeline, and 3D twin from one app.
+
+![NOC ID landing hero](docs/assets/readme/landing-hero.png)
+
+## What This Is
+
+NOC ID connects owners, enterprises, workshops, and admins around a single vehicle identity layer:
+
+- **Owners** register/login with email and password, receive an embedded Solana wallet, view active vehicles, QR/NFC identity, 3D digital twin, booking status, and verified service timeline.
+- **Enterprises** connect Phantom, mint vehicle compressed NFTs, register vehicle records in the NOC Registry program, and transfer vehicles to users.
+- **Workshops** connect Phantom, scan vehicle identity, process bookings, create invoices, verify component origin, anchor service logs, and update vehicle passport metadata.
+- **Admins** manage roles, workshops, platform config, audit events, and dispute/review surfaces.
+
+The app uses PostgreSQL for operational state, Solana Devnet for authorization and immutable proof records, and Metaplex Bubblegum/Core for compressed vehicle passport assets.
+
+## Product Preview
+
+### Owner Dashboard
+
+![Owner vehicle dashboard](docs/assets/readme/owner-dashboard.png)
+
+### 3D Digital Twin
+
+![3D digital twin](docs/assets/readme/digital-twin.png)
+
+### Verified Workshop Discovery
+
+![Workshop search](docs/assets/readme/workshop-search.png)
+
+### Vehicle Identity Network
+
+![NOC ID network overview](docs/assets/readme/network-overview.png)
+
+## Tech Stack
+
+![Next.js](https://img.shields.io/badge/Next.js-16-black?style=for-the-badge&logo=nextdotjs)
+![React](https://img.shields.io/badge/React-19-20232a?style=for-the-badge&logo=react)
+![TypeScript](https://img.shields.io/badge/TypeScript-5-3178c6?style=for-the-badge&logo=typescript&logoColor=white)
+![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4-06b6d4?style=for-the-badge&logo=tailwindcss&logoColor=white)
+![Three.js](https://img.shields.io/badge/Three.js-0.183-black?style=for-the-badge&logo=threedotjs)
+![Fastify](https://img.shields.io/badge/Fastify-5-000000?style=for-the-badge&logo=fastify)
+![Prisma](https://img.shields.io/badge/Prisma-6-2d3748?style=for-the-badge&logo=prisma)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169e1?style=for-the-badge&logo=postgresql&logoColor=white)
+![Redis](https://img.shields.io/badge/Redis-7-dc382d?style=for-the-badge&logo=redis&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-Compose-2496ed?style=for-the-badge&logo=docker&logoColor=white)
+![Rust](https://img.shields.io/badge/Rust-Anchor-000000?style=for-the-badge&logo=rust)
+![Solana](https://img.shields.io/badge/Solana-Devnet-14f195?style=for-the-badge&logo=solana&logoColor=black)
+![Metaplex](https://img.shields.io/badge/Metaplex-Bubblegum%20%2B%20Core-8247e5?style=for-the-badge)
+![Arweave](https://img.shields.io/badge/Arweave-Irys-222222?style=for-the-badge&logo=arweave)
+![MinIO](https://img.shields.io/badge/MinIO-S3_Compatible-c72e49?style=for-the-badge&logo=minio&logoColor=white)
+
+| Layer | Implementation |
+| --- | --- |
+| Frontend | Next.js 16, React 19, TypeScript, Tailwind CSS 4, Zustand, TanStack Query, Three.js, MapLibre |
+| Backend | TypeScript, Fastify 5, Zod, Prisma, BullMQ, Redis |
+| Database | PostgreSQL 16 |
+| Smart Contract | Rust + Anchor, program `noc_registry` |
+| NFT / cNFT | Metaplex Bubblegum V2 compressed NFTs + Metaplex Core collection |
+| Solana Client | `@solana/kit`, `@solana/client`, `@solana/react-hooks`, `@solana/web3.js`, Anchor IDL client |
+| Metadata | Irys/Arweave for public metadata, MinIO/S3-compatible storage for private evidence |
+| Payments | IDR placeholder, USDC SPL, IDRX SPL on Solana, future NOC token |
+
+## Architecture
+
+```mermaid
+flowchart LR
+  Owner["Owner DApp"] --> Frontend["Next.js Frontend"]
+  Enterprise["Enterprise Portal + Phantom"] --> Frontend
+  Workshop["Workshop Portal + Phantom"] --> Frontend
+  Admin["Admin Portal"] --> Frontend
+
+  Frontend --> API["Fastify API"]
+  API --> DB[("PostgreSQL")]
+  API --> Redis[("Redis / BullMQ")]
+  API --> Storage["Irys / Arweave + MinIO"]
+  API --> Worker["On-chain Worker"]
+
+  Frontend --> Phantom["Phantom Wallet"]
+  Phantom --> Solana["Solana Devnet RPC"]
+  Worker --> Solana
+  Worker --> DAS["DAS RPC"]
+  Solana --> Program["NOC Registry Anchor Program"]
+  Solana --> Bubblegum["Metaplex Bubblegum V2"]
+  Solana --> Core["Metaplex Core Collection"]
+
+  Program --> PDAs["Platform, Vehicle, Workshop, Service, Component PDAs"]
+  Bubblegum --> Tree["Compressed NFT Merkle Tree"]
+```
+
+## Repository Layout
+
+```text
+NOC-ID/
+  frontend/                         # Next.js owner, workshop, enterprise, admin portals
+  backend/                          # Fastify API, Prisma schema, workers, tests
+  programs/noc_registry/            # Anchor smart contract
+  clients/ts/noc-registry/          # generated TS client package
+  idl/noc_registry.json             # Anchor IDL used by API/frontend scripts
+  scripts/devnet/                   # devnet operator, deploy, cNFT, smoke scripts
+  infra/docker-compose.yml          # Postgres, Redis, MinIO
+  docs/                             # implementation notes and README assets
+```
 
 ## Prerequisites
 
-- Node.js 20+ and npm.
-- Docker Desktop with Linux containers.
+- Node.js 20 or newer.
+- Docker Desktop with Compose enabled.
 - PowerShell on Windows.
-- Internet access for npm, Docker image pulls, Google Fonts during frontend build, and Solana devnet RPC.
-
-Rust, Cargo, Solana CLI, and Anchor do not need to be installed on Windows for normal project work. Anchor build runs inside Docker through `npm run anchor:build`.
+- Phantom wallet set to Solana Devnet for enterprise/workshop/admin actions.
+- A funded Devnet wallet for deploy/operator actions.
+- A DAS-capable Solana RPC URL for real cNFT reads, proofs, transfers, and metadata updates. Helius Devnet, QuickNode, and Triton-style DAS RPCs work; the plain public Solana RPC is not enough for cNFT proof APIs.
 
 ## Fresh Clone Setup
 
-1. Install dependencies from the repo root:
+Use this path when the project is being set up on a new machine.
+
+1. Install dependencies from the repository root:
 
 ```powershell
 npm install
 ```
 
-2. Create backend env:
+2. Create backend environment file:
 
 ```powershell
-Copy-Item backend/.env.example backend/.env
+Copy-Item backend\.env.example backend\.env
 ```
 
-Set `JWT_SECRET` to a real 32+ character value. For local dev, the default Postgres, Redis, MinIO, devnet RPC, USDC, and IDRX values are ready to use. The supported IDRX mint is:
+3. Edit `backend\.env` and fill the values below:
 
-```text
-idrxZcP8xiKkYk6XGD4uz1dxEYCWSgKDHqgjsBbwDur
+```env
+JWT_SECRET=change-this-to-a-long-random-secret
+SOLANA_CLUSTER=devnet
+SOLANA_RPC_URL=https://api.devnet.solana.com
+SOLANA_WS_URL=wss://api.devnet.solana.com
+SOLANA_DAS_RPC_URL=https://devnet.helius-rpc.com/?api-key=YOUR_KEY
+NOC_REGISTRY_PROGRAM_ID=GpQrQR2pQnA7ihao7yJoCceas2x1nLor1nfB5QPPhHJU
+DEVNET_KEYPAIR_PATH=C:\tmp\noc-keys\noc-devnet-deployer.json
+BUBBLEGUM_TREE_ADDRESS=your_tree_address
+METAPLEX_CORE_COLLECTION_ADDRESS=your_collection_address
+IDRX_MINT=idrxZcP8xiKkYk6XGD4uz1dxEYCWSgKDHqgjsBbwDur
+CORS_ORIGIN=http://localhost:3001
 ```
 
-Do not use deprecated IDRX mints starting with `idrxTdN`.
+4. Create frontend environment file:
 
-Optional but recommended for embedded user wallets:
-
-```text
-EMBEDDED_WALLET_ENCRYPTION_KEY=<32+ character secret, different from JWT_SECRET>
+```powershell
+@'
+NEXT_PUBLIC_BACKEND_URL=http://localhost:4000
+NEXT_PUBLIC_SOLANA_RPC_URL=https://api.devnet.solana.com
+NEXT_PUBLIC_SOLANA_WS_URL=wss://api.devnet.solana.com
+'@ | Set-Content frontend\.env.local
 ```
 
-3. Start local infra:
+5. Start local infrastructure:
 
 ```powershell
 docker compose -f infra/docker-compose.yml up -d
 ```
 
-Services:
+This starts:
 
-- Postgres: `localhost:5432`
-- Redis: `localhost:6379`
-- MinIO API: `http://localhost:9000`
-- MinIO console: `http://localhost:9001`
+| Service | URL |
+| --- | --- |
+| PostgreSQL | `localhost:5432` |
+| Redis | `localhost:6379` |
+| MinIO API | `http://localhost:9000` |
+| MinIO Console | `http://localhost:9001` |
 
-4. Prepare database:
+6. Prepare the database:
 
 ```powershell
 npm run backend:prisma:generate
-npm --workspace backend run prisma:migrate
-npm --workspace backend run prisma:seed
+npm run backend:prisma:migrate
+npm --prefix backend run prisma:seed
 ```
 
-5. Start backend API and worker in separate terminals:
+7. Start the backend API:
 
 ```powershell
 npm run backend:dev
+```
+
+8. Start the on-chain worker in another terminal:
+
+```powershell
 npm run backend:worker
 ```
 
-Backend API runs at `http://localhost:4000`.
-
-6. Start frontend:
+9. Start the frontend in another terminal:
 
 ```powershell
-npm --prefix frontend run dev
+npm --prefix frontend run dev -- -p 3001
 ```
 
-Frontend runs at `http://localhost:3000` and defaults to `NEXT_PUBLIC_BACKEND_URL=http://localhost:4000`.
+10. Open the app:
 
-7. Build Anchor program in Docker:
-
-```powershell
-npm run anchor:build
+```text
+http://localhost:3001
 ```
 
-This creates/updates `idl/noc_registry.json` and `programs/noc_registry/target/deploy/noc_registry.so`.
+## Running After Everything Is Already Setup
 
-8. Run smoke checks:
-
-```powershell
-npm run devnet:smoke
-```
-
-Expected checks: backend health, vehicles, workshops, bookings, payment config, on-chain job queue, and Solana devnet RPC health.
-
-## Running On This Machine After Setup
-
-If dependencies and Docker volumes already exist, the shorter loop is:
+Use this path on your current machine after dependencies, `.env`, database, and devnet config already exist.
 
 ```powershell
 docker compose -f infra/docker-compose.yml up -d
 npm run backend:dev
 npm run backend:worker
-npm --prefix frontend run dev
+npm --prefix frontend run dev -- -p 3001
 ```
 
-Useful verification commands:
+Optional health checks:
 
 ```powershell
-npm run build --workspace backend
-npm run build --workspace clients/ts/noc-registry
-npm --prefix frontend run build
-npm run anchor:build
+npm run backend:build
+npm run frontend:build
+npm run devnet:preflight
 npm run devnet:smoke
 ```
 
-## Backend Flow Coverage
+## Devnet Operator Flow
 
-Implemented API surface covers the devnet plan flows:
+The app can run locally against Devnet. Browser actions that must be authorized by a business actor open Phantom:
 
-- User auth/session/RBAC: user register/login with username, email, password, encrypted embedded devnet wallet, sessions, and `/auth/me`.
-- Enterprise/workshop auth: wallet nonce/verify remains the login path for B2B portals.
-- Owner app: vehicles, bookings, invoices, payments, service logs, trips, notifications.
-- Workshop: registration, queue/bookings, service-log draft/build/submit, credentials.
-- Enterprise: mint requests, audits, cNFT job queue, credential grant/revoke, recalls, warranties, disputes.
-- Admin: config read/update surface, wallet role upsert, workshop approval, analytics, audit events.
-- Solana boundary: queued on-chain job records for Anchor instructions, tx receipts, devnet config, IDRX payment intent + devnet receipt confirmation, Anchor transaction plans, DAS vehicle verification.
-- Storage: public metadata hash/URI policy and private evidence hash registration.
+- Enterprise vehicle cNFT mint.
+- Enterprise vehicle transfer.
+- Workshop service log anchor.
+- Workshop component-origin verification.
+- Workshop cNFT passport metadata update.
+- Admin/enterprise credential actions when wired to wallet-signed transactions.
 
-Wallet auth verifies signed Solana messages on the backend. User auth generates a real Solana keypair server-side and stores only the encrypted secret plus public address. Vehicle mint, transfer, booking, invoice, IDRX payment, walk-in scan, and service-log anchoring now round-trip through the backend so the frontend can be tested without manually running devnet scripts.
-
-The worker currently confirms queued jobs in devnet UI receipt mode and applies DB side effects. Real cNFT transfer/mint signing still requires a funded operator keypair plus DAS RPC; keep production signing behind explicit approval and simulation.
-
-## Frontend Test Flow
-
-1. Open `http://localhost:3000/register`, create a user with username, email, and password.
-2. Confirm the created user has an embedded wallet address in the app account state.
-3. Login enterprise via `/enterprise/login` with wallet.
-4. Mint a vehicle from `/enterprise/mint`; keep backend API and worker running.
-5. Phantom will ask the enterprise wallet to approve a devnet fee transaction during mint. This is a 0-lamport self-transfer used to produce a real devnet fee/signature for the UI receipt.
-6. Open `/enterprise/transfer`, choose the minted vehicle, search/select the registered user email, then transfer.
-7. Phantom will ask for another devnet fee transaction for ownership transfer.
-8. Login as the user at `/login`; the transferred vehicle appears as the active user vehicle.
-9. User books service from `/dapp/book`, or workshop scans/pastes QR payload from `/dapp/identity` in `/workshop/scan`.
-10. Workshop accepts, starts service, creates invoice, and user pays with IDRX from `/dapp/book/status`.
-11. Workshop clicks anchoring from `/workshop/bookings`.
-12. User opens `/dapp/timeline` and sees the anchored service event with devnet receipt signature/explorer URL.
-
-## Devnet Deployment Notes
-
-Do not deploy or sign transactions without an explicitly approved, funded devnet authority. Before real devnet deployment, prepare:
-
-- Funded devnet keypair or wallet-standard signing flow.
-- Final `NOC_REGISTRY_PROGRAM_ID`.
-- DAS-enabled RPC endpoint for cNFT fetch/update/transfer.
-- Bubblegum tree address and Metaplex Core collection address.
-- Irys funding/config for immutable public metadata.
-
-## Devnet Operator Kit
-
-The repo now includes dry-run-first operator scripts. They are ready up to the point where you provide a funded devnet wallet.
-
-Check readiness:
+Operator commands:
 
 ```powershell
-npm run devnet:preflight
 npm run devnet:wallet:check
-```
-
-Create a local devnet keypair outside the repo:
-
-```powershell
-npm run devnet:wallet:create
-```
-
-Then set this in `backend/.env` or your PowerShell session:
-
-```text
-DEVNET_KEYPAIR_PATH=C:\tmp\noc-keys\noc-devnet-deployer.json
-```
-
-Airdrop devnet SOL to the printed wallet address:
-
-```powershell
-docker run --rm -v "C:\tmp\noc-keys:/keys" noc-id-anchor:0.31.1 solana airdrop 5 -u devnet -k /keys/noc-devnet-deployer.json
-```
-
-Build and deploy the Anchor program before calling any Anchor instruction:
-
-```powershell
+npm run devnet:preflight
 npm run anchor:build
 npm run devnet:deploy-program
-npm run devnet:preflight
+npm run devnet:init-platform -- --execute
+npm run devnet:create-core-collection -- --uri https://example.com/noc-id-collection.json --execute
+npm run devnet:create-bubblegum-tree -- --max-depth 14 --max-buffer-size 64 --execute
 ```
 
-The deploy helper uses `solana program deploy` with a persistent buffer keypair at `programs/noc_registry/target/deploy/noc_registry-buffer-keypair.json`, `--use-rpc`, and retry settings. If devnet public RPC drops write transactions, rerun the same command; it can resume with the same buffer. You can also tune retries:
+After deployment, update `backend\.env` with:
 
-```powershell
-npm run devnet:deploy-program -- -MaxSignAttempts 30 -ComputeUnitPrice 5000
-```
+- `NOC_REGISTRY_PROGRAM_ID`
+- `BUBBLEGUM_TREE_ADDRESS`
+- `METAPLEX_CORE_COLLECTION_ADDRESS`
+- `SOLANA_DAS_RPC_URL`
+- `DEVNET_KEYPAIR_PATH`
 
-If `devnet:init-platform -- --execute` fails with `ProgramAccountNotFound`, the configured `NOC_REGISTRY_PROGRAM_ID` is not deployed on devnet yet, or it does not match `programs/noc_registry/target/deploy/noc_registry-keypair.json`. Rebuild, deploy, and rerun preflight before initializing platform state.
+Then restart backend and worker.
 
-All real transaction scripts default to dry-run. They print the transaction summary and stop unless you add `--execute`.
+## Main Test Flow
 
-Dry-run examples:
+1. Register a user with username, email, and password.
+2. Confirm the user receives an embedded Devnet wallet address from the backend.
+3. Login as enterprise with Phantom.
+4. Mint a vehicle from `/enterprise/mint`; Phantom signs the Bubblegum mint and the app registers the vehicle PDA.
+5. Transfer the vehicle to the registered user from `/enterprise/transfer`.
+6. Login as the user and confirm the vehicle appears in active vehicles.
+7. Book a verified workshop from `/dapp/book`.
+8. Login as workshop with Phantom, accept the booking, start service, add serviced/replaced parts, optionally verify component origin, and send invoice.
+9. Confirm payment in the app.
+10. Workshop signs service anchoring and cNFT metadata update.
+11. Owner opens service timeline and verifies explorer links for service, passport metadata update, and component-origin proof.
 
-```powershell
-npm run devnet:init-platform -- --keypair C:\tmp\noc-keys\noc-devnet-deployer.json
-npm run devnet:create-core-collection -- --keypair C:\tmp\noc-keys\noc-devnet-deployer.json --uri https://example.com/noc-id-collection.json
-npm run devnet:create-bubblegum-tree -- --keypair C:\tmp\noc-keys\noc-devnet-deployer.json --max-depth 14 --max-buffer-size 64
-```
+## On-chain Proof Model
 
-Execute only after reviewing the printed summary:
+| Flow | On-chain record |
+| --- | --- |
+| Vehicle mint | Metaplex Bubblegum `MintV2` compressed NFT leaf |
+| Vehicle registration | NOC Registry `VehicleRecord` PDA |
+| Ownership transfer | Bubblegum cNFT transfer + NOC transfer/ownership receipt |
+| Service log | NOC Registry `ServiceLogRecord` PDA |
+| Component origin | NOC Registry `ComponentOriginRecord` PDA |
+| Passport update | Bubblegum `UpdateMetadataV2` cNFT metadata update |
 
-```powershell
-npm run devnet:init-platform -- --keypair C:\tmp\noc-keys\noc-devnet-deployer.json --execute
-npm run devnet:create-core-collection -- --keypair C:\tmp\noc-keys\noc-devnet-deployer.json --uri https://example.com/noc-id-collection.json --execute
-npm run devnet:create-bubblegum-tree -- --keypair C:\tmp\noc-keys\noc-devnet-deployer.json --max-depth 14 --max-buffer-size 64 --execute
-```
+Database state remains the operational source of truth for sessions, booking status, invoice status, role resolution, and UI queries. Solana stores immutable authorization and proof anchors.
 
-After creating collection/tree, copy the printed env values into `backend/.env`:
+## Useful Scripts
 
-```text
-METAPLEX_CORE_COLLECTION_ADDRESS=<printed collectionAddress>
-BUBBLEGUM_TREE_ADDRESS=<printed treeAddress>
-```
-
-Mint and register a vehicle after metadata upload and tree/collection setup:
-
-```powershell
-node --import tsx scripts/devnet/upload-metadata.ts .\path\vehicle-metadata.json vehicle
-npm run devnet:register-enterprise -- --vehicle-id <db-vehicle-id>
-npm run devnet:mint-vehicle-cnft -- --keypair C:\tmp\noc-keys\noc-devnet-deployer.json --tree <tree-address> --collection <collection-address> --owner <owner-wallet> --uri <metadata-uri>
-npm run devnet:register-vehicle-record -- --keypair C:\tmp\noc-keys\noc-devnet-deployer.json --vehicle-id <db-vehicle-id> --asset-id <cnft-asset-id> --tree <tree-address> --leaf-index <leaf-index>
-npm run devnet:sync-vehicle-refs -- --vehicle-id <db-vehicle-id> --asset-id <cnft-asset-id> --tree <tree-address> --leaf-index <leaf-index> --vehicle-record-pda <vehicle-record-pda> --enterprise-record-pda <enterprise-record-pda>
-```
-
-Add `--execute` to the enterprise, mint, and register commands only after reviewing their dry-run summaries. For demo seed data whose stored owner/enterprise wallet is a placeholder, pass the deployer wallet explicitly with `--owner <wallet>` and `--enterprise-authority <wallet>`.
-
-After deployment, update `backend/.env`:
-
-```text
-NOC_REGISTRY_PROGRAM_ID=<deployed-program-id>
-SOLANA_RPC_URL=<devnet-rpc>
-SOLANA_DAS_RPC_URL=<das-enabled-rpc>
-```
-
-Then run:
-
-```powershell
-npm run anchor:build
-npm run devnet:smoke
-```
-
-Useful preflight helpers:
-
-```powershell
-node --import tsx scripts/devnet/upload-metadata.ts <metadata.json> vehicle
-node --import tsx scripts/devnet/create-bubblegum-tree.ts
-```
-
-`create-bubblegum-tree.ts` checks RPC/DAS/tree/collection readiness. It only becomes `readyForMint` after `BUBBLEGUM_TREE_ADDRESS` and `METAPLEX_CORE_COLLECTION_ADDRESS` are configured.
-
-Record the program id, tree address, collection address, IDRX mint, RPC/DAS URLs, and smoke output in project docs before sharing the devnet build.
+| Command | Purpose |
+| --- | --- |
+| `npm run backend:dev` | Start Fastify API with watch mode |
+| `npm run backend:worker` | Start BullMQ on-chain worker |
+| `npm run backend:build` | Type-check/build backend |
+| `npm run frontend:build` | Build Next.js frontend |
+| `npm run backend:prisma:migrate` | Run Prisma migration |
+| `npm --prefix backend run prisma:seed` | Seed demo users, enterprise, workshops, vehicles |
+| `npm run anchor:build` | Build Anchor program through Docker |
+| `npm run devnet:deploy-program` | Deploy/upgrade `noc_registry` to Devnet |
+| `npm run devnet:preflight` | Check IDL, program binary, wallet, and env |
+| `npm run devnet:smoke` | Run local API/devnet smoke checks |
 
 ## Common Issues
 
-- Docker pull/start timeout: rerun `docker compose -f infra/docker-compose.yml up -d` after Docker Desktop is fully ready.
-- Frontend build fails on fonts: allow network access so Next.js can fetch Google Fonts.
-- Smoke fails only at `solana rpc health`: local services are fine, but the process cannot reach devnet RPC.
-- Prisma cannot connect: confirm Postgres is up with `docker compose -f infra/docker-compose.yml ps`.
-- Anchor is not installed locally: use `npm run anchor:build`; the Docker image handles Rust, Solana CLI, and Anchor.
+| Issue | Fix |
+| --- | --- |
+| cNFT transfer/update fails with missing DAS RPC | Set `SOLANA_DAS_RPC_URL` to a DAS-capable Devnet RPC, then restart backend/frontend. |
+| `ProgramAccountNotFound` during init | Deploy the Anchor program first with `npm run devnet:deploy-program`. |
+| Phantom shows only network fee | Solana wallets usually highlight transaction fee; rent deposits appear as account balance changes in Explorer. |
+| `AccountNotInitialized` after contract changes | Rebuild and redeploy the Anchor program, then restart backend/worker. |
+| Backend cannot connect to DB | Start Docker Compose and verify `DATABASE_URL` in `backend\.env`. |
+| Frontend calls wrong API URL | Check `NEXT_PUBLIC_BACKEND_URL` in `frontend\.env.local`. |
+
+## Current Devnet Constants
+
+| Name | Value |
+| --- | --- |
+| IDRX SPL mint | `idrxZcP8xiKkYk6XGD4uz1dxEYCWSgKDHqgjsBbwDur` |
+| Deprecated IDRX prefix | `idrxTdN` |
+| Default cluster | `devnet` |
+| Backend default port | `4000` |
+| Frontend recommended local port | `3001` |
+

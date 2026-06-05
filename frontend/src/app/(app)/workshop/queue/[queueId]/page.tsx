@@ -2,21 +2,21 @@
 
 import { use, useMemo } from "react";
 import Link from "next/link";
-import { ArrowLeft, ClipboardList, Car, Calendar, Shield, Wrench, Eye, Share2 } from "lucide-react";
+import { ArrowLeft, Calendar, Car, ClipboardList, Eye, Share2, Shield, Wrench } from "lucide-react";
 import { useBookingStore } from "@/store/useBookingStore";
 import { vehicleData } from "@/context/ActiveVehicleContext";
-import type { VehicleKey } from "@/types/vehicle";
 import { getHealthColor, getHealthStatus } from "@/lib/health";
 import type { BookingRequest } from "@/types/booking";
+import type { VehicleKey } from "@/types/vehicle";
 
 export default function QueueDetailPage({ params }: { params: Promise<{ queueId: string }> }) {
   const { queueId } = use(params);
-  const bookings = useBookingStore(s => s.bookings);
+  const bookings = useBookingStore((state) => state.bookings);
 
   const item = useMemo(() => {
     return Object.values(bookings).find(
-      (b): b is BookingRequest => !!b && b.id === queueId && (b.status === "ACCEPTED" || b.status === "IN_SERVICE")
-    ) || null;
+      (booking): booking is BookingRequest => Boolean(booking && booking.id === queueId && (booking.status === "ACCEPTED" || booking.status === "IN_SERVICE")),
+    ) ?? null;
   }, [bookings, queueId]);
 
   if (!item) {
@@ -29,8 +29,13 @@ export default function QueueDetailPage({ params }: { params: Promise<{ queueId:
     );
   }
 
-  const vKey = item.form.vehicleKey as VehicleKey;
-  const vehicle = vehicleData[vKey];
+  const legacyVehicle = vehicleData[item.form.vehicleKey as VehicleKey];
+  const vehicle = {
+    name: item.form.vehicleName || legacyVehicle?.name || item.form.vehicleKey,
+    vin: item.form.vehicleVin || legacyVehicle?.vin || "-",
+    mileage: legacyVehicle?.mileage || "-",
+    health: legacyVehicle?.health,
+  };
   const isInService = item.status === "IN_SERVICE";
 
   return (
@@ -59,21 +64,21 @@ export default function QueueDetailPage({ params }: { params: Promise<{ queueId:
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
         <div className="glass-card p-6 rounded-2xl">
           <h3 className="text-sm font-semibold mb-4 flex items-center gap-2"><Car className="w-4 h-4" style={{ color: "#5EEAD4" }} /> Vehicle</h3>
-          {vehicle ? (
-            <div className="space-y-3 text-sm">
-              <div><span className="text-gray-400">Model:</span> <span className="font-medium">{vehicle.name}</span></div>
-              <div><span className="text-gray-400">VIN:</span> <span className="mono text-xs">{vehicle.vin}</span></div>
-              <div><span className="text-gray-400">Mileage:</span> <span className="font-medium">{vehicle.mileage}</span></div>
-              <div className="flex items-center gap-2">
-                <span className="text-gray-400">Health:</span>
+          <div className="space-y-3 text-sm">
+            <div><span className="text-gray-400">Model:</span> <span className="font-medium">{vehicle.name}</span></div>
+            <div><span className="text-gray-400">VIN:</span> <span className="mono text-xs">{vehicle.vin}</span></div>
+            <div><span className="text-gray-400">Mileage:</span> <span className="font-medium">{vehicle.mileage}</span></div>
+            <div className="flex items-center gap-2">
+              <span className="text-gray-400">Health:</span>
+              {typeof vehicle.health === "number" ? (
                 <span className="font-bold mono px-2 py-0.5 rounded-md text-sm" style={{ color: getHealthColor(vehicle.health), background: `${getHealthColor(vehicle.health)}15` }}>
-                  {vehicle.health} — {getHealthStatus(vehicle.health)}
+                  {vehicle.health} - {getHealthStatus(vehicle.health)}
                 </span>
-              </div>
+              ) : (
+                <span className="text-gray-500">Belum tersedia</span>
+              )}
             </div>
-          ) : (
-            <p className="text-gray-500 text-sm">Vehicle data unavailable.</p>
-          )}
+          </div>
         </div>
 
         <div className="glass-card p-6 rounded-2xl">
@@ -107,12 +112,11 @@ export default function QueueDetailPage({ params }: { params: Promise<{ queueId:
       </div>
 
       <div className="flex gap-4">
-        {!isInService && (
+        {!isInService ? (
           <button className="px-6 py-2.5 rounded-xl text-sm font-medium" style={{ background: "rgba(94,234,212,0.15)", color: "#5EEAD4", border: "1px solid rgba(94,234,212,0.3)" }}>
             Start Service
           </button>
-        )}
-        {isInService && (
+        ) : (
           <button className="px-6 py-2.5 rounded-xl text-sm font-medium" style={{ background: "rgba(94,234,212,0.15)", color: "#5EEAD4", border: "1px solid rgba(94,234,212,0.3)" }}>
             Send Invoice
           </button>

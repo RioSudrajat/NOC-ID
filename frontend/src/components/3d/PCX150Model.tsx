@@ -1,9 +1,10 @@
 "use client";
 
-import { useCallback, useMemo } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 import { Mesh, MeshStandardMaterial, Object3D, Vector3 } from "three";
 import { ThreeEvent, useFrame } from "@react-three/fiber";
 import { useGLTF } from "@react-three/drei";
+import type { PartDragOffsets, RegisterPartTransformTarget } from "@/components/3d/partDrag";
 import pcxParts from "@/data/pcx150Parts.json";
 
 interface PCX150ModelProps {
@@ -11,6 +12,8 @@ interface PCX150ModelProps {
   selectedPart: string | null;
   xray: boolean;
   exploded: boolean;
+  partDragOffsets?: PartDragOffsets;
+  onPartTransformTarget?: RegisterPartTransformTarget;
 }
 
 interface PCXPart {
@@ -118,9 +121,19 @@ function prepareScene(scene: Object3D) {
   return cloned;
 }
 
-export default function PCX150Model({ onSelectPart, selectedPart, xray, exploded }: PCX150ModelProps) {
+export default function PCX150Model({ onSelectPart, selectedPart, xray, exploded, partDragOffsets = {}, onPartTransformTarget }: PCX150ModelProps) {
   const { scene } = useGLTF("/models/honda-pcx/source/PCXDLXABS.glb");
   const model = useMemo(() => prepareScene(scene), [scene]);
+
+  useEffect(() => {
+    if (!selectedPart) return;
+    let target: Mesh | null = null;
+    model.traverse((object) => {
+      if (target || !(object instanceof Mesh)) return;
+      if (object.userData.partId === selectedPart) target = object;
+    });
+    onPartTransformTarget?.(selectedPart, target);
+  }, [model, onPartTransformTarget, selectedPart]);
 
   useFrame(() => {
     model.traverse((object) => {
@@ -129,6 +142,7 @@ export default function PCX150Model({ onSelectPart, selectedPart, xray, exploded
       const part = partId ? partsById.get(partId) : null;
       const base = basePositions.get(object);
       if (!part || !base) return;
+      const dragOffset = partDragOffsets[part.id] ?? [0, 0, 0];
 
       targetPosition.copy(base);
       if (exploded) {
@@ -136,6 +150,9 @@ export default function PCX150Model({ onSelectPart, selectedPart, xray, exploded
         targetPosition.y += part.explodeDir[1] * 0.65;
         targetPosition.z += part.explodeDir[2] * 0.65;
       }
+      targetPosition.x += dragOffset[0];
+      targetPosition.y += dragOffset[1];
+      targetPosition.z += dragOffset[2];
       object.position.lerp(targetPosition, 0.08);
 
       const materials = Array.isArray(object.material) ? object.material : [object.material];

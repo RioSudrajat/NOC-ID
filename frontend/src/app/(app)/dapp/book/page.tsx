@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { MapPin, Star, Search, CheckCircle2, ShieldCheck, ChevronLeft, Building2, Loader2, Activity } from "lucide-react";
+import { MapPin, Star, Search, CheckCircle2, ShieldCheck, ChevronLeft, Building2, Loader2, Activity, Calendar } from "lucide-react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import { Workshop, useBooking } from "@/context/BookingContext";
@@ -38,6 +38,7 @@ export default function BookServicePage() {
   // has an ongoing booking session. Each vehicle has its own slot, so
   // switching the active vehicle in the sidebar updates this badge.
   const activeVehicleCtx = useActiveVehicle();
+  const hasActiveVehicle = activeVehicleCtx?.hasActiveVehicle ?? false;
   const activeVehicle = activeVehicleCtx?.activeVehicleId || activeVehicleCtx?.activeVehicle || "bmw_m4";
   const activeVehicleMake = activeVehicleCtx?.activeVehicleIdentity.make ?? vehicleData[activeVehicle]?.make ?? "";
   const bookingCtx = useBooking();
@@ -59,6 +60,17 @@ export default function BookServicePage() {
       (activeFilter === "Brand Specialist" && isBrandSpecialist);
     return ws.verified && matchSearch && matchCity && matchFilter;
   });
+
+  if (!hasActiveVehicle) {
+    return (
+      <div className="glass-card p-8 text-center">
+        <Calendar className="mx-auto mb-4 h-10 w-10 text-teal-300" />
+        <h1 className="text-2xl font-bold">Belum bisa booking service</h1>
+        <p className="mt-2 text-sm text-slate-400">Tambahkan kendaraan digital dulu lewat dealer/enterprise minting atau register vehicle untuk audit manufacturer.</p>
+        <Link href="/dapp/register-vehicle" className="glow-btn mt-6 inline-flex px-5 py-2.5 text-sm">Register Vehicle</Link>
+      </div>
+    );
+  }
 
   return (
     <div>

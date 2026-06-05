@@ -1141,6 +1141,142 @@
           "type": "bool"
         }
       ]
+    },
+    {
+      "name": "verify_component_origin",
+      "discriminator": [
+        194,
+        227,
+        140,
+        106,
+        23,
+        14,
+        70,
+        38
+      ],
+      "accounts": [
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "workshop_authority",
+          "signer": true
+        },
+        {
+          "name": "platform_config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  108,
+                  97,
+                  116,
+                  102,
+                  111,
+                  114,
+                  109
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "vehicle_record"
+        },
+        {
+          "name": "workshop_record"
+        },
+        {
+          "name": "credential_record"
+        },
+        {
+          "name": "component_origin_record",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  109,
+                  112,
+                  111,
+                  110,
+                  101,
+                  110,
+                  116,
+                  45,
+                  111,
+                  114,
+                  105,
+                  103,
+                  105,
+                  110
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "vehicle_record"
+              },
+              {
+                "kind": "arg",
+                "path": "service_id_hash"
+              }
+            ]
+          }
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "service_id_hash",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "invoice_hash",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "parts_hash",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "catalog_hash",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "verified_part_count",
+          "type": "u16"
+        }
+      ]
     }
   ],
   "accounts": [
@@ -1155,6 +1291,19 @@
         134,
         10,
         138
+      ]
+    },
+    {
+      "name": "ComponentOriginRecord",
+      "discriminator": [
+        39,
+        89,
+        85,
+        89,
+        247,
+        202,
+        207,
+        55
       ]
     },
     {
@@ -1364,6 +1513,70 @@
           {
             "name": "status_code",
             "type": "u8"
+          },
+          {
+            "name": "created_at_unix",
+            "type": "i64"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ComponentOriginRecord",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "vehicle",
+            "type": "pubkey"
+          },
+          {
+            "name": "workshop",
+            "type": "pubkey"
+          },
+          {
+            "name": "service_id_hash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "invoice_hash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "parts_hash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "catalog_hash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "verified_part_count",
+            "type": "u16"
           },
           {
             "name": "created_at_unix",

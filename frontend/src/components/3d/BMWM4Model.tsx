@@ -1,9 +1,10 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { Vector3, DoubleSide } from "three";
 import type { Group } from "three";
 import { useFrame } from "@react-three/fiber";
+import type { PartDragOffset, PartDragOffsets, RegisterPartTransformTarget } from "@/components/3d/partDrag";
 
 function getHealthColor(health: number): string {
   if (health >= 90) return "#86EFAC";
@@ -38,17 +39,24 @@ interface PartProps {
   position?: [number, number, number];
   rotation?: [number, number, number];
   drillParts?: { name: string; health: number }[];
+  dragOffset?: PartDragOffset;
+  onPartTransformTarget?: RegisterPartTransformTarget;
 }
 
-function Part({ name, health, onSelect, selected, xray, exploded, explodeOffset = [0, 0, 0], children, position = [0, 0, 0], rotation, drillParts }: PartProps) {
+function Part({ name, health, onSelect, selected, xray, exploded, explodeOffset = [0, 0, 0], children, position = [0, 0, 0], rotation, drillParts, dragOffset = [0, 0, 0], onPartTransformTarget }: PartProps) {
   const ref = useRef<Group>(null);
   const isSelected = selected === name;
-  const [drill, setDrill] = useState(false);
   const targetVec = useRef(new Vector3());
+  void drillParts;
 
   const finalPos: [number, number, number] = exploded
-    ? [position[0] + explodeOffset[0], position[1] + explodeOffset[1], position[2] + explodeOffset[2]]
-    : position;
+    ? [position[0] + explodeOffset[0] + dragOffset[0], position[1] + explodeOffset[1] + dragOffset[1], position[2] + explodeOffset[2] + dragOffset[2]]
+    : [position[0] + dragOffset[0], position[1] + dragOffset[1], position[2] + dragOffset[2]];
+
+  useEffect(() => {
+    if (!isSelected) return;
+    onPartTransformTarget?.(name, ref.current);
+  }, [isSelected, name, onPartTransformTarget]);
 
   useFrame(() => {
     if (ref.current) {
@@ -59,7 +67,7 @@ function Part({ name, health, onSelect, selected, xray, exploded, explodeOffset 
 
   return (
     <group ref={ref} position={position} rotation={rotation}>
-      <group onClick={(e) => { e.stopPropagation(); if (drill && !isSelected) { setDrill(false); } onSelect(name, health); if (isSelected && drillParts) setDrill(!drill); }}>
+      <group onClick={(e) => { e.stopPropagation(); onSelect(name, health); }}>
         {children}
         {/* Glow ring on select */}
         {isSelected && (
@@ -69,18 +77,6 @@ function Part({ name, health, onSelect, selected, xray, exploded, explodeOffset 
           </mesh>
         )}
       </group>
-      {/* Drill-down sub-parts */}
-      {drill && drillParts && (
-        <group position={[0, 0.6, 0]}>
-          {drillParts.map((dp, i) => (
-            <mesh key={i} position={[(i - drillParts.length / 2) * 0.25, 0, 0]}
-              onClick={(e) => { e.stopPropagation(); onSelect(`${name}.${dp.name}`, dp.health); }}>
-              <boxGeometry args={[0.12, 0.12, 0.12]} />
-              <meshStandardMaterial color={getHealthColor(dp.health)} metalness={0.6} roughness={0.3} />
-            </mesh>
-          ))}
-        </group>
-      )}
     </group>
   );
 }
@@ -92,6 +88,8 @@ interface BMWM4Props {
   selectedPart: string | null;
   xray: boolean;
   exploded: boolean;
+  partDragOffsets?: PartDragOffsets;
+  onPartTransformTarget?: RegisterPartTransformTarget;
 }
 
 const partData: Record<string, { health: number; drill?: { name: string; health: number }[] }> = {
@@ -157,13 +155,13 @@ const partData: Record<string, { health: number; drill?: { name: string; health:
   "Electrical.Alternator": { health: 88 },
 };
 
-export default function BMWM4Model({ onSelectPart, selectedPart, xray, exploded }: BMWM4Props) {
+export default function BMWM4Model({ onSelectPart, selectedPart, xray, exploded, partDragOffsets = {}, onPartTransformTarget }: BMWM4Props) {
   const groupRef = useRef<Group>(null);
 
   const P = (name: string, pos: [number, number, number], explOff: [number, number, number], children: React.ReactNode, rot?: [number, number, number]) => {
     const pd = partData[name] || { health: 80 };
     return (
-      <Part key={name} name={name} health={pd.health} onSelect={onSelectPart} selected={selectedPart} xray={xray} exploded={exploded} explodeOffset={explOff} position={pos} rotation={rot} drillParts={pd.drill}>
+      <Part key={name} name={name} health={pd.health} onSelect={onSelectPart} selected={selectedPart} xray={xray} exploded={exploded} explodeOffset={explOff} position={pos} rotation={rot} drillParts={pd.drill} dragOffset={partDragOffsets[name]} onPartTransformTarget={onPartTransformTarget}>
         {children}
       </Part>
     );

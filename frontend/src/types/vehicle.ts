@@ -154,6 +154,22 @@ export function getVehicleDisplayName(vehicle: Pick<VehicleIdentity, "make" | "m
   return `${vehicle.make} ${vehicle.model} ${vehicle.year}`;
 }
 
+export function isServiceLogReadyVehicle(vehicle: VehicleIdentity) {
+  const asset = vehicle.onChainMintAddress ?? "";
+  const tree = vehicle.treeAddress ?? "";
+  const record = vehicle.vehicleRecordPda ?? "";
+  return (
+    (vehicle.mintStatus === "minted" || vehicle.mintStatus === "transferred") &&
+    Boolean(asset) &&
+    !asset.startsWith("devnet-") &&
+    Boolean(tree) &&
+    tree !== "devnet-tree-pending" &&
+    typeof vehicle.leafIndex === "number" &&
+    Boolean(record) &&
+    !record.startsWith("devnet-vehicle-record")
+  );
+}
+
 export function formatMileageKm(value: number) {
   return value.toLocaleString("id-ID");
 }

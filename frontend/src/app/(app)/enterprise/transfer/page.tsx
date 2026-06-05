@@ -5,7 +5,8 @@ import { AnimatePresence } from "framer-motion";
 import { ArrowRightLeft, CheckCircle2, Sparkles } from "lucide-react";
 import { useToast } from "@/components/ui/Toast";
 import { api } from "@/lib/api/client";
-import { requestDevnetNetworkFeeSignature } from "@/lib/devnetWalletFee";
+import { transferCompressedVehicleWithPhantom } from "@/lib/clientBubblegumMint";
+import { signAndSendSerializedTransaction } from "@/lib/phantomTransactions";
 import { useUserStore } from "@/store/useUserStore";
 import { useVehicleRegistryStore } from "@/store/useVehicleRegistryStore";
 import type { VehicleData, SaleData, BuyerData, BuyerMode } from "@/components/enterprise/transfer/types";
@@ -67,16 +68,30 @@ export default function TransferPage() {
       showToast("error", "Buyer Invalid", "Pilih buyer yang sudah terdaftar di NOC ID sebelum transfer.");
       return;
     }
+    if (!currentUser?.selfCustodyAddress) {
+      showToast("error", "Wallet belum terhubung", "Login enterprise dengan Phantom authority sebelum transfer.");
+      return;
+    }
     setTransferring(true);
     try {
-      const fee = await requestDevnetNetworkFeeSignature(`NOC ID transfer ${selectedVehicle.vin}`);
-      const result = await api.transferVehicle(selectedVehicle.vehicleId, {
+      const draft = await api.createTransferDraft(selectedVehicle.vehicleId, {
         newOwnerId: buyer.userId,
         newOwnerEmail: buyer.email,
         newOwnerWallet: buyer.walletAddress,
-        enterpriseAuthorityWallet: currentUser?.selfCustodyAddress,
-        feeSignature: fee.signature,
-        feePayer: fee.feePayer,
+        enterpriseAuthorityWallet: currentUser.selfCustodyAddress,
+      });
+      const cnftTransfer = await transferCompressedVehicleWithPhantom({
+        newLeafOwner: draft.newOwnerWallet,
+        coreCollection: draft.collectionAddress,
+        transferProof: draft.transferProof,
+      });
+      const registry = await signAndSendSerializedTransaction(draft.registryTransactionBase64);
+      const result = await api.confirmTransferVehicle(selectedVehicle.vehicleId, {
+        newOwnerId: draft.newOwnerId,
+        newOwnerWallet: draft.newOwnerWallet,
+        enterpriseAuthorityWallet: currentUser.selfCustodyAddress,
+        cnftTransferSignature: cnftTransfer.signature,
+        registrySignature: registry.signature,
       });
       setTxSig(`${result.signature.slice(0, 8)}...${result.signature.slice(-8)}`);
       updateVehicle(selectedVehicle.vehicleId, {
@@ -87,7 +102,8 @@ export default function TransferPage() {
       setTransferring(false);
       setDone(true);
       const target = `${buyer.displayName} (${buyer.email})`;
-      showToast("success", "Transfer Complete!", `cNFT transferred to ${target}`);
+      const totalFee = (cnftTransfer.feeSol ?? 0) + (registry.feeSol ?? 0);
+      showToast("success", "Transfer Complete!", `cNFT transferred to ${target}. Fee ${totalFee.toFixed(8)} SOL.`);
     } catch (error) {
       setTransferring(false);
       showToast("error", "Transfer gagal", error instanceof Error ? error.message : "Backend transfer gagal.");

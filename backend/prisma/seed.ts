@@ -95,49 +95,25 @@ async function main() {
     }
   });
 
-  const booking = await prisma.booking.create({
-    data: {
-      vehicleId: vehicle.id,
-      workshopId: workshop.id,
-      date: "2026-05-20",
-      time: "10:00",
-      complaint: "Routine devnet service and brake inspection",
-      status: "INVOICE_SENT"
-    }
+  const seededServiceWhere = {
+    vehicleId: vehicle.id,
+    complaint: "Routine devnet service and brake inspection"
+  };
+  await prisma.payment.deleteMany({
+    where: { invoice: { booking: seededServiceWhere } }
   });
-
-  const invoice = await prisma.invoice.create({
-    data: {
-      bookingId: booking.id,
-      serviceType: "Periodic maintenance",
-      serviceCost: 350000,
-      gasFee: 5000,
-      totalIdr: 355000,
-      mechanicNotes: "Demo invoice for IDRX flow",
-      parts: [{ name: "Engine oil", qty: 1, priceIdr: 120000 }]
-    }
+  await prisma.invoice.deleteMany({
+    where: { booking: seededServiceWhere }
   });
-
-  await prisma.payment.create({
-    data: {
-      invoiceId: invoice.id,
-      currency: "IDRX",
-      amountAtomic: BigInt(35500000),
-      amountDisplay: 355000,
-      mint: "idrxZcP8xiKkYk6XGD4uz1dxEYCWSgKDHqgjsBbwDur",
-      recipientWallet: workshopWallet,
-      payerWallet: ownerWallet,
-      status: "REQUIRES_SIGNATURE"
-    }
+  await prisma.booking.deleteMany({
+    where: seededServiceWhere
   });
 
   console.log({
     ownerId: owner.id,
     enterpriseId: enterprise.id,
     workshopId: workshop.id,
-    vehicleId: vehicle.id,
-    bookingId: booking.id,
-    invoiceId: invoice.id
+    vehicleId: vehicle.id
   });
 }
 

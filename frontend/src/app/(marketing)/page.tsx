@@ -162,7 +162,7 @@ function Navbar() {
       >
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2.5 shrink-0">
-          <Image src="/noc_logo.png" alt="NOC Logo" width={32} height={32} className="h-auto w-auto object-contain" />
+          <Image src="/noc_logo.png" alt="NOC Logo" width={32} height={32} className="object-contain" style={{ width: 32, height: "auto" }} />
           <span className="font-semibold text-zinc-900 tracking-tight">NOC ID</span>
         </Link>
 

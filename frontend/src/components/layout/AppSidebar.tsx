@@ -79,7 +79,7 @@ export function AppSidebar({
           className={`flex items-center gap-3 mb-8 ${isLeftCollapsed ? "justify-center" : ""}`}
         >
           <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0 overflow-hidden">
-            <Image src="/noc_logo.png" alt="NOC Logo" width={36} height={36} className="h-auto w-auto object-contain" />
+            <Image src="/noc_logo.png" alt="NOC Logo" width={36} height={36} className="object-contain" style={{ width: 36, height: "auto" }} />
           </div>
           {!isLeftCollapsed && (
             <span className="font-bold text-lg whitespace-nowrap overflow-hidden transition-opacity">
@@ -165,7 +165,7 @@ export function AppSidebar({
       >
         <Link href="/" className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-lg flex items-center justify-center overflow-hidden">
-            <Image src="/noc_logo.png" alt="NOC Logo" width={32} height={32} className="h-auto w-auto object-contain" />
+            <Image src="/noc_logo.png" alt="NOC Logo" width={32} height={32} className="object-contain" style={{ width: 32, height: "auto" }} />
           </div>
           <span className="font-bold text-sm">{portalLabel}</span>
         </Link>

@@ -1,12 +1,16 @@
 "use client";
 
-import { useState, Suspense, useEffect } from "react";
+import { useCallback, useMemo, useRef, useState, Suspense, useEffect } from "react";
 import { Canvas } from "@react-three/fiber";
-import { OrbitControls, ContactShadows } from "@react-three/drei";
+import { OrbitControls, ContactShadows, TransformControls } from "@react-three/drei";
 import dynamic from "next/dynamic";
 import { Eye, EyeOff, Expand, RotateCcw, Car, Bike, X, ChevronUp, ChevronDown, Wrench, ChevronDown as DropdownIcon, ExternalLink } from "lucide-react";
-import { useActiveVehicle, vehicleData } from "@/context/ActiveVehicleContext";
+import { Object3D, Vector3 } from "three";
+import { useActiveVehicle } from "@/context/ActiveVehicleContext";
+import type { PartDragOffsets, RegisterPartTransformTarget } from "@/components/3d/partDrag";
 import type { VehicleIdentity } from "@/types/vehicle";
+import { useBookingStore } from "@/store/useBookingStore";
+import type { BookingRequest } from "@/types/booking";
 
 const BMWM4Model = dynamic(() => import("@/components/3d/BMWM4Model"), { ssr: false });
 const HarleyDavidsonModel = dynamic(() => import("@/components/3d/HarleyDavidsonModel"), { ssr: false });
@@ -28,6 +32,15 @@ function resolveVehicleType(vehicle?: VehicleIdentity): VehicleType | null {
   if (vehicle?.category === "motorcycle_matic") return "pcx_150";
   if (vehicle?.category === "motorcycle_big") return "harley";
   if (vehicle?.category === "car") return "bmw_m4";
+  return null;
+}
+
+function resolveVehicleTypeFromText(text?: string | null): VehicleType | null {
+  const normalized = (text ?? "").toLowerCase();
+  if (normalized.includes("pcx")) return "pcx_150";
+  if (normalized.includes("supra")) return "supra";
+  if (normalized.includes("harley") || normalized.includes("sportster")) return "harley";
+  if (normalized.includes("bmw") || normalized.includes("m4")) return "bmw_m4";
   return null;
 }
 
@@ -59,9 +72,10 @@ function LoadingFallback() {
 interface SharedViewerProps {
   mode: "owner" | "mechanic";
   initialVehicle?: VehicleType | null; 
+  initialVin?: string;
 }
 
-export default function SharedDigitalTwinViewer({ mode, initialVehicle }: SharedViewerProps) {
+export default function SharedDigitalTwinViewer({ mode, initialVehicle, initialVin }: SharedViewerProps) {
   const [vehicleType, setVehicleType] = useState<VehicleType | null>(
     mode === "owner" ? initialVehicle || "bmw_m4" : initialVehicle || null
   );
@@ -70,11 +84,43 @@ export default function SharedDigitalTwinViewer({ mode, initialVehicle }: Shared
   const [selectedHealth, setSelectedHealth] = useState<number>(0);
   const [xray, setXray] = useState(false);
   const [exploded, setExploded] = useState(false);
+  const [partDragOffsets, setPartDragOffsets] = useState<PartDragOffsets>({});
+  const [partTransformTarget, setPartTransformTarget] = useState<Object3D | null>(null);
+  const [partDragging, setPartDragging] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [sheetExpanded, setSheetExpanded] = useState(false);
+  const lastTransformPosition = useRef(new Vector3());
   
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const activeVehicleCtx = useActiveVehicle();
+  const bookings = useBookingStore((state) => state.bookings);
+  const syncQueueFromBackend = useBookingStore((state) => state.syncFromBackend);
+
+  useEffect(() => {
+    if (mode === "mechanic") void syncQueueFromBackend();
+  }, [mode, syncQueueFromBackend]);
+
+  const queueVehicles = useMemo(() => {
+    if (mode !== "mechanic") return [];
+    return Object.values(bookings)
+      .filter((booking): booking is BookingRequest => Boolean(booking))
+      .filter((booking) => booking.status === "ACCEPTED" || booking.status === "IN_SERVICE" || booking.status === "INVOICE_SENT" || booking.status === "PAID" || booking.status === "ANCHORING")
+      .map((booking) => {
+        const label = booking.form.vehicleName ?? booking.form.vehicleKey;
+        const vin = booking.form.vehicleVin ?? booking.form.vehicleKey;
+        const vt = resolveVehicleTypeFromText(`${label} ${vin}`);
+        if (!vt) return null;
+        return {
+          vt,
+          label,
+          vin,
+          owner: "NOC User",
+          bookingId: booking.id,
+        };
+      })
+      .filter((item): item is { vt: VehicleType; label: string; vin: string; owner: string; bookingId: string } => Boolean(item))
+      .filter((item, index, list) => list.findIndex((other) => other.vin === item.vin) === index);
+  }, [bookings, mode]);
 
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 768);
@@ -93,12 +139,50 @@ export default function SharedDigitalTwinViewer({ mode, initialVehicle }: Shared
   const clearSelection = () => {
     setSelectedPart(null);
     setSelectedHealth(0);
+    setPartTransformTarget(null);
     setSheetExpanded(false);
+  };
+
+  const registerPartTransformTarget = useCallback<RegisterPartTransformTarget>((partId, target) => {
+    if (partId !== selectedPart) return;
+    setPartTransformTarget(target);
+    if (target) lastTransformPosition.current.copy(target.position);
+  }, [selectedPart]);
+
+  const handleReset = () => {
+    clearSelection();
+    setXray(false);
+    setExploded(false);
+    setPartDragOffsets({});
+    setPartDragging(false);
+  };
+
+  const handleTransformChange = () => {
+    if (!selectedPart || !partTransformTarget) return;
+    const delta = partTransformTarget.position.clone().sub(lastTransformPosition.current);
+    if (delta.lengthSq() === 0) return;
+    lastTransformPosition.current.copy(partTransformTarget.position);
+    setPartDragOffsets((currentOffsets) => {
+      const current = currentOffsets[selectedPart] ?? [0, 0, 0];
+      return {
+        ...currentOffsets,
+        [selectedPart]: [
+          current[0] + delta.x,
+          current[1] + delta.y,
+          current[2] + delta.z,
+        ],
+      };
+    });
   };
 
   const contextVehicleType = mode === "owner" ? resolveVehicleType(activeVehicleCtx?.activeVehicleIdentity) : null;
   const displayVehicleType = contextVehicleType ?? vehicleType;
   const current = displayVehicleType ? vehicleLabels[displayVehicleType] : null;
+  const selectedMechanicVehicle = mode === "mechanic" && displayVehicleType
+    ? (initialVin
+      ? queueVehicles.find((item) => item.vin === initialVin && item.vt === displayVehicleType)
+      : undefined) ?? queueVehicles.find((item) => item.vt === displayVehicleType)
+    : null;
   const ownerVehicleName = mode === "owner" ? activeVehicleCtx?.currentVehicleData.name : undefined;
   const oemName =
     displayVehicleType === "pcx_150"
@@ -108,6 +192,24 @@ export default function SharedDigitalTwinViewer({ mode, initialVehicle }: Shared
         : displayVehicleType === "bmw_m4"
           ? "BMW Group"
           : "Toyota Motor Corp";
+
+  useEffect(() => {
+    setPartTransformTarget(null);
+  }, [displayVehicleType, selectedPart]);
+
+  useEffect(() => {
+    if (mode !== "mechanic" || !initialVin || !queueVehicles.length) return;
+    const selected = queueVehicles.find((item) => item.vin === initialVin);
+    if (selected && selected.vt !== vehicleType) {
+      setVehicleType(selected.vt);
+      clearSelection();
+    }
+  }, [initialVin, mode, queueVehicles, vehicleType]);
+
+  useEffect(() => {
+    if (mode !== "mechanic" || vehicleType || !queueVehicles.length) return;
+    setVehicleType(queueVehicles[0].vt);
+  }, [mode, queueVehicles, vehicleType]);
 
   return (
     <div className="relative" style={{ height: "calc(100dvh - 64px)" }}>
@@ -127,7 +229,7 @@ export default function SharedDigitalTwinViewer({ mode, initialVehicle }: Shared
                 </div>
                 <div>
                   <h1 className="text-lg font-bold flex items-center gap-2 text-white group-hover:text-teal-400 transition-colors">
-                    {current ? `${current.subtitle}` : "Select Active Queue Vehicle"} 
+                    {selectedMechanicVehicle?.label ?? (current ? `${current.subtitle}` : "Select Active Queue Vehicle")} 
                     <DropdownIcon className={`w-4 h-4 transition-transform ${dropdownOpen ? 'rotate-180' : ''}`} />
                   </h1>
                   <p className="text-xs text-slate-400 mt-0.5">
@@ -143,9 +245,7 @@ export default function SharedDigitalTwinViewer({ mode, initialVehicle }: Shared
                     Active Service Queue
                   </div>
                   <div className="p-2 flex flex-col gap-1 max-h-64 overflow-y-auto">
-                    {[                      { vt: "bmw_m4", label: vehicleData.bmw_m4.name, vin: vehicleData.bmw_m4.vin, owner: vehicleData.bmw_m4.owner || "Andi Wijaya" },                      { vt: "harley", label: vehicleData.harley.name, vin: vehicleData.harley.vin, owner: vehicleData.harley.owner || "John Doe" },                      { vt: "pcx_150", label: vehicleData.pcx_150.name, vin: vehicleData.pcx_150.vin, owner: vehicleData.pcx_150.owner || "Budi Santoso" },
-                      { vt: "supra", label: vehicleData.supra.name, vin: vehicleData.supra.vin, owner: vehicleData.supra.owner || "Ryo Takahashi" }
-                    ].map((item, i) => (
+                    {queueVehicles.map((item, i) => (
                       <button 
                         key={i}
                         onClick={() => { setVehicleType(item.vt as VehicleType); setDropdownOpen(false); clearSelection(); }}
@@ -158,9 +258,11 @@ export default function SharedDigitalTwinViewer({ mode, initialVehicle }: Shared
                         <span className="text-xs bg-slate-800 px-2 py-1 rounded text-slate-400">{item.owner}</span>
                       </button>
                     ))}
-                    <div className="p-3 text-center text-xs text-slate-500">
-                      *Vehicles disappear from here once invoice is paid.
-                    </div>
+                    {!queueVehicles.length && (
+                      <div className="p-3 text-center text-xs text-slate-500">
+                        Belum ada kendaraan aktif dari queue backend.
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
@@ -194,7 +296,7 @@ export default function SharedDigitalTwinViewer({ mode, initialVehicle }: Shared
             </button>
 
             {/* Reset */}
-            <button onClick={() => { clearSelection(); setXray(false); setExploded(false); }} className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-medium transition-all cursor-pointer shadow-lg hover:scale-105"
+            <button onClick={handleReset} className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-medium transition-all cursor-pointer shadow-lg hover:scale-105"
               style={{ background: "rgba(30,30,40,0.9)", border: "1px solid rgba(255,255,255,0.1)", color: "white", backdropFilter: "blur(10px)" }}>
               <RotateCcw className="w-4 h-4" /> Reset
             </button>
@@ -236,21 +338,34 @@ export default function SharedDigitalTwinViewer({ mode, initialVehicle }: Shared
 
           <Suspense fallback={<LoadingFallback />}>
             {displayVehicleType === "bmw_m4" ? (
-              <BMWM4Model onSelectPart={handleSelectPart} selectedPart={selectedPart} xray={xray} exploded={exploded} />
+              <BMWM4Model onSelectPart={handleSelectPart} selectedPart={selectedPart} xray={xray} exploded={exploded} partDragOffsets={partDragOffsets} onPartTransformTarget={registerPartTransformTarget} />
             ) : null}
             {displayVehicleType === "harley" ? (
-              <HarleyDavidsonModel onSelectPart={handleSelectPart} selectedPart={selectedPart} xray={xray} exploded={exploded} />
+              <HarleyDavidsonModel onSelectPart={handleSelectPart} selectedPart={selectedPart} xray={xray} exploded={exploded} partDragOffsets={partDragOffsets} onPartTransformTarget={registerPartTransformTarget} />
             ) : null}
             {displayVehicleType === "pcx_150" ? (
-              <PCX150Model onSelectPart={handleSelectPart} selectedPart={selectedPart} xray={xray} exploded={exploded} />
+              <PCX150Model onSelectPart={handleSelectPart} selectedPart={selectedPart} xray={xray} exploded={exploded} partDragOffsets={partDragOffsets} onPartTransformTarget={registerPartTransformTarget} />
             ) : null}
             {displayVehicleType === "supra" ? (
-              <SupraModel onSelectPart={handleSelectPart} selectedPart={selectedPart} xray={xray} exploded={exploded} />
+              <SupraModel onSelectPart={handleSelectPart} selectedPart={selectedPart} xray={xray} exploded={exploded} partDragOffsets={partDragOffsets} onPartTransformTarget={registerPartTransformTarget} />
             ) : null}
           </Suspense>
 
           <ContactShadows position={[0, -0.01, 0]} opacity={0.4} blur={2} far={4} />
-          <OrbitControls enablePan enableZoom enableRotate minDistance={2} maxDistance={15} autoRotate={!selectedPart} autoRotateSpeed={0.5} />
+          {partTransformTarget && (
+            <TransformControls
+              object={partTransformTarget}
+              mode="translate"
+              size={0.75}
+              onMouseDown={() => {
+                setPartDragging(true);
+                lastTransformPosition.current.copy(partTransformTarget.position);
+              }}
+              onMouseUp={() => setPartDragging(false)}
+              onObjectChange={handleTransformChange}
+            />
+          )}
+          <OrbitControls enablePan enableZoom enableRotate enabled={!partDragging} minDistance={2} maxDistance={15} autoRotate={!selectedPart && !partDragging} autoRotateSpeed={0.5} />
           {/* Environment removed — 75MB GLB + PMREM causes WebGL context loss */}
           <gridHelper args={[20, 40, "#1a1a3e", "#1a1a3e"]} position={[0, 0, 0]} />
         </Canvas>

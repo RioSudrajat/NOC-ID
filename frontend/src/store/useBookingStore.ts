@@ -216,9 +216,14 @@ function mapApiBooking(booking: ApiBooking): BookingRequest {
         manufacturer: String(part.manufacturer ?? "NOC"),
         price: Number(part.price ?? part.priceIdr ?? 0),
         isOEM: Boolean(part.isOEM ?? true),
+        originStatus: typeof part.originStatus === "string" ? part.originStatus as "unverified" | "pending" | "verified" | "non_oem" | "failed" : undefined,
+        originSignature: typeof part.originSignature === "string" ? part.originSignature : undefined,
+        originRecordPda: typeof part.originRecordPda === "string" ? part.originRecordPda : undefined,
+        originCatalogItemId: typeof part.originCatalogItemId === "string" ? part.originCatalogItemId : undefined,
       })),
     } : null,
     review: null,
+    serviceLogId: booking.serviceLog?.id ?? undefined,
     anchorTxSig: booking.serviceLog?.txSignature ?? booking.invoice?.payments?.find((payment) => payment.signature)?.signature ?? undefined,
   };
 }
@@ -412,7 +417,7 @@ export const useBookingStore = create<BookingStore>((set, get) => {
           shareHistory: true,
           shareDigitalTwin: true,
         },
-        status: "ACCEPTED", // Walk-in is auto accepted usually, or IN_SERVICE
+        status: "ACCEPTED",
         createdAt: new Date().toISOString(),
         invoice: null,
         review: null,
@@ -476,6 +481,10 @@ export const useBookingStore = create<BookingStore>((set, get) => {
             componentName: part.componentName,
             componentZone: part.componentZone,
             serviceAction: part.serviceAction,
+            originStatus: part.originStatus,
+            originSignature: part.originSignature,
+            originRecordPda: part.originRecordPda,
+            originCatalogItemId: part.originCatalogItemId,
           })),
         }).then(() => get().syncFromBackend()).catch((error) => {
           console.warn("[booking-store] backend invoice create skipped", error);
@@ -629,10 +638,12 @@ export const useBookingStore = create<BookingStore>((set, get) => {
 
     submitReview: (vehicleKey, review) => {
       let completedToAppend: CompletedBooking | null = null;
+      let backendBookingId: string | null = null;
 
       set(state => {
         const bookings = updateSlot(state.bookings, vehicleKey, prev => {
           if (!prev || !prev.invoice) return prev;
+          backendBookingId = prev.id.startsWith("BK-") ? null : prev.id;
           const updated = { ...prev, status: "COMPLETED" as BookingStatus, review };
 
           completedToAppend = {
@@ -686,6 +697,11 @@ export const useBookingStore = create<BookingStore>((set, get) => {
         saveJSON(NOTIF_KEY, notifs);
         return { bookings, completedBookings, bookingNotifications: notifs };
       });
+      if (backendBookingId) {
+        void api.updateBookingStatus(backendBookingId, "COMPLETED").then(() => get().syncFromBackend()).catch((error) => {
+          console.warn("[booking-store] backend review completion skipped", error);
+        });
+      }
     },
 
     reset: (vehicleKey) => {

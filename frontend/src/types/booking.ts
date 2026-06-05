@@ -75,6 +75,10 @@ export interface InvoicePart {
   componentName?: string;
   componentZone?: string;
   serviceAction?: "inspect" | "service" | "repair" | "replace";
+  originStatus?: "unverified" | "pending" | "verified" | "non_oem" | "failed";
+  originSignature?: string;
+  originRecordPda?: string;
+  originCatalogItemId?: string;
 }
 
 export interface InvoiceData {
@@ -116,7 +120,9 @@ export interface BookingRequest {
   createdAt: string;
   invoice: InvoiceData | null;
   review: ReviewData | null;
+  serviceLogId?: string;
   anchorTxSig?: string;
+  passportTxSig?: string;
   warrantyClaim?: WarrantyClaimDraft;
 }
 

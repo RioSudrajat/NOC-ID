@@ -1,15 +1,21 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { Users, Car, Clock, Shield, Wrench, AlertTriangle, ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 
 import { vehicleData } from "@/context/ActiveVehicleContext";
 import { useBooking } from "@/context/BookingContext";
+import { useBookingStore } from "@/store/useBookingStore";
 
 export default function WorkshopQueue() {
   const bookingCtx = useBooking();
+  const syncFromBackend = useBookingStore((state) => state.syncFromBackend);
+
+  useEffect(() => {
+    void syncFromBackend();
+  }, [syncFromBackend]);
 
   // Build one queue entry per active booking (ACCEPTED or IN_SERVICE) so that
   // concurrent sessions for different vehicles all appear side-by-side instead
@@ -20,11 +26,12 @@ export default function WorkshopQueue() {
       .filter((b) => ["ACCEPTED", "IN_SERVICE"].includes(b.status))
       .map((b) => {
         const vd = vehicleData[b.form.vehicleKey];
+        const vehicleName = b.form.vehicleName || vd?.name || b.form.vehicleKey;
+        const vehicleVin = b.form.vehicleVin || vd?.vin || b.form.vehicleKey;
         return {
           id: b.id,
-          vin: vd?.vin || b.id,
-          model: vd?.name || b.form.vehicleKey,
-          year: 2025,
+          vin: vehicleVin,
+          model: vehicleName,
           owner: "Pelanggan NOC",
           arrivalTime: b.form.time,
           status: b.status === "IN_SERVICE" ? ("IN_PROGRESS" as const) : ("WAITING" as const),
@@ -73,7 +80,7 @@ export default function WorkshopQueue() {
                    <Car className="w-6 h-6" />
                  </div>
                  <div>
-                   <h2 className="text-xl font-bold text-white">{item.model} <span className="text-slate-500 font-normal">({item.year})</span></h2>
+                   <h2 className="text-xl font-bold text-white">{item.model}</h2>
                    <p className="font-mono text-sm text-slate-400 flex items-center gap-1.5"><Shield className="w-3 h-3"/> {item.vin}</p>
                  </div>
                </div>

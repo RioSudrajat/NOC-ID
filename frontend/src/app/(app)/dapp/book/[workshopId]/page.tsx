@@ -14,7 +14,7 @@ import { useActiveVehicle, vehicleData } from "@/context/ActiveVehicleContext";
 import { useAdminStore } from "@/store/useAdminStore";
 import { useUserStore } from "@/store/useUserStore";
 import { useVehicleRegistryStore } from "@/store/useVehicleRegistryStore";
-import { getVehicleDisplayName } from "@/types/vehicle";
+import { getVehicleDisplayName, isServiceLogReadyVehicle } from "@/types/vehicle";
 
 const timeSlots = ["08:00", "09:00", "10:00", "11:00", "13:00", "14:00", "15:00", "16:00"];
 
@@ -50,6 +50,7 @@ export default function WorkshopProfilePage() {
   const ws = workshopsData.find((w) => w.id === workshopId);
   const bookingCtx = useBooking();
   const vehicleCtx = useActiveVehicle();
+  const hasActiveVehicle = vehicleCtx?.hasActiveVehicle ?? false;
   const hydrateAdmin = useAdminStore((state) => state.hydrate);
   const allCredentials = useAdminStore((state) => state.credentials);
   const credentials = allCredentials.filter(item => item.workshopId === workshopId && !item.revokedAt);
@@ -69,8 +70,10 @@ export default function WorkshopProfilePage() {
     return registryVehicles
       .filter((vehicle) => {
         if (!vehicle.make || !vehicle.model || !vehicle.year || !vehicle.vin) return false;
-        if (userId) return vehicle.currentOwnerId === userId || ownedVehicleIds?.includes(vehicle.vehicleId);
-        if (vehicle.mintStatus === "transferred" || vehicle.mintStatus === "escrow") return false;
+        if (userId) {
+          const isOwned = vehicle.currentOwnerId === userId || ownedVehicleIds?.includes(vehicle.vehicleId);
+          return isOwned && isServiceLogReadyVehicle(vehicle);
+        }
         return vehicle.isDemo;
       })
       .filter((vehicle, index, list) => list.findIndex((item) => item.vin === vehicle.vin) === index);
@@ -94,6 +97,17 @@ export default function WorkshopProfilePage() {
       <div className="flex flex-col items-center justify-center min-h-[50vh]">
         <p style={{ color: "var(--solana-text-muted)" }}>Bengkel tidak ditemukan</p>
         <Link href="/dapp/book" className="glow-btn-outline px-4 py-2 text-sm mt-4">Kembali</Link>
+      </div>
+    );
+  }
+
+  if (!hasActiveVehicle) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[50vh] text-center">
+        <Calendar className="mb-4 h-10 w-10 text-teal-300" />
+        <h1 className="text-2xl font-bold">Belum bisa booking service</h1>
+        <p className="mt-2 max-w-lg text-sm text-slate-400">Akun ini belum punya kendaraan digital yang siap service log. Mint/transfer kendaraan dari dealer atau register vehicle untuk audit dulu.</p>
+        <Link href="/dapp/register-vehicle" className="glow-btn mt-6 px-5 py-2.5 text-sm">Register Vehicle</Link>
       </div>
     );
   }

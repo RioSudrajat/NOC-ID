@@ -11,6 +11,7 @@ export const NOC_REGISTRY_INSTRUCTIONS = [
   "register_vehicle_record",
   "mark_vehicle_transferred",
   "claim_vehicle",
+  "verify_component_origin",
   "anchor_service_log",
   "anchor_trip_summary",
   "anchor_case_event",

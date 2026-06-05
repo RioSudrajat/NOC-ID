@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import {
   CheckCircle2, XCircle, Clock, Loader2,
@@ -9,6 +9,7 @@ import {
 import Link from "next/link";
 import { useBooking, type BookingRequest, type BookingStatus, type SessionType } from "@/context/BookingContext";
 import { useActiveVehicle, vehicleData } from "@/context/ActiveVehicleContext";
+import { useBookingStore } from "@/store/useBookingStore";
 import dynamic from "next/dynamic";
 import StatusCards from "@/components/dapp/status/StatusCards";
 import ServiceDetailPanel from "@/components/dapp/status/ServiceDetailPanel";
@@ -109,6 +110,7 @@ function StatusSidebarPanel({ status, type, workshopName, bookingDate, bookingTi
 
 export default function BookingStatusPage() {
   const ctx = useBooking();
+  const syncFromBackend = useBookingStore((state) => state.syncFromBackend);
   const activeVehicleCtx = useActiveVehicle();
   const activeVehicle = activeVehicleCtx?.activeVehicleId || activeVehicleCtx?.activeVehicle || "bmw_m4";
   const booking = ctx?.bookings[activeVehicle] || null;
@@ -117,6 +119,10 @@ export default function BookingStatusPage() {
   const [rating, setRating] = useState(0);
   const [reviewComment, setReviewComment] = useState("");
   const [reviewSubmitted, setReviewSubmitted] = useState(false);
+
+  useEffect(() => {
+    void syncFromBackend();
+  }, [syncFromBackend]);
 
   if (!booking) {
     return (
@@ -187,7 +193,7 @@ export default function BookingStatusPage() {
               reviewSubmitted={reviewSubmitted}
               onSetRating={setRating}
               onSetReviewComment={setReviewComment}
-              onSubmitReview={() => { if (rating > 0) { ctx?.submitReview(activeVehicle, { rating, comment: reviewComment, onChainVerified: true }); setReviewSubmitted(true); } }}
+              onSubmitReview={() => { if (rating > 0) { ctx?.submitReview(activeVehicle, { rating, comment: reviewComment, onChainVerified: false }); setReviewSubmitted(true); } }}
               onOpenPayment={() => setPaymentOpen(true)}
               onReset={() => ctx?.reset(activeVehicle)}
             />

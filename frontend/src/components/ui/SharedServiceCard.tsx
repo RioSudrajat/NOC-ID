@@ -3,7 +3,7 @@
 import { useState } from "react";
 import type { ComponentType, CSSProperties } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Star, CheckCircle, CheckCircle2, XCircle, AlertCircle, Camera, ExternalLink, X, CreditCard, FileText } from "lucide-react";
+import { Star, CheckCircle, CheckCircle2, XCircle, AlertCircle, Camera, ExternalLink, X, CreditCard, FileText, ShieldCheck } from "lucide-react";
 import { PaymentModal } from "./PaymentModal";
 
 export interface PartItem {
@@ -12,6 +12,11 @@ export interface PartItem {
   isOem: boolean;
   manufacturer: string;
   priceIDR: number;
+  serviceAction?: "inspect" | "service" | "repair" | "replace" | string;
+  originStatus?: "unverified" | "pending" | "verified" | "non_oem" | "failed" | string | null;
+  originSignature?: string | null;
+  originRecordPda?: string | null;
+  originCatalogItemId?: string | null;
 }
 
 export interface ServiceEvent {
@@ -33,6 +38,8 @@ export interface ServiceEvent {
   costNOC: number;
   costStr: string;
   txSig: string | null;
+  passportTxSig?: string | null;
+  originTxSig?: string | null;
   healthBefore: number;
   healthAfter: number;
   notes: string;
@@ -53,6 +60,20 @@ function getHealthColor(health: number) {
   if (health >= 50) return "#FCD34D";
   if (health >= 30) return "#5EEAD4";
   return "#FCA5A5";
+}
+
+function partNeedsOrigin(part: PartItem) {
+  return part.serviceAction === "replace" || part.serviceAction === "inspect";
+}
+
+function partOriginBadge(part: PartItem) {
+  if (!partNeedsOrigin(part)) {
+    return part.isOem ? { label: "OEM", color: "text-teal-400", icon: CheckCircle2 } : { label: "Aftermarket", color: "text-slate-400", icon: XCircle };
+  }
+  if (part.originStatus === "verified") return { label: "Terverifikasi", color: "text-teal-400", icon: CheckCircle2 };
+  if (part.originStatus === "non_oem") return { label: "Bukan OEM", color: "text-yellow-300", icon: AlertCircle };
+  if (part.originStatus === "failed") return { label: "Verification Failed", color: "text-red-300", icon: XCircle };
+  return { label: "Tidak terverifikasi", color: "text-yellow-300", icon: AlertCircle };
 }
 
 export function SharedServiceCard({ event, userRole, onPayNow, onDispute, onCancelInvoice }: SharedServiceCardProps) {
@@ -97,28 +118,28 @@ export function SharedServiceCard({ event, userRole, onPayNow, onDispute, onCanc
         </div>
 
         {/* Card */}
-        <div className={`glass-card p-8 flex-1 transition-transform hover:scale-[1.01] ${
+        <div className={`glass-card min-w-0 p-6 md:p-8 flex-1 transition-transform hover:scale-[1.01] ${
           isPending ? 'border-yellow-500/30 bg-yellow-500/5' : 
           isRejected ? 'border-red-500/30 bg-red-500/5 opacity-70' : ''
         }`}>
           <div className="flex flex-col md:flex-row justify-between items-start gap-6 mb-6">
-            <div>
-              <div className="flex items-center gap-4 mb-2">
-                <h3 className="text-xl font-bold">{event.type}</h3>
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-3 mb-2">
+                <h3 className="min-w-0 text-xl font-bold break-words">{event.type}</h3>
                 {statusBadge}
               </div>
-              <p className="text-base" style={{ color: "var(--solana-text-muted)" }}>
+              <p className="text-base break-words" style={{ color: "var(--solana-text-muted)" }}>
                 {event.workshop} · {event.mechanic} (★ {event.rating})
               </p>
             </div>
-            <div className="text-left md:text-right">
+            <div className="shrink-0 text-left md:text-right">
               <p className="mono text-base font-semibold mb-1">{event.date}</p>
               <p className="text-sm" style={{ color: "var(--solana-text-muted)" }}>{event.mileage}</p>
             </div>
           </div>
 
           {/* Health change */}
-          <div className="flex items-center gap-4 mb-6">
+          <div className="flex items-center gap-4 mb-6 min-w-0">
             <span className="text-sm" style={{ color: "var(--solana-text-muted)" }}>Health:</span>
             <span className="mono font-bold" style={{ color: getHealthColor(event.healthBefore) }}>{event.healthBefore}</span>
             <span style={{ color: "var(--solana-text-muted)" }}>→</span>
@@ -129,14 +150,14 @@ export function SharedServiceCard({ event, userRole, onPayNow, onDispute, onCanc
           </div>
 
           {/* Parts + Action / TX */}
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-5">
-                <div>
+          <div className="flex flex-col gap-4 min-w-0">
+            <div className="min-w-0">
               {event.parts.length > 0 && (
                 <div className="flex flex-wrap gap-2">
                   {event.parts.slice(0, 2).map((p, j) => (
-                    <span key={j} className="text-xs px-2 py-1 rounded-md flex items-center gap-1" style={{ background: "rgba(20,20,40,0.5)", color: "var(--solana-text-muted)" }}>
-                      {p.isOem && <CheckCircle2 className="w-3 h-3 text-teal-400" />}
-                      {p.name}
+                    <span key={j} className="max-w-full text-xs px-2 py-1 rounded-md inline-flex items-center gap-1 break-words leading-snug" style={{ background: "rgba(20,20,40,0.5)", color: "var(--solana-text-muted)" }}>
+                      {p.isOem && <CheckCircle2 className="w-3 h-3 shrink-0 text-teal-400" />}
+                      <span className="min-w-0 break-words">{p.name}</span>
                     </span>
                   ))}
                   {event.parts.length > 2 && (
@@ -146,7 +167,7 @@ export function SharedServiceCard({ event, userRole, onPayNow, onDispute, onCanc
               )}
             </div>
             
-            <div className="flex items-center gap-4 shrink-0">
+            <div className="flex flex-col gap-3 min-w-0 lg:flex-row lg:items-center lg:justify-between">
               <span className="text-sm font-semibold whitespace-nowrap" style={{ color: isPending ? "#FCD34D" : isRejected ? "#FCA5A5" : "var(--solana-green)" }}>
                 {event.costStr}
               </span>
@@ -179,11 +200,29 @@ export function SharedServiceCard({ event, userRole, onPayNow, onDispute, onCanc
                   )}
                 </div>
               ) : isAnchored ? (
-                <a href={`https://explorer.solana.com/tx/${event.txSig}?cluster=devnet`} target="_blank" rel="noreferrer" onClick={e => e.stopPropagation()} className="flex items-center gap-1 text-xs mono hover:brightness-150 transition-colors bg-teal-500/10 px-3 py-2 rounded-lg" style={{ color: "var(--solana-purple)" }}>
-                  <CheckCircle2 className="w-3 h-3 text-teal-400" />
-                  tx: {event.txSig}
-                  <ExternalLink className="w-3 h-3" />
-                </a>
+                <div className="flex max-w-full flex-wrap gap-2">
+                  {event.txSig && (
+                    <a href={`https://explorer.solana.com/tx/${event.txSig}?cluster=devnet`} target="_blank" rel="noreferrer" onClick={e => e.stopPropagation()} className="min-w-0 max-w-full inline-flex items-center gap-1 text-xs mono hover:brightness-150 transition-colors bg-teal-500/10 px-3 py-2 rounded-lg" style={{ color: "var(--solana-purple)" }}>
+                      <CheckCircle2 className="w-3 h-3 shrink-0 text-teal-400" />
+                      <span className="min-w-0 truncate">service: {event.txSig.slice(0, 6)}...{event.txSig.slice(-6)}</span>
+                      <ExternalLink className="w-3 h-3 shrink-0" />
+                    </a>
+                  )}
+                  {event.passportTxSig && (
+                    <a href={`https://explorer.solana.com/tx/${event.passportTxSig}?cluster=devnet`} target="_blank" rel="noreferrer" onClick={e => e.stopPropagation()} className="min-w-0 max-w-full inline-flex items-center gap-1 text-xs mono hover:brightness-150 transition-colors bg-cyan-500/10 px-3 py-2 rounded-lg" style={{ color: "var(--solana-cyan)" }}>
+                      <CheckCircle2 className="w-3 h-3 shrink-0 text-cyan-300" />
+                      <span className="min-w-0 truncate">passport: {event.passportTxSig.slice(0, 6)}...{event.passportTxSig.slice(-6)}</span>
+                      <ExternalLink className="w-3 h-3 shrink-0" />
+                    </a>
+                  )}
+                  {event.originTxSig && (
+                    <a href={`https://explorer.solana.com/tx/${event.originTxSig}?cluster=devnet`} target="_blank" rel="noreferrer" onClick={e => e.stopPropagation()} className="min-w-0 max-w-full inline-flex items-center gap-1 text-xs mono hover:brightness-150 transition-colors bg-emerald-500/10 px-3 py-2 rounded-lg" style={{ color: "#86efac" }}>
+                      <ShieldCheck className="w-3 h-3 shrink-0 text-emerald-300" />
+                      <span className="min-w-0 truncate">origin: {event.originTxSig.slice(0, 6)}...{event.originTxSig.slice(-6)}</span>
+                      <ExternalLink className="w-3 h-3 shrink-0" />
+                    </a>
+                  )}
+                </div>
               ) : (
                 <span className="flex items-center gap-1 text-xs font-semibold text-red-500 bg-red-500/10 px-3 py-2 rounded-lg border border-red-500/20">
                   <XCircle className="w-3 h-3"/> {event.status === "REJECTED" ? "Rejected" : "Cancelled"}
@@ -284,15 +323,15 @@ export function SharedServiceCard({ event, userRole, onPayNow, onDispute, onCanc
                                 <span className="block text-[10px] mono text-slate-500">{p.partNumber}</span>
                               </td>
                               <td className="py-2">
-                                {p.isOem ? (
-                                  <span className="flex items-center gap-1 text-teal-400 text-xs"><CheckCircle2 className="w-3.5 h-3.5" /> OEM</span>
-                                ) : (
-                                  <span className="text-xs text-teal-400">Aftermarket</span>
-                                )}
+                                {(() => {
+                                  const badge = partOriginBadge(p);
+                                  const Icon = badge.icon;
+                                  return <span className={`flex items-center gap-1 text-xs ${badge.color}`}><Icon className="w-3.5 h-3.5" /> {badge.label}</span>;
+                                })()}
                               </td>
                               <td className="py-2 text-xs">
-                                {p.isOem ? (
-                                  <a href={`https://explorer.solana.com/address/NocPart_${p.partNumber}_mock`} target="_blank" rel="noopener noreferrer" className="text-teal-400 hover:underline flex items-center gap-1">{p.manufacturer} <ExternalLink className="w-3 h-3" /></a>
+                                {(p.originSignature || (partNeedsOrigin(p) && event.originTxSig)) ? (
+                                  <a href={`https://explorer.solana.com/tx/${p.originSignature ?? event.originTxSig}?cluster=devnet`} target="_blank" rel="noopener noreferrer" className="text-teal-400 hover:underline flex items-center gap-1">{p.manufacturer} <ExternalLink className="w-3 h-3" /></a>
                                 ) : (
                                   <span className="text-slate-400">{p.manufacturer}</span>
                                 )}
@@ -307,6 +346,37 @@ export function SharedServiceCard({ event, userRole, onPayNow, onDispute, onCanc
                 )}
 
                 <div className="pt-4 border-t border-slate-700/50">
+                  {isAnchored && (
+                    <div className="mb-5 space-y-2">
+                      <h3 className="text-sm font-semibold text-slate-300 border-b border-slate-700/50 pb-2">On-chain Proofs</h3>
+                      {event.txSig && (
+                        <a href={`https://explorer.solana.com/tx/${event.txSig}?cluster=devnet`} target="_blank" rel="noreferrer" className="flex items-center justify-between gap-3 rounded-xl bg-teal-500/10 border border-teal-500/20 px-4 py-3 text-xs">
+                          <span className="text-slate-300">ServiceLogRecord PDA anchor</span>
+                          <span className="mono text-teal-300 flex items-center gap-1">{event.txSig.slice(0, 8)}...{event.txSig.slice(-8)} <ExternalLink className="w-3 h-3" /></span>
+                        </a>
+                      )}
+                      {event.passportTxSig ? (
+                        <a href={`https://explorer.solana.com/tx/${event.passportTxSig}?cluster=devnet`} target="_blank" rel="noreferrer" className="flex items-center justify-between gap-3 rounded-xl bg-cyan-500/10 border border-cyan-500/20 px-4 py-3 text-xs">
+                          <span className="text-slate-300">cNFT vehicle passport metadata update</span>
+                          <span className="mono text-cyan-300 flex items-center gap-1">{event.passportTxSig.slice(0, 8)}...{event.passportTxSig.slice(-8)} <ExternalLink className="w-3 h-3" /></span>
+                        </a>
+                      ) : (
+                        <div className="rounded-xl bg-yellow-500/10 border border-yellow-500/20 px-4 py-3 text-xs text-yellow-200">
+                          cNFT passport metadata update belum tercatat untuk service ini.
+                        </div>
+                      )}
+                      {event.originTxSig ? (
+                        <a href={`https://explorer.solana.com/tx/${event.originTxSig}?cluster=devnet`} target="_blank" rel="noreferrer" className="flex items-center justify-between gap-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 px-4 py-3 text-xs">
+                          <span className="text-slate-300">Component origin verification</span>
+                          <span className="mono text-emerald-300 flex items-center gap-1">{event.originTxSig.slice(0, 8)}...{event.originTxSig.slice(-8)} <ExternalLink className="w-3 h-3" /></span>
+                        </a>
+                      ) : event.parts.some((part) => partNeedsOrigin(part)) ? (
+                        <div className="rounded-xl bg-yellow-500/10 border border-yellow-500/20 px-4 py-3 text-xs text-yellow-200">
+                          Component origin verification belum tercatat untuk part replace/inspect service ini.
+                        </div>
+                      ) : null}
+                    </div>
+                  )}
                   {event.parts.length > 0 && (
                     <div className="flex justify-between items-center mb-2">
                       <span className="text-sm text-slate-400">Subtotal Parts</span>

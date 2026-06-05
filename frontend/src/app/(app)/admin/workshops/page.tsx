@@ -6,7 +6,10 @@ import { Wrench, Star, Shield, CheckCircle2, ShieldAlert, Search, MapPin, BadgeC
 import { useBooking } from "@/context/BookingContext";
 import { useEnterprise } from "@/context/EnterpriseContext";
 import { useToast } from "@/components/ui/Toast";
+import { api } from "@/lib/api/client";
+import { signAndSendSerializedTransaction } from "@/lib/phantomTransactions";
 import { useAdminStore } from "@/store/useAdminStore";
+import { useUserStore } from "@/store/useUserStore";
 import { mergeRegisteredWorkshops } from "@/data/workshops";
 import type { WorkshopCredential } from "@/types/admin";
 
@@ -21,6 +24,7 @@ export default function AdminWorkshopsPage() {
   const rejectWorkshop = useAdminStore((state) => state.rejectWorkshop);
   const grantCredential = useAdminStore((state) => state.grantCredential);
   const revokeCredential = useAdminStore((state) => state.revokeCredential);
+  const currentUser = useUserStore((state) => state.currentUser);
   const wsMetrics = enterprise?.metrics.workshopMetrics || [];
 
   const [filter, setFilter] = useState("all");
@@ -47,10 +51,10 @@ export default function AdminWorkshopsPage() {
 
   const pendingWorkshops = registrations.filter(item => item.status === "pending_kyc");
 
-  const handleApproveKYC = (workshopId: string, name: string) => {
+  const handleApproveKYC = async (workshopId: string, name: string) => {
     approveWorkshop(workshopId, "usr-demo-admin");
-    grantCredential(workshopId, "verified_signer", "platform");
-    showToast("success", "KYC Approved", `${name} has been verified. On-chain credential issued.`);
+    await quickGrant(workshopId, "verified_signer");
+    showToast("success", "KYC Approved", `${name} has been verified.`);
     // Notify workshop + enterprise
     booking?.addNotification("kyc_change", "KYC Approved", `Your workshop "${name}" has been verified by platform admin.`, "workshop");
     booking?.addNotification("kyc_change", "Workshop KYC Approved", `Workshop "${name}" has been verified and credentialed.`, "enterprise");
@@ -63,9 +67,36 @@ export default function AdminWorkshopsPage() {
     booking?.addNotification("kyc_change", "KYC Rejected", `Your workshop "${name}" KYC application has been rejected.`, "workshop");
   };
 
-  const quickGrant = (workshopId: string, credential: WorkshopCredential) => {
-    grantCredential(workshopId, credential, credential === "verified_signer" ? "platform" : "ent-astra", credential === "verified_signer" ? undefined : "ent-astra");
-    showToast("success", "Credential Granted", `${credential} granted to ${workshopId}.`);
+  const quickGrant = async (workshopId: string, credential: WorkshopCredential) => {
+    try {
+      if (!currentUser?.selfCustodyAddress) {
+        showToast("error", "Wallet belum terhubung", "Login admin/enterprise dengan Phantom dulu sebelum grant credential.");
+        return;
+      }
+      const issuedBy = credential === "verified_signer" ? "platform" : "ent-astra";
+      const enterpriseId = credential === "verified_signer" ? undefined : "ent-astra";
+      const draft = await api.createCredentialGrantDraft({
+        workshopId,
+        credential,
+        issuedBy,
+        enterpriseId,
+        issuerWallet: currentUser.selfCustodyAddress,
+      });
+      const signed = await signAndSendSerializedTransaction(draft.transactionBase64);
+      await api.confirmCredentialGrant({
+        workshopId,
+        credential,
+        issuedBy,
+        enterpriseId,
+        issuerWallet: currentUser.selfCustodyAddress,
+        signature: signed.signature,
+        credentialRecordPda: draft.credentialRecordPda,
+      });
+      grantCredential(workshopId, credential, issuedBy, enterpriseId);
+      showToast("success", "Credential Granted", `${credential} granted on-chain. Fee ${(signed.feeSol ?? 0).toFixed(8)} SOL.`);
+    } catch (error) {
+      showToast("error", "Grant credential gagal", error instanceof Error ? error.message : "Credential grant transaction gagal.");
+    }
   };
 
   return (

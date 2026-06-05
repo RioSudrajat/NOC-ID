@@ -11,7 +11,9 @@ import { useRouter } from "next/navigation";
 import { useBooking, isDataAccessActive, type BookingStatus, type BookingRequest } from "@/context/BookingContext";
 import { vehicleData } from "@/context/ActiveVehicleContext";
 import { api } from "@/lib/api/client";
-import { requestDevnetNetworkFeeSignature } from "@/lib/devnetWalletFee";
+import { updateCompressedVehicleMetadataWithPhantom } from "@/lib/clientBubblegumMint";
+import { getConnectedPhantomAddress, signAndSendSerializedTransaction } from "@/lib/phantomTransactions";
+import { useUserStore } from "@/store/useUserStore";
 import { useVehicleRegistryStore } from "@/store/useVehicleRegistryStore";
 import { useBookingStore } from "@/store/useBookingStore";
 import { getVehicleDisplayName } from "@/types/vehicle";
@@ -50,6 +52,7 @@ export default function WorkshopBookingsPage() {
   const router = useRouter();
   const getVehicleById = useVehicleRegistryStore((state) => state.getVehicleById);
   const registryVehicles = useVehicleRegistryStore((state) => state.vehicles);
+  const currentUser = useUserStore((state) => state.currentUser);
   const [activeTab, setActiveTab] = useState("Semua");
   const [rejectConfirmId, setRejectConfirmId] = useState<string | null>(null);
   const [resubmitId, setResubmitId] = useState<string | null>(null);
@@ -57,7 +60,10 @@ export default function WorkshopBookingsPage() {
   const [resubmitPhotos, setResubmitPhotos] = useState<string[]>([]);
   const [isMounted, setIsMounted] = useState(false);
 
-  useEffect(() => setIsMounted(true), []);
+  useEffect(() => {
+    setIsMounted(true);
+    void useBookingStore.getState().syncFromBackend();
+  }, []);
 
   const rejectedClaims = (ctx?.warrantyClaims || []).filter(c => c.status === "Rejected");
 
@@ -80,6 +86,10 @@ export default function WorkshopBookingsPage() {
 
   const visibleBookings = activeBookings.filter((b) => matchesTab(b.status));
 
+  const handleRefreshBookings = async () => {
+    await useBookingStore.getState().syncFromBackend();
+  };
+
   const handleSendInvoice = (booking: BookingRequest) => {
     const registryVehicle = getVehicleById(booking.form.vehicleKey);
     const vehicle = registryVehicle ? { vin: registryVehicle.vin } : vehicleData[booking.form.vehicleKey] ?? { vin: booking.form.vehicleVin };
@@ -89,7 +99,12 @@ export default function WorkshopBookingsPage() {
 
   const handleSignAnchoring = async (booking: BookingRequest) => {
     if (!ctx) return;
+    let anchorConfirmed = Boolean(booking.anchorTxSig);
     try {
+      const connectedWallet = await getConnectedPhantomAddress();
+      if (currentUser?.selfCustodyAddress && currentUser.selfCustodyAddress !== connectedWallet) {
+        throw new Error(`Wallet Phantom ${connectedWallet} bukan workshop authority ${currentUser.selfCustodyAddress}.`);
+      }
       let backendBookingId = booking.id;
       if (booking.id.startsWith("BK-")) {
         const registryVehicle = getVehicleById(booking.form.vehicleKey) ?? registryVehicles.find((vehicle) => vehicle.vin === booking.form.vehicleVin);
@@ -130,18 +145,54 @@ export default function WorkshopBookingsPage() {
         await api.updateBookingStatus(backendBookingId, "PAID");
         await useBookingStore.getState().syncFromBackend();
       }
-      const approval = await requestDevnetNetworkFeeSignature("anchor_service_log");
       ctx.startAnchoring(booking.form.vehicleKey);
-      const result = await api.anchorServiceLogDevnet({
-        bookingId: backendBookingId,
-        odometerKm: 15000,
-        feeSignature: approval.signature,
-        feePayer: approval.feePayer,
-      });
-      ctx.completeAnchoring(booking.form.vehicleKey, result.signature);
+      let serviceLogId = booking.serviceLogId;
+      let anchorSignature = booking.anchorTxSig;
+      if (!serviceLogId || !anchorSignature) {
+        const draft = await api.createServiceLogAnchorDraft({
+          bookingId: backendBookingId,
+          odometerKm: 15000,
+          workshopAuthorityWallet: connectedWallet,
+        });
+        const signed = await signAndSendSerializedTransaction(draft.transactionBase64);
+        const result = await api.confirmServiceLogAnchor(draft.serviceLogId, {
+          signature: signed.signature,
+          signerWallet: connectedWallet,
+        });
+        serviceLogId = draft.serviceLogId;
+        anchorSignature = result.signature;
+        anchorConfirmed = true;
+      }
+      try {
+        if (!serviceLogId) throw new Error("Service log id belum tersedia untuk update cNFT passport.");
+        const passportDraft = await api.createPassportUpdateDraft(serviceLogId, {
+          authorityWallet: connectedWallet,
+        });
+        const passportSigned = await updateCompressedVehicleMetadataWithPhantom({
+          collectionAddress: passportDraft.collectionAddress,
+          currentMetadata: passportDraft.currentMetadata,
+          updateArgs: passportDraft.updateArgs,
+          proof: passportDraft.proof,
+        });
+        await api.confirmPassportUpdate(serviceLogId, {
+          signature: passportSigned.signature,
+          signerWallet: connectedWallet,
+          metadataHash: passportDraft.metadataHash,
+          metadataUri: passportDraft.metadataUri,
+        });
+        ctx.completeAnchoring(booking.form.vehicleKey, anchorSignature ?? passportSigned.signature);
+      } catch (passportError) {
+        console.error("Passport metadata update failed:", passportError);
+        throw new Error("Service log sudah anchored, tapi update cNFT metadata gagal: " + (passportError instanceof Error ? passportError.message : String(passportError)));
+      }
+      await useBookingStore.getState().syncFromBackend();
     } catch (err: any) {
       console.error("Anchoring failed:", err);
-      ctx.failAnchoring(booking.form.vehicleKey);
+      if (!anchorConfirmed) {
+        ctx.failAnchoring(booking.form.vehicleKey);
+      } else {
+        ctx.startAnchoring(booking.form.vehicleKey);
+      }
       alert("Failed to sign anchoring transaction: " + err.message);
     }
   };
@@ -340,9 +391,19 @@ export default function WorkshopBookingsPage() {
             )}
 
             {booking.status === "ANCHORING" && (
-              <div className="flex items-center gap-2 text-xs px-4 py-2.5 rounded-xl" style={{ background: "rgba(94, 234, 212,0.05)", color: "var(--solana-purple)", border: "1px solid rgba(94, 234, 212,0.15)" }}>
-                <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                Anchoring on-chain... menunggu konfirmasi Solana.
+              <div className="space-y-3">
+                <div className="flex items-center gap-2 text-xs px-4 py-2.5 rounded-xl" style={{ background: "rgba(94, 234, 212,0.05)", color: "var(--solana-purple)", border: "1px solid rgba(94, 234, 212,0.15)" }}>
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  Anchoring belum selesai. Jika Phantom/RPC gagal, lanjutkan ulang dari transaksi terakhir.
+                </div>
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <button onClick={() => handleSignAnchoring(booking)} className="glow-btn px-5 py-2.5 text-xs cursor-pointer flex items-center justify-center gap-1.5">
+                    <FileText className="w-3.5 h-3.5" /> Retry Sign Anchoring
+                  </button>
+                  <button onClick={handleRefreshBookings} className="px-5 py-2.5 text-xs rounded-xl cursor-pointer flex items-center justify-center gap-1.5" style={{ background: "rgba(255,255,255,0.04)", color: "var(--solana-text-muted)", border: "1px solid rgba(255,255,255,0.08)" }}>
+                    <Loader2 className="w-3.5 h-3.5" /> Refresh Status
+                  </button>
+                </div>
               </div>
             )}
 

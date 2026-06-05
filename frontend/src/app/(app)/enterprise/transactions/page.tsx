@@ -1,11 +1,12 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Receipt, DollarSign, Fuel, CreditCard, Search, Filter, ChevronDown, ChevronUp, ExternalLink, Hash } from "lucide-react";
 import { useEnterprise } from "@/context/EnterpriseContext";
+import { api, type ApiTxReceipt } from "@/lib/api/client";
 
-type TxType = "payment" | "mint" | "anchor";
+type TxType = "payment" | "mint" | "anchor" | "transfer" | "passport";
 
 interface Transaction {
   id: string;
@@ -26,7 +27,22 @@ const typeColors: Record<TxType, string> = {
   payment: "var(--solana-green)",
   mint: "var(--solana-purple)",
   anchor: "var(--solana-cyan)",
+  transfer: "#FCD34D",
+  passport: "#5EEAD4",
 };
+
+function mapReceiptType(raw?: Record<string, unknown> | null): TxType {
+  const action = String(raw?.action ?? "");
+  if (action.includes("mint")) return "mint";
+  if (action.includes("transfer")) return "transfer";
+  if (action.includes("passport") || action.includes("metadata")) return "passport";
+  if (action.includes("service_log")) return "anchor";
+  return "payment";
+}
+
+function short(signature: string) {
+  return `${signature.slice(0, 8)}...${signature.slice(-8)}`;
+}
 
 export default function EnterpriseTxPage() {
   const enterprise = useEnterprise();
@@ -36,10 +52,21 @@ export default function EnterpriseTxPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [typeFilter, setTypeFilter] = useState<string>("");
   const [expandedRow, setExpandedRow] = useState<string | null>(null);
+  const [receipts, setReceipts] = useState<ApiTxReceipt[]>([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    api.transactions({ take: 100 }).then((response) => {
+      if (!cancelled) setReceipts(response.items);
+    }).catch(() => {
+      if (!cancelled) setReceipts([]);
+    });
+    return () => { cancelled = true; };
+  }, []);
 
   // Build transactions from completed bookings
   const transactions: Transaction[] = useMemo(() => {
-    return completed.map((cb): Transaction => ({
+    const completedTxs = completed.map((cb): Transaction => ({
       id: cb.id,
       txSig: cb.txSig,
       type: "payment",
@@ -53,7 +80,27 @@ export default function EnterpriseTxPage() {
       bookingId: cb.bookingId,
       serviceType: cb.serviceType,
     }));
-  }, [completed]);
+    const receiptTxs = receipts.map((receipt): Transaction => ({
+      id: receipt.id,
+      txSig: receipt.signature,
+      type: mapReceiptType(receipt.raw),
+      from: String(receipt.raw?.feePayer ?? receipt.raw?.signerWallet ?? receipt.raw?.enterpriseAuthorityWallet ?? "Wallet"),
+      to: String(receipt.raw?.vehicleId ?? receipt.raw?.serviceLogId ?? receipt.raw?.newOwnerWallet ?? receipt.programId ?? "NOC ID"),
+      amount: 0,
+      currency: "SOL",
+      gasFee: Number(receipt.raw?.feeLamports ?? 0),
+      status: receipt.confirmationStatus === "CONFIRMED" ? "confirmed" : "pending",
+      timestamp: receipt.createdAt,
+      bookingId: typeof receipt.raw?.bookingId === "string" ? receipt.raw.bookingId : undefined,
+      serviceType: String(receipt.raw?.action ?? "onchain"),
+    }));
+    const seen = new Set<string>();
+    return [...receiptTxs, ...completedTxs].filter((tx) => {
+      if (seen.has(tx.txSig)) return false;
+      seen.add(tx.txSig);
+      return true;
+    });
+  }, [completed, receipts]);
 
   const filtered = useMemo(() => {
     return transactions.filter(tx => {
@@ -108,6 +155,8 @@ export default function EnterpriseTxPage() {
             <option value="payment">Payment</option>
             <option value="mint">Mint</option>
             <option value="anchor">Anchor</option>
+            <option value="transfer">Transfer</option>
+            <option value="passport">Passport Update</option>
           </select>
         </div>
       </div>
@@ -132,7 +181,9 @@ export default function EnterpriseTxPage() {
               {filtered.length > 0 ? filtered.map((tx) => (
                 <motion.tr key={tx.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="hover:bg-white/5 transition-colors cursor-pointer" onClick={() => setExpandedRow(expandedRow === tx.id ? null : tx.id)}>
                   <td className="py-4 px-6">
-                    <span className="mono text-xs text-teal-400">{tx.txSig}</span>
+                    <a href={`https://explorer.solana.com/tx/${tx.txSig}?cluster=devnet`} target="_blank" rel="noreferrer" onClick={(event) => event.stopPropagation()} className="mono text-xs text-teal-400 inline-flex items-center gap-1 hover:underline">
+                      {short(tx.txSig)} <ExternalLink className="w-3 h-3" />
+                    </a>
                   </td>
                   <td className="py-4 px-6">
                     <span className="text-xs px-2.5 py-1 rounded-full font-medium capitalize" style={{ background: `${typeColors[tx.type]}15`, color: typeColors[tx.type], border: `1px solid ${typeColors[tx.type]}40` }}>

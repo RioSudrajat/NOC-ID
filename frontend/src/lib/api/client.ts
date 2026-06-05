@@ -177,6 +177,67 @@ export type ApiTrip = {
   createdAt: string;
 };
 
+export type ApiTxReceipt = {
+  id: string;
+  signature: string;
+  cluster: string;
+  programId?: string | null;
+  slot?: string | number | null;
+  confirmationStatus: string;
+  explorerUrl: string;
+  raw?: Record<string, unknown> | null;
+  createdAt: string;
+};
+
+export type ApiVehicleQrPayload = {
+  type: "noc_vehicle_qr";
+  version: 1;
+  token: string;
+  vehicleId: string;
+  expiresAt: string;
+};
+
+export type ApiVehicleQrToken = {
+  qrTokenId: string;
+  qrPayload: ApiVehicleQrPayload;
+  expiresAt: string;
+  expirySeconds: number;
+  vehicle: Pick<ApiVehicle, "id" | "vin" | "make" | "model" | "year" | "cnftAssetId" | "treeAddress" | "vehicleRecordPda">;
+};
+
+export type ApiVehicleQrVerification = {
+  scanSessionId: string;
+  verifiedAt: string;
+  workshop: { id: string; name: string };
+  includeServiceHistory: boolean;
+  vehicle: ApiVehicle & {
+    currentOwner?: ApiAuthUser | null;
+    enterprise?: Record<string, unknown> | null;
+    serviceLogs?: Array<Record<string, unknown>>;
+  };
+  serviceHistory: Array<Record<string, unknown>>;
+};
+
+export type ApiComponentOriginDraft = {
+  status: string;
+  bookingId: string;
+  transactionBase64: string;
+  componentOriginRecordPda: string;
+  serviceIdHash: string;
+  invoiceHash: string;
+  partsHash: string;
+  catalogHash: string;
+  verifiedPartCount: number;
+  parts: Array<Record<string, unknown>>;
+  costEstimate?: {
+    networkFeeSol: number;
+    storageRentSol: number;
+    totalSol: number;
+    storageAccountBytes?: number;
+  };
+  accounts: Record<string, string>;
+};
+
 export const api = {
   health: () => apiRequest<{ ok: boolean; service: string; cluster: string; idrxMint: string }>("/health"),
   solanaConfig: () => apiRequest<{
@@ -188,6 +249,14 @@ export const api = {
     idrxMint: string;
     usdcMint: string;
   }>("/solana/config"),
+  transactions: (query?: { action?: string; programId?: string; take?: number }) => {
+    const params = new URLSearchParams();
+    if (query?.action) params.set("action", query.action);
+    if (query?.programId) params.set("programId", query.programId);
+    if (query?.take) params.set("take", String(query.take));
+    const suffix = params.size ? `?${params.toString()}` : "";
+    return apiRequest<{ items: ApiTxReceipt[]; cluster: string }>(`/solana/transactions${suffix}`);
+  },
   authNonce: (body: { address?: string; role?: ApiAuthUser["role"] }) =>
     apiRequest<{ nonce: string; message: string }>("/auth/nonce", {
       method: "POST",
@@ -220,6 +289,10 @@ export const api = {
   },
   vehicleTimeline: (vehicleId: string) =>
     apiRequest<{ vehicleId: string; vin: string; items: Array<{ type: string; at: string; item: Record<string, unknown> }>; receipts: Array<Record<string, unknown>>; cluster: string }>(`/vehicles/${vehicleId}/timeline`),
+  createVehicleQrToken: (vehicleId: string, body: { includeServiceHistory?: boolean }, token?: string | null) =>
+    apiRequest<ApiVehicleQrToken>(`/vehicles/${vehicleId}/qr-tokens`, { method: "POST", body, token }),
+  verifyVehicleQr: (body: { payload: string | ApiVehicleQrPayload; workshopId?: string }, token?: string | null) =>
+    apiRequest<ApiVehicleQrVerification>("/vehicles/qr/verify", { method: "POST", body, token }),
   resolveVehicle: (query: string) =>
     apiRequest<{ vehicle: ApiVehicle; qrPayload: Record<string, unknown> }>("/vehicles/resolve", { method: "POST", body: { query } }),
   workshops: () => apiRequest<{ items: ApiWorkshop[]; source: string }>("/workshops"),
@@ -238,8 +311,8 @@ export const api = {
     time: string;
     complaint: string;
   }) => apiRequest<{ bookingId: string; status: string; booking: ApiBooking }>("/bookings", { method: "POST", body }),
-  createWalkinBooking: (body: { vehicleId: string; workshopId: string; complaint: string }) =>
-    apiRequest<{ bookingId: string; status: string; booking: ApiBooking }>("/bookings/walk-in", { method: "POST", body }),
+  createWalkinBooking: (body: { vehicleId: string; workshopId: string; scanSessionId: string; complaint: string }, token?: string | null) =>
+    apiRequest<{ bookingId: string; status: string; booking: ApiBooking }>("/bookings/walk-in", { method: "POST", body, token }),
   updateBookingStatus: (bookingId: string, status: ApiBooking["status"]) =>
     apiRequest<{ bookingId: string; status: ApiBooking["status"]; booking: ApiBooking }>(`/bookings/${bookingId}/status`, { method: "PATCH", body: { status } }),
   createInvoice: (body: {
@@ -278,8 +351,69 @@ export const api = {
       method: "POST",
       body,
     }),
+  resolveComponentOrigin: (body: { vehicleId: string; partNumber: string; manufacturer?: string; componentId?: string }) =>
+    apiRequest<{ eligible: boolean; reason: string; catalogItem: Record<string, unknown> | null }>("/components/origin/resolve", {
+      method: "POST",
+      body,
+    }),
+  createComponentOriginDraft: (body: { bookingId: string; workshopWallet: string; parts: Array<Record<string, unknown>> }) =>
+    apiRequest<ApiComponentOriginDraft>("/components/origin/draft", {
+      method: "POST",
+      body,
+    }),
+  confirmComponentOrigin: (body: {
+    bookingId: string;
+    signature: string;
+    signerWallet: string;
+    componentOriginRecordPda: string;
+    invoiceHash: string;
+    partsHash: string;
+    catalogHash: string;
+  }) =>
+    apiRequest<{ status: string; bookingId: string; signature: string; explorerUrl: string; componentOriginRecordPda: string; onchainJobId: string }>("/components/origin/confirm", {
+      method: "POST",
+      body,
+    }),
   mintVehicleBatch: (body: { enterpriseId?: string; feeSignature?: string; feePayer?: string; vehicles: Array<Record<string, unknown>> }) =>
     apiRequest<{ mintBatchId: string; status: string; count: number; vehicleIds: string[]; enterpriseId: string; signature: string }>("/mints/vehicle-batch", {
+      method: "POST",
+      body,
+    }),
+  createVehicleMintDraft: (body: { enterpriseId?: string; minterWallet: string; vehicles: Array<Record<string, unknown>> }) =>
+    apiRequest<{
+      status: string;
+      enterpriseId: string;
+      treeAddress: string | null;
+      collectionAddress: string | null;
+      vehicles: Array<{ vehicleId: string; vin: string; name: string; uri: string | null; metadataHash: string | null }>;
+    }>("/mints/vehicle-batch/draft", { method: "POST", body }),
+  confirmVehicleMintBatch: (body: {
+    enterpriseId: string;
+    minterWallet: string;
+    minted: Array<{ vehicleId: string; cnftAssetId: string; treeAddress: string; leafIndex: number; mintSignature: string; feeLamports?: number | null }>;
+  }) =>
+    apiRequest<{ status: string; count: number; vehicleIds: string[]; signature: string; confirmed: Array<Record<string, unknown>> }>("/mints/vehicle-batch/confirm", {
+      method: "POST",
+      body,
+    }),
+  createPartCatalogDraft: (body: {
+    enterpriseId: string;
+    minterWallet: string;
+    parts: Array<{ name: string; partNumber: string; category: string; manufacturer: string; compatibleModels: string[]; priceIdr: number }>;
+  }) =>
+    apiRequest<{
+      status: string;
+      enterpriseId: string;
+      treeAddress: string | null;
+      collectionAddress: string | null;
+      parts: Array<{ partId: string; name: string; uri: string | null; metadataHash: string | null }>;
+    }>("/mints/part-catalog/draft", { method: "POST", body }),
+  confirmPartCatalogMint: (body: {
+    enterpriseId: string;
+    minterWallet: string;
+    minted: Array<{ partId: string; cnftAssetId: string; treeAddress: string; leafIndex: number; mintSignature: string; feeLamports?: number | null }>;
+  }) =>
+    apiRequest<{ status: string; count: number; partIds: string[]; signature: string; confirmed: Array<Record<string, unknown>> }>("/mints/part-catalog/confirm", {
       method: "POST",
       body,
     }),
@@ -305,10 +439,100 @@ export const api = {
     apiRequest<{ auditId: string; status: string }>("/audits/reports", { method: "POST", body }),
   approveAudit: (auditId: string) =>
     apiRequest<{ auditId: string; status: string; onchainJobId: string }>(`/audits/${auditId}/approve`, { method: "POST" }),
+  createTransferDraft: (vehicleId: string, body: { newOwnerId?: string; newOwnerEmail?: string; newOwnerWallet?: string; enterpriseAuthorityWallet: string }) =>
+    apiRequest<{
+      status: string;
+      vehicleId: string;
+      assetId: string;
+      newOwnerId: string;
+      newOwnerWallet: string;
+      authorityWallet: string;
+      collectionAddress: string | null;
+      transferProof: {
+        leafOwner: string;
+        leafDelegate: string;
+        merkleTree: string;
+        root: number[];
+        dataHash: number[];
+        creatorHash: number[];
+        assetDataHash: number[] | null;
+        flags: number;
+        nonce: number;
+        index: number;
+        proof: string[];
+      };
+      registryTransactionBase64: string;
+    }>(`/vehicles/${vehicleId}/transfer/draft`, { method: "POST", body }),
+  confirmTransferVehicle: (vehicleId: string, body: { newOwnerId: string; newOwnerWallet: string; enterpriseAuthorityWallet: string; cnftTransferSignature: string; registrySignature: string }) =>
+    apiRequest<{ vehicleId: string; status: string; newOwnerId: string; newOwnerWallet: string; signature: string; cnftTransferSignature: string; explorerUrl: string; onchainJobId: string }>(`/vehicles/${vehicleId}/transfer/confirm`, {
+      method: "POST",
+      body,
+    }),
   transferVehicle: (vehicleId: string, body: { newOwnerId?: string; newOwnerEmail?: string; newOwnerWallet?: string; enterpriseAuthorityWallet?: string; feeSignature?: string; feePayer?: string }) =>
     apiRequest<{ vehicleId: string; status: string; newOwnerId: string; newOwnerWallet: string; signature: string; explorerUrl: string; onchainJobId: string }>(`/vehicles/${vehicleId}/transfer`, { method: "POST", body }),
+  createServiceLogAnchorDraft: (body: { bookingId: string; odometerKm?: number; evidenceHash?: string; workshopAuthorityWallet: string }) =>
+    apiRequest<{ serviceLogId: string; bookingId: string; transactionBase64: string; summary: Record<string, unknown>; accounts: Record<string, string>; costEstimate?: { networkFeeSol: number; storageRentSol: number; totalSol: number; storageAccountBytes?: number; note?: string } }>("/service-logs/anchor-devnet/draft", {
+      method: "POST",
+      body,
+    }),
+  confirmServiceLogAnchor: (serviceLogId: string, body: { signature: string; signerWallet: string }) =>
+    apiRequest<{ serviceLogId: string; bookingId: string | null; status: string; signature: string; explorerUrl: string; onchainJobId: string }>(`/service-logs/${serviceLogId}/confirm-signed`, {
+      method: "POST",
+      body,
+    }),
+  createPassportUpdateDraft: (serviceLogId: string, body: { authorityWallet: string }) =>
+    apiRequest<{
+      status: string;
+      serviceLogId: string;
+      vehicleId: string;
+      assetId: string;
+      metadataHash: string;
+      metadataUri: string;
+      authorityWallet: string;
+      collectionAddress: string | null;
+      currentMetadata: {
+        name: string;
+        symbol: string;
+        uri: string;
+        sellerFeeBasisPoints: number;
+        primarySaleHappened: boolean;
+        isMutable: boolean;
+        creators: Array<{ address: string; verified: boolean; share: number }>;
+        collection: string | null;
+      };
+      updateArgs: { uri: string; name?: string };
+      proof: {
+        leafOwner: string;
+        leafDelegate: string;
+        treeConfig?: string | null;
+        merkleTree: string;
+        root: number[];
+        assetDataHash: number[] | null;
+        flags?: number | null;
+        nonce: number;
+        index: number;
+        proof: string[];
+      };
+      costEstimate?: { networkFeeSol: number; storageRentSol: number; totalSol: number; note?: string };
+      summary: Record<string, unknown>;
+    }>(`/service-logs/${serviceLogId}/passport-update/draft`, { method: "POST", body }),
+  confirmPassportUpdate: (serviceLogId: string, body: { signature: string; signerWallet: string; metadataHash: string; metadataUri: string }) =>
+    apiRequest<{ serviceLogId: string; vehicleId: string; status: string; signature: string; explorerUrl: string; metadataHash: string; metadataUri: string; onchainJobId: string }>(`/service-logs/${serviceLogId}/passport-update/confirm`, {
+      method: "POST",
+      body,
+    }),
   anchorServiceLogDevnet: (body: { bookingId: string; odometerKm?: number; evidenceHash?: string; feeSignature?: string; feePayer?: string }) =>
     apiRequest<{ serviceLogId: string; bookingId: string; status: string; signature: string; explorerUrl: string; onchainJobId: string }>("/service-logs/anchor-devnet", {
+      method: "POST",
+      body,
+    }),
+  createCredentialGrantDraft: (body: { workshopId: string; credential: "verified_signer" | "oem_certified" | "manufacturer_audit_partner" | "recall_executor"; issuedBy: string; issuerWallet: string; enterpriseId?: string; validUntil?: string }) =>
+    apiRequest<{ status: string; workshopId: string; credential: string; transactionBase64: string; credentialRecordPda: string; summary: Record<string, unknown> }>("/credentials/grant/draft", {
+      method: "POST",
+      body,
+    }),
+  confirmCredentialGrant: (body: { workshopId: string; credential: "verified_signer" | "oem_certified" | "manufacturer_audit_partner" | "recall_executor"; issuedBy: string; issuerWallet: string; signature: string; credentialRecordPda: string; enterpriseId?: string; validUntil?: string }) =>
+    apiRequest<{ credentialId: string; status: string; signature: string; onchainJobId: string }>("/credentials/grant/confirm", {
       method: "POST",
       body,
     }),

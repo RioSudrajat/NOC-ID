@@ -44,6 +44,26 @@ export default function PartsTable({
     setQuery("");
   };
 
+  const needsOrigin = (part: PartRow) => part.serviceAction === "replace" || part.serviceAction === "inspect";
+
+  const originLabel = (part: PartRow) => {
+    if (!needsOrigin(part)) return part.isOem ? "OEM" : "Non-OEM";
+    if (part.originStatus === "verified") return "Terverifikasi";
+    if (part.originStatus === "non_oem") return "Bukan OEM";
+    if (!part.isOem) return "Non-OEM";
+    if (part.originStatus === "failed") return "Origin Failed";
+    return "Tidak Terverifikasi";
+  };
+
+  const originColor = (part: PartRow) => {
+    if (!needsOrigin(part)) return part.isOem ? "var(--solana-green)" : "var(--solana-text-muted)";
+    if (part.originStatus === "verified") return "var(--solana-green)";
+    if (part.originStatus === "non_oem") return "#FCD34D";
+    if (!part.isOem) return "var(--solana-text-muted)";
+    if (part.originStatus === "failed") return "#FCA5A5";
+    return "#FCD34D";
+  };
+
   const updateAction = (rowIndex: number, action: ServiceAction) => {
     onUpdatePart(rowIndex, "serviceAction", action);
   };
@@ -127,13 +147,13 @@ export default function PartsTable({
               </div>
               <div className="flex items-end gap-3">
                 {part.oemLocked ? (
-                  <div className="shrink-0 rounded-xl px-3 py-3 text-xs" style={{ background: part.isOem ? "rgba(94, 234, 212,0.08)" : "rgba(20,20,40,0.3)", color: part.isOem ? "var(--solana-green)" : "var(--solana-text-muted)" }}>
-                    {part.isOem ? "OEM Verified" : "Non-OEM"}
+                  <div className="shrink-0 rounded-xl px-3 py-3 text-xs" style={{ background: part.isOem ? "rgba(94, 234, 212,0.08)" : "rgba(20,20,40,0.3)", color: originColor(part) }}>
+                    {originLabel(part)}
                   </div>
                 ) : (
-                  <label className="flex shrink-0 cursor-pointer items-center gap-2 rounded-xl px-3 py-3 text-xs" style={{ background: part.isOem ? "rgba(94, 234, 212,0.08)" : "rgba(20,20,40,0.3)", color: part.isOem ? "var(--solana-green)" : "var(--solana-text-muted)" }}>
+                  <label className="flex shrink-0 cursor-pointer items-center gap-2 rounded-xl px-3 py-3 text-xs" style={{ background: part.isOem ? "rgba(94, 234, 212,0.08)" : "rgba(20,20,40,0.3)", color: originColor(part) }}>
                     <input type="checkbox" checked={part.isOem} onChange={(event) => onUpdatePart(i, "isOem", event.target.checked)} className="accent-teal-500" />
-                    OEM
+                    {originLabel(part)}
                   </label>
                 )}
                 {parts.length > 1 && (

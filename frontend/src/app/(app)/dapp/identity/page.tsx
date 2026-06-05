@@ -1,9 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Scan, Copy, Download, Clock, Shield, CheckCircle2, Maximize2, X, CreditCard, Activity, Power, AlertTriangle, Key, History, ArrowRightLeft, ShieldAlert, User, KeyRound, Loader2 } from "lucide-react";
+import { useState, useEffect, useCallback } from "react";
+import { Scan, Copy, Download, Clock, Shield, ShieldCheck, CheckCircle2, Maximize2, X, CreditCard, Activity, Power, AlertTriangle, Key, History, ArrowRightLeft, ShieldAlert, User, KeyRound, Loader2, RefreshCcw } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useActiveVehicle, vehicleData } from "@/context/ActiveVehicleContext";
+import { api, type ApiVehicleQrToken } from "@/lib/api/client";
+import { useUserStore } from "@/store/useUserStore";
 import { useVehicleRegistryStore } from "@/store/useVehicleRegistryStore";
 
 const scanHistory = [
@@ -13,17 +15,23 @@ const scanHistory = [
 
 export default function IdentityPage() {
   const ctx = useActiveVehicle();
+  const hasActiveVehicle = ctx?.hasActiveVehicle ?? false;
   const currentVehicleData = ctx?.currentVehicleData || vehicleData.bmw_m4;
   const activeVehicleIdentity = ctx?.activeVehicleIdentity;
   const updateVehicle = useVehicleRegistryStore((state) => state.updateVehicle);
+  const sessionToken = useUserStore((state) => state.session?.token);
 
   const [activeTab, setActiveTab] = useState<"nfc" | "qr">("qr");
 
   // QR state
   const [copied, setCopied] = useState(false);
-  const [timeLimit, setTimeLimit] = useState(true);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [timeLeft, setTimeLeft] = useState(300);
+  const [includeServiceHistory, setIncludeServiceHistory] = useState(true);
+  const [qrToken, setQrToken] = useState<ApiVehicleQrToken | null>(null);
+  const [qrDataUrl, setQrDataUrl] = useState("");
+  const [qrLoading, setQrLoading] = useState(false);
+  const [qrError, setQrError] = useState("");
 
   // NFC state
   const [isActive, setIsActive] = useState(true);
@@ -42,27 +50,89 @@ export default function IdentityPage() {
     setTimeout(() => setIsTransferring(false), 2000);
   };
 
-  useEffect(() => {
-    if (!timeLimit || timeLeft <= 0) return;
-    const timer = setInterval(() => setTimeLeft(prev => prev - 1), 1000);
-    return () => clearInterval(timer);
-  }, [timeLimit, timeLeft]);
+  const refreshQr = useCallback(async () => {
+    if (!hasActiveVehicle) {
+      setQrToken(null);
+      setQrDataUrl("");
+      setQrError("");
+      return;
+    }
+    const vehicleId = activeVehicleIdentity?.vehicleId ?? currentVehicleData.vehicleId;
+    if (!sessionToken) {
+      setQrToken(null);
+      setQrDataUrl("");
+      setQrError("Login user backend diperlukan untuk generate QR kendaraan.");
+      return;
+    }
+    setQrLoading(true);
+    setQrError("");
+    try {
+      const response = await api.createVehicleQrToken(vehicleId, { includeServiceHistory }, sessionToken);
+      const QRCode = await import("qrcode") as {
+        toDataURL: (text: string, options: Record<string, unknown>) => Promise<string>;
+      };
+      const payloadText = JSON.stringify(response.qrPayload);
+      const dataUrl = await QRCode.toDataURL(payloadText, {
+        errorCorrectionLevel: "H",
+        margin: 4,
+        width: 360,
+        color: { dark: "#000000", light: "#FFFFFF" },
+      });
+      setQrToken(response);
+      setQrDataUrl(dataUrl);
+      setTimeLeft(Math.max(0, Math.ceil((new Date(response.expiresAt).getTime() - Date.now()) / 1000)));
+    } catch (error) {
+      setQrToken(null);
+      setQrDataUrl("");
+      setQrError(error instanceof Error ? error.message : "Gagal generate QR kendaraan.");
+    } finally {
+      setQrLoading(false);
+    }
+  }, [activeVehicleIdentity?.vehicleId, currentVehicleData.vehicleId, hasActiveVehicle, includeServiceHistory, sessionToken]);
 
-  const qrPayload = JSON.stringify({
-    type: "noc_vehicle",
-    vehicleId: activeVehicleIdentity?.vehicleId ?? currentVehicleData.vehicleId,
-    vin: currentVehicleData.vin,
-    cnftAssetId: activeVehicleIdentity?.onChainMintAddress,
-    treeAddress: activeVehicleIdentity?.treeAddress,
-    vehicleRecordPda: activeVehicleIdentity?.vehicleRecordPda,
-  });
+  useEffect(() => {
+    if (activeTab === "qr") void refreshQr();
+  }, [activeTab, refreshQr]);
+
+  useEffect(() => {
+    if (!qrToken) return;
+    const updateTimeLeft = () => {
+      setTimeLeft(Math.max(0, Math.ceil((new Date(qrToken.expiresAt).getTime() - Date.now()) / 1000)));
+    };
+    updateTimeLeft();
+    const timer = setInterval(updateTimeLeft, 1000);
+    return () => clearInterval(timer);
+  }, [qrToken]);
+
+  const qrPayloadText = qrToken ? JSON.stringify(qrToken.qrPayload) : "";
+  const maskedQrToken = qrToken
+    ? `${qrToken.qrPayload.token.slice(0, 8)}...${qrToken.qrPayload.token.slice(-8)}`
+    : "Waiting for token";
 
   const handleCopy = () => {
-    void navigator.clipboard?.writeText(qrPayload);
+    if (!qrPayloadText) return;
+    void navigator.clipboard?.writeText(qrPayloadText);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
+  const handleDownload = () => {
+    if (!qrDataUrl) return;
+    const link = document.createElement("a");
+    link.href = qrDataUrl;
+    link.download = `noc-vehicle-qr-${currentVehicleData.vin}.png`;
+    link.click();
+  };
   const formatTime = (secs: number) => { const m = Math.floor(secs / 60); const s = secs % 60; return `${m}:${s < 10 ? "0" : ""}${s}`; };
+
+  if (!hasActiveVehicle) {
+    return (
+      <div className="glass-card p-8 text-center">
+        <Shield className="mx-auto mb-4 h-10 w-10 text-teal-300" />
+        <h1 className="text-2xl font-bold">Belum ada identity card</h1>
+        <p className="mt-2 text-sm text-slate-400">QR/NFC identity aktif setelah kendaraan digital hasil mint program baru masuk ke akun ini.</p>
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -91,7 +161,13 @@ export default function IdentityPage() {
               {/* QR Code display */}
               <div className="glass-card-static p-10 flex flex-col items-center text-center">
                 <div className="relative w-64 h-64 rounded-2xl mb-6 flex items-center justify-center group" style={{ background: "white", padding: 16 }}>
-                  <div className="w-full h-full" style={{ background: `repeating-conic-gradient(#0E0E1A 0% 25%, transparent 0% 50%) 50% / 20px 20px`, borderRadius: 8 }} />
+                  {qrDataUrl ? (
+                    <img src={qrDataUrl} alt="NOC ID vehicle QR code" className="h-full w-full rounded-lg object-contain" />
+                  ) : (
+                    <div className="flex h-full w-full items-center justify-center rounded-lg bg-slate-100 text-slate-500">
+                      {qrLoading ? <Loader2 className="h-8 w-8 animate-spin" /> : <Shield className="h-8 w-8" />}
+                    </div>
+                  )}
                   <div className="absolute inset-0 flex items-center justify-center">
                     <div className="w-14 h-14 rounded-lg flex items-center justify-center" style={{ background: "var(--solana-gradient)" }}>
                       <Shield className="w-7 h-7 text-white" />
@@ -102,21 +178,46 @@ export default function IdentityPage() {
                   </button>
                 </div>
                 <p className="text-xs mono mb-4" style={{ color: "var(--solana-text-muted)" }}>NOC ID #{currentVehicleData.vin.substring(currentVehicleData.vin.length - 5)} · {currentVehicleData.name}</p>
-                <textarea readOnly value={qrPayload} rows={4} className="mb-4 w-full rounded-xl bg-black/30 p-3 text-[10px] text-slate-300 outline-none" style={{ border: "1px solid rgba(94, 234, 212,0.18)" }} />
-                {timeLimit && (
-                  <div className="flex items-center gap-2 mb-4 px-4 py-2 rounded-xl" style={{ background: "rgba(94, 234, 212,0.08)", border: "1px solid rgba(94, 234, 212,0.2)" }}>
-                    <Clock className="w-4 h-4" style={{ color: "var(--solana-green)" }} />
-                    <span className="text-xs font-semibold" style={{ color: "var(--solana-green)" }}>{timeLeft > 0 ? `Expires in ${formatTime(timeLeft)}` : "Expired"}</span>
+                <div className="mb-4 w-full rounded-xl bg-black/30 p-4 text-left" style={{ border: "1px solid rgba(94, 234, 212,0.18)" }}>
+                  <div className="mb-3 flex items-center gap-2 text-sm font-semibold text-teal-300">
+                    <ShieldCheck className="h-4 w-4" />
+                    Secure workshop scan token
                   </div>
-                )}
+                  <div className="grid gap-3 text-xs sm:grid-cols-2">
+                    <div>
+                      <p className="mb-1 text-slate-500">Vehicle</p>
+                      <p className="font-semibold text-slate-200">{currentVehicleData.name}</p>
+                    </div>
+                    <div>
+                      <p className="mb-1 text-slate-500">Token</p>
+                      <p className="font-mono text-slate-300">{maskedQrToken}</p>
+                    </div>
+                    <div>
+                      <p className="mb-1 text-slate-500">History Access</p>
+                      <p className="font-semibold text-slate-200">{includeServiceHistory ? "Enabled for this QR" : "Verify only"}</p>
+                    </div>
+                    <div>
+                      <p className="mb-1 text-slate-500">Valid Until</p>
+                      <p className="font-mono text-slate-300">{qrToken ? new Date(qrToken.expiresAt).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit", second: "2-digit" }) : "-"}</p>
+                    </div>
+                  </div>
+                </div>
+                {qrError && <p className="mb-4 text-xs text-red-300">{qrError}</p>}
+                <div className="flex items-center gap-2 mb-4 px-4 py-2 rounded-xl" style={{ background: "rgba(94, 234, 212,0.08)", border: "1px solid rgba(94, 234, 212,0.2)" }}>
+                  <Clock className="w-4 h-4" style={{ color: timeLeft > 0 ? "var(--solana-green)" : "#FCA5A5" }} />
+                  <span className="text-xs font-semibold" style={{ color: timeLeft > 0 ? "var(--solana-green)" : "#FCA5A5" }}>{timeLeft > 0 ? `Expires in ${formatTime(timeLeft)}` : "Expired"}</span>
+                </div>
                 <div className="flex gap-3 w-full">
-                  <button onClick={handleCopy} className="glow-btn-outline flex-1 gap-2 text-sm cursor-pointer" style={{ padding: "10px 16px" }}>
-                    {copied ? <><CheckCircle2 className="w-4 h-4" /> Copied!</> : <><Copy className="w-4 h-4" /> Copy Link</>}
+                  <button onClick={handleCopy} disabled={!qrPayloadText} className="glow-btn-outline flex-1 gap-2 text-sm cursor-pointer disabled:cursor-not-allowed disabled:opacity-50" style={{ padding: "10px 16px" }}>
+                    {copied ? <><CheckCircle2 className="w-4 h-4" /> Copied!</> : <><Copy className="w-4 h-4" /> Copy QR Data</>}
                   </button>
-                  <button className="glow-btn flex-1 gap-2 text-sm cursor-pointer" style={{ padding: "10px 16px" }}>
+                  <button onClick={handleDownload} disabled={!qrDataUrl} className="glow-btn flex-1 gap-2 text-sm cursor-pointer disabled:cursor-not-allowed disabled:opacity-50" style={{ padding: "10px 16px" }}>
                     <Download className="w-4 h-4" /> Download
                   </button>
                 </div>
+                <button onClick={() => void refreshQr()} disabled={qrLoading} className="mt-3 flex items-center justify-center gap-2 text-xs font-semibold text-teal-300 transition-colors hover:text-teal-100 disabled:opacity-50">
+                  <RefreshCcw className={`h-3.5 w-3.5 ${qrLoading ? "animate-spin" : ""}`} /> Regenerate QR
+                </button>
               </div>
               {/* QR Settings */}
               <div className="flex flex-col gap-8">
@@ -124,14 +225,14 @@ export default function IdentityPage() {
                   <h3 className="text-base font-semibold mb-6">QR Settings</h3>
                   <div className="flex items-center justify-between mb-4 p-4 rounded-xl" style={{ background: "rgba(20,20,40,0.5)" }}>
                     <div><p className="text-sm font-medium">Time-limited Code</p><p className="text-xs" style={{ color: "var(--solana-text-muted)" }}>QR expires after 5 minutes for security</p></div>
-                    <button onClick={() => setTimeLimit(!timeLimit)} className="w-12 h-6 rounded-full transition-all relative cursor-pointer" style={{ background: timeLimit ? "var(--solana-green)" : "rgba(148,163,184,0.3)" }}>
-                      <div className="w-5 h-5 bg-white rounded-full absolute top-0.5 transition-all" style={{ left: timeLimit ? 26 : 2 }} />
+                    <button disabled className="w-12 h-6 rounded-full transition-all relative cursor-not-allowed" style={{ background: "var(--solana-green)" }} title="QR tokens are always time-limited">
+                      <div className="w-5 h-5 bg-white rounded-full absolute top-0.5 transition-all" style={{ left: 26 }} />
                     </button>
                   </div>
                   <div className="flex items-center justify-between p-4 rounded-xl" style={{ background: "rgba(20,20,40,0.5)" }}>
                     <div><p className="text-sm font-medium">Include Service History</p><p className="text-xs" style={{ color: "var(--solana-text-muted)" }}>Let workshop see full maintenance records</p></div>
-                    <button className="w-12 h-6 rounded-full transition-all relative" style={{ background: "var(--solana-green)" }}>
-                      <div className="w-5 h-5 bg-white rounded-full absolute top-0.5" style={{ left: 26 }} />
+                    <button onClick={() => setIncludeServiceHistory((value) => !value)} className="w-12 h-6 rounded-full transition-all relative cursor-pointer" style={{ background: includeServiceHistory ? "var(--solana-green)" : "rgba(148,163,184,0.3)" }}>
+                      <div className="w-5 h-5 bg-white rounded-full absolute top-0.5 transition-all" style={{ left: includeServiceHistory ? 26 : 2 }} />
                     </button>
                   </div>
                 </div>
@@ -291,11 +392,17 @@ export default function IdentityPage() {
             <button onClick={() => setIsFullscreen(false)} className="absolute top-6 right-6 p-3 rounded-xl bg-white/10 hover:bg-white/20 transition-colors cursor-pointer"><X className="w-6 h-6 text-white" /></button>
             <motion.div initial={{ scale: 0.9 }} animate={{ scale: 1 }} exit={{ scale: 0.9 }} className="flex flex-col items-center">
               <div className="w-80 h-80 sm:w-96 sm:h-96 rounded-3xl flex items-center justify-center relative shadow-2xl" style={{ background: "white", padding: 24, boxShadow: "0 0 50px rgba(94, 234, 212,0.2)" }}>
-                <div className="w-full h-full" style={{ background: `repeating-conic-gradient(#0E0E1A 0% 25%, transparent 0% 50%) 50% / 24px 24px`, borderRadius: 12 }} />
+                {qrDataUrl ? (
+                  <img src={qrDataUrl} alt="NOC ID vehicle QR code fullscreen" className="h-full w-full rounded-xl object-contain" />
+                ) : (
+                  <div className="flex h-full w-full items-center justify-center rounded-xl bg-slate-100 text-slate-500">
+                    <Loader2 className="h-10 w-10 animate-spin" />
+                  </div>
+                )}
                 <div className="absolute inset-0 flex items-center justify-center"><div className="w-20 h-20 rounded-2xl flex items-center justify-center" style={{ background: "var(--solana-gradient)" }}><Shield className="w-10 h-10 text-white" /></div></div>
               </div>
-              <p className="text-lg mono mt-8 font-bold text-white tracking-widest">NOC ID #00001</p>
-              {timeLimit && <div className="mt-4 px-6 py-3 rounded-2xl bg-black/50 border border-teal-500/30 text-teal-400 font-mono text-xl">{timeLeft > 0 ? formatTime(timeLeft) : "EXPIRED"}</div>}
+              <p className="text-lg mono mt-8 font-bold text-white tracking-widest">NOC ID #{currentVehicleData.vin.substring(currentVehicleData.vin.length - 5)}</p>
+              <div className="mt-4 px-6 py-3 rounded-2xl bg-black/50 border border-teal-500/30 text-teal-400 font-mono text-xl">{timeLeft > 0 ? formatTime(timeLeft) : "EXPIRED"}</div>
             </motion.div>
           </motion.div>
         )}

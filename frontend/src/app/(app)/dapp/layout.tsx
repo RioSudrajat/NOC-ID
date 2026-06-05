@@ -23,7 +23,7 @@ import {
   vehicleData,
 } from "@/context/ActiveVehicleContext";
 import type { VehicleKey } from "@/types/vehicle";
-import { formatMileageKm, getVehicleDisplayName } from "@/types/vehicle";
+import { formatMileageKm, getVehicleDisplayName, isServiceLogReadyVehicle } from "@/types/vehicle";
 import { useUserStore } from "@/store/useUserStore";
 import { useVehicleRegistryStore } from "@/store/useVehicleRegistryStore";
 
@@ -52,8 +52,10 @@ function VehicleSelector() {
     return registryVehicles
       .filter((vehicle) => {
         if (!vehicle.make || !vehicle.model || !vehicle.year || !vehicle.vin) return false;
-        if (userId) return vehicle.currentOwnerId === userId || ownedVehicleIds?.includes(vehicle.vehicleId);
-        if (vehicle.mintStatus === "transferred" || vehicle.mintStatus === "escrow") return false;
+        if (userId) {
+          const isOwned = vehicle.currentOwnerId === userId || ownedVehicleIds?.includes(vehicle.vehicleId);
+          return isOwned && isServiceLogReadyVehicle(vehicle);
+        }
         return vehicle.isDemo;
       })
       .filter((vehicle, index, list) => list.findIndex((item) => item.vin === vehicle.vin) === index);
@@ -85,10 +87,10 @@ function VehicleSelector() {
               Active Vehicle
             </p>
             <p className="font-semibold text-sm truncate max-w-[140px]">
-              {safeCurrentVehicle ? getVehicleDisplayName(safeCurrentVehicle) : currentVehicleData.name}
+              {safeCurrentVehicle ? getVehicleDisplayName(safeCurrentVehicle) : "No vehicle yet"}
             </p>
             <p className="text-[10px] mono mt-1" style={{ color: "var(--solana-purple)" }}>
-              {(safeCurrentVehicle?.vin ?? currentVehicleData.vin).substring(0, 10)}...
+              {safeCurrentVehicle ? `${safeCurrentVehicle.vin.substring(0, 10)}...` : "Register or buy"}
             </p>
           </div>
           <ChevronDown
@@ -103,7 +105,7 @@ function VehicleSelector() {
           <div className="fixed inset-0 z-40" onClick={() => setDropdownOpen(false)} />
           <div className="absolute top-full left-0 mt-2 w-full rounded-xl bg-slate-800 border border-slate-600 shadow-2xl z-50">
             <div className="p-1.5 flex flex-col gap-1">
-              {visibleVehicles.map((vehicle) => {
+              {visibleVehicles.length ? visibleVehicles.map((vehicle) => {
                 const key = vehicle.legacyKey as VehicleKey | undefined;
                 const isActive = activeVehicleId === vehicle.vehicleId || activeVehicle === key;
                 return (
@@ -126,7 +128,11 @@ function VehicleSelector() {
                     {isActive && <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />}
                   </div>
                 );
-              })}
+              }) : (
+                <div className="px-3 py-4 text-center text-xs text-slate-400">
+                  Belum ada kendaraan digital yang siap service log.
+                </div>
+              )}
             </div>
           </div>
         </>
@@ -163,6 +169,14 @@ function DAppSidebarAndContent({ children }: { children: React.ReactNode }) {
 }
 
 export default function DAppLayout({ children }: { children: React.ReactNode }) {
+  const currentUser = useUserStore((state) => state.currentUser);
+  const syncVehicles = useVehicleRegistryStore((state) => state.syncFromBackend);
+
+  useEffect(() => {
+    if (currentUser?.role !== "user") return;
+    void syncVehicles(currentUser.userId);
+  }, [currentUser?.role, currentUser?.userId, syncVehicles]);
+
   return (
     <PortalGuard requiredRole="user">
       <ActiveVehicleProvider>

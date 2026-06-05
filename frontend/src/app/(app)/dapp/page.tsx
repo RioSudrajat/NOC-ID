@@ -10,8 +10,10 @@ import {
   ArrowUpRight,
   Activity,
   Bell,
+  ShoppingBag,
 } from "lucide-react";
 import Link from "next/link";
+import { useEffect, useMemo, useState } from "react";
 
 const dashboardData = {
 bmw_m4: {
@@ -32,10 +34,7 @@ harley: {
     ]
   },
 pcx_150: {
-    recentEvents: [
-      { date: "2026-04-18", type: "CVT Belt Inspection", mechanic: "Honda Wing Bandung", mileage: "18,250 km", status: "Verified" },
-      { date: "2026-02-09", type: "Engine Oil & Air Filter", mechanic: "Honda Wing Bandung", mileage: "16,100 km", status: "Verified" },
-    ],
+    recentEvents: [],
     aiAlerts: [
       { part: "Drive Belt", health: 54, risk: "Medium", prediction: "Inspect CVT belt within 14 days", color: "#FCD34D" },
       { part: "Air Filter Element", health: 58, risk: "Medium", prediction: "Clean or replace at next service", color: "#FCD34D" },
@@ -86,18 +85,60 @@ function HealthScoreRing({ score }: { score: number }) {
 
 import { useActiveVehicle, vehicleData } from "@/context/ActiveVehicleContext";
 import { useBooking } from "@/context/BookingContext";
+import { api } from "@/lib/api/client";
+import { mapBackendServiceTimelineEntry } from "@/lib/serviceEvents";
 import { Shield } from "lucide-react";
 
 export default function DAppDashboard() {
   const ctx = useActiveVehicle();
   const bookingCtx = useBooking();
+  const hasActiveVehicle = ctx?.hasActiveVehicle ?? false;
   const currentKey = ctx?.activeVehicle || "bmw_m4";
   const activeVehicleId = ctx?.activeVehicleId;
   const isDemoVehicle = ctx?.activeVehicleIdentity.isDemo ?? true;
   const currentVehicleData = ctx?.currentVehicleData || vehicleData.bmw_m4;
-  const { recentEvents, aiAlerts } = isDemoVehicle
+  const demoDashboard = isDemoVehicle
     ? (dashboardData[currentKey] || dashboardData.bmw_m4)
     : { recentEvents: [], aiAlerts: [] };
+  const [backendRecentEvents, setBackendRecentEvents] = useState<typeof dashboardData.bmw_m4.recentEvents>([]);
+  const recentEvents = useMemo(
+    () => isDemoVehicle ? demoDashboard.recentEvents : backendRecentEvents,
+    [backendRecentEvents, demoDashboard.recentEvents, isDemoVehicle],
+  );
+  const aiAlerts = demoDashboard.aiAlerts;
+
+  useEffect(() => {
+    let cancelled = false;
+    if (!activeVehicleId || isDemoVehicle) {
+      setBackendRecentEvents([]);
+      return () => { cancelled = true; };
+    }
+
+    void api.vehicleTimeline(activeVehicleId)
+      .then((response) => {
+        if (cancelled) return;
+        const events = response.items
+          .map((entry, index) => mapBackendServiceTimelineEntry(entry, index, { health: currentVehicleData.health, mileage: currentVehicleData.mileage }))
+          .filter((event): event is NonNullable<ReturnType<typeof mapBackendServiceTimelineEntry>> => Boolean(event))
+          .slice(0, 5)
+          .map((event) => ({
+            date: event.date,
+            type: event.type,
+            mechanic: event.mechanic,
+            mileage: event.mileage,
+            status: event.txSig ? "Verified" : "Recorded",
+          }));
+        setBackendRecentEvents(events);
+      })
+      .catch((error) => {
+        if (!cancelled) {
+          console.warn("[dapp-dashboard] service events load skipped", error);
+          setBackendRecentEvents([]);
+        }
+      });
+
+    return () => { cancelled = true; };
+  }, [activeVehicleId, currentVehicleData.health, currentVehicleData.mileage, isDemoVehicle]);
 
   // Warranty data for active vehicle
   const vehicleClaims = (bookingCtx?.warrantyClaims || []).filter(c => c.vin === currentVehicleData.vin);
@@ -112,6 +153,59 @@ export default function DAppDashboard() {
   // Unread notifications for the user role — badge on the Bell button.
   const unreadNotifCount = (bookingCtx?.bookingNotifications || [])
     .filter(n => n.targetRole === "user" && !n.read).length;
+
+  if (!hasActiveVehicle) {
+    return (
+      <div>
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 mb-10">
+          <div>
+            <h1 className="text-2xl md:text-3xl font-bold">Vehicle Dashboard</h1>
+            <p className="mt-2 text-sm text-slate-400">Belum ada kendaraan digital di akun ini.</p>
+          </div>
+          <Link
+            href="/dapp/notifications"
+            className="relative p-2.5 rounded-xl hover:bg-white/5 transition-colors"
+            style={{ color: "var(--solana-text-muted)", border: "1px solid rgba(94, 234, 212,0.15)" }}
+            aria-label="Notifications"
+          >
+            <Bell className="w-5 h-5" />
+            {unreadNotifCount > 0 && (
+              <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] rounded-full flex items-center justify-center text-[10px] font-bold px-1" style={{ background: "#FCA5A5", color: "#0E0E1A" }}>
+                {unreadNotifCount > 9 ? "9+" : unreadNotifCount}
+              </span>
+            )}
+          </Link>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
+          <Link href="/enterprise/fleet" className="glass-card p-8 flex items-start justify-between hover:bg-white/[0.04] transition-colors">
+            <div>
+              <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl bg-teal-400/10 text-teal-300">
+                <ShoppingBag className="h-5 w-5" />
+              </div>
+              <h2 className="text-lg font-bold">Beli kendaraan dari dealer</h2>
+              <p className="mt-2 text-sm text-slate-400">Dealer/enterprise bisa mint kendaraan baru lalu transfer cNFT ke embedded wallet akun ini.</p>
+            </div>
+            <ArrowUpRight className="h-5 w-5 text-teal-300" />
+          </Link>
+          <Link href="/dapp/register-vehicle" className="glass-card p-8 flex items-start justify-between hover:bg-white/[0.04] transition-colors">
+            <div>
+              <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl bg-teal-400/10 text-teal-300">
+                <Wrench className="h-5 w-5" />
+              </div>
+              <h2 className="text-lg font-bold">Register kendaraan sendiri</h2>
+              <p className="mt-2 text-sm text-slate-400">Ajukan audit ke workshop/manufacturer agar identitas digital kendaraan bisa diminting.</p>
+            </div>
+            <ArrowUpRight className="h-5 w-5 text-teal-300" />
+          </Link>
+        </div>
+
+        <div className="glass-card p-8 text-center text-sm text-slate-400">
+          Dashboard, service timeline, AI insight, 3D twin, booking, dan identity card akan aktif setelah kendaraan hasil mint program baru masuk ke akun ini.
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -335,7 +429,7 @@ export default function DAppDashboard() {
               </tr>
             </thead>
             <tbody>
-              {recentEvents.map((e, i) => (
+              {recentEvents.length ? recentEvents.map((e, i) => (
                 <tr key={i}>
                   <td className="mono text-sm">{e.date}</td>
                   <td className="font-medium">{e.type}</td>
@@ -347,7 +441,13 @@ export default function DAppDashboard() {
                     </span>
                   </td>
                 </tr>
-              ))}
+              )) : (
+                <tr>
+                  <td colSpan={5} className="py-8 text-center text-sm" style={{ color: "var(--solana-text-muted)" }}>
+                    Belum ada service event untuk kendaraan ini.
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>

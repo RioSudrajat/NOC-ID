@@ -3,6 +3,7 @@
 import dynamic from "next/dynamic";
 import { useActiveVehicle } from "@/context/ActiveVehicleContext";
 import type { VehicleIdentity } from "@/types/vehicle";
+import Link from "next/link";
 
 const SharedDigitalTwinViewer = dynamic(
   () => import("@/components/3d/SharedDigitalTwinViewer"),
@@ -34,6 +35,17 @@ function resolveViewerVehicleType(vehicle?: VehicleIdentity): ViewerVehicleType 
 
 export default function ViewerPage() {
   const ctx = useActiveVehicle();
+  if (!ctx?.hasActiveVehicle) {
+    return (
+      <div className="flex min-h-[60vh] items-center justify-center">
+        <div className="glass-card max-w-xl p-8 text-center">
+          <h1 className="text-2xl font-bold">Belum ada 3D digital twin</h1>
+          <p className="mt-2 text-sm text-slate-400">3D twin akan tersedia setelah kendaraan digital sudah dimint dan masuk ke akun ini.</p>
+          <Link href="/dapp/register-vehicle" className="glow-btn mt-6 inline-flex px-5 py-2.5 text-sm">Register Vehicle</Link>
+        </div>
+      </div>
+    );
+  }
   const activeVehicle = resolveViewerVehicleType(ctx?.activeVehicleIdentity);
   return <SharedDigitalTwinViewer key={ctx?.activeVehicleId ?? activeVehicle} mode="owner" initialVehicle={activeVehicle} />;
 }

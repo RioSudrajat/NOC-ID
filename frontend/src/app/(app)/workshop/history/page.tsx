@@ -1,11 +1,9 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
-import { FileText, Wrench, Droplets, Settings, Search } from "lucide-react";
+import { useState } from "react";
+import { FileText, Droplets, Settings, Search } from "lucide-react";
 import { useToast } from "@/components/ui/Toast";
 import { SharedServiceCard, ServiceEvent } from "@/components/ui/SharedServiceCard";
-import { useBooking } from "@/context/BookingContext";
-import { vehicleData } from "@/context/ActiveVehicleContext";
 
 const initialHistory: ServiceEvent[] = [
   { id: "SRV-102", status: "ANCHORED", date: "2026-03-20", type: "Oil Change (Innova)", category: "Fluids", icon: Droplets, mechanic: "Pak Hendra", workshop: "Bengkel Hendra Motor", rating: 4.8, mileage: "45,000 km", parts: [
@@ -17,50 +15,7 @@ const initialHistory: ServiceEvent[] = [
 
 export default function WorkshopGlobalHistory() {
   const { showToast } = useToast();
-  const bookingCtx = useBooking();
-
-  // Convert completed bookings to ServiceEvent format
-  const completedAsEvents: ServiceEvent[] = useMemo(() => {
-    return (bookingCtx?.completedBookings || []).map(cb => ({
-      id: cb.id,
-      status: "ANCHORED" as const,
-      date: cb.date,
-      type: `${cb.serviceType} (Booking)`,
-      category: "Booking Service",
-      icon: Wrench,
-      mechanic: cb.workshopName,
-      workshop: cb.workshopName,
-      rating: cb.review?.rating || 0,
-      mileage: vehicleData[cb.vehicleKey]?.mileage || "-",
-      parts: cb.parts.map(p => ({
-        name: p.name,
-        partNumber: p.partNumber,
-        isOem: p.isOEM,
-        manufacturer: p.manufacturer,
-        priceIDR: p.price,
-      })),
-      serviceCost: cb.serviceCost,
-      gasFee: cb.gasFee,
-      costIDR: cb.totalIDR,
-      costUSDC: Math.round(cb.totalIDR / 16000 * 100) / 100,
-      costNOC: Math.round(cb.totalIDR / 52),
-      costStr: `Rp ${cb.totalIDR.toLocaleString("id-ID")}`,
-      txSig: cb.txSig,
-      healthBefore: 60,
-      healthAfter: 95,
-      notes: cb.mechanicNotes || "Servis via booking NOC ID.",
-      images: [],
-    }));
-  }, [bookingCtx?.completedBookings]);
-
   const [data, setData] = useState(initialHistory);
-
-  useEffect(() => {
-    const merged = [...initialHistory, ...completedAsEvents];
-    merged.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setData(merged);
-  }, [completedAsEvents]);
 
   const handleCancelInvoice = (id: string | number) => {
     setData((prev) =>

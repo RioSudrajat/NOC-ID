@@ -5,10 +5,11 @@ import { AnimatePresence } from "framer-motion";
 import { Cpu } from "lucide-react";
 import { useToast } from "@/components/ui/Toast";
 import { api } from "@/lib/api/client";
-import { requestDevnetNetworkFeeSignature } from "@/lib/devnetWalletFee";
+import { mintCompressedVehicleWithPhantom } from "@/lib/clientBubblegumMint";
 import { useUserStore } from "@/store/useUserStore";
 import { useVehicleRegistryStore } from "@/store/useVehicleRegistryStore";
 import {
+  ENTERPRISE_NAME,
   ENTERPRISE_MODEL_LABELS,
   EnterpriseModelKey,
   PartCategory,
@@ -110,39 +111,114 @@ export default function MintPage() {
           showToast("error", "Data belum lengkap", "Isi VIN, model, tahun, dan warna kendaraan.");
           return;
         }
-        const fee = await requestDevnetNetworkFeeSignature(`NOC ID mint ${validVehicles.length} vehicle(s)`);
-        const response = await api.mintVehicleBatch({
+        const minterWallet = currentUser?.selfCustodyAddress;
+        if (!minterWallet) {
+          showToast("error", "Wallet belum terhubung", "Login enterprise dengan Phantom dulu sebelum mint.");
+          return;
+        }
+        const payloadVehicles = validVehicles.map((vehicle) => {
+          const label = ENTERPRISE_MODEL_LABELS[vehicle.modelKey as EnterpriseModelKey] ?? vehicle.modelKey;
+          const [make, ...modelParts] = label.split(" ");
+          return {
+            vin: vehicle.vin.trim().toUpperCase(),
+            make: make || "NOC",
+            model: modelParts.join(" ") || label,
+            modelKey: vehicle.modelKey,
+            year: Number(vehicle.year),
+            color: vehicle.color || "Unknown",
+            category: vehicle.modelKey === "harley" || vehicle.modelKey === "pcx_150" ? "motorcycle_matic" : "car",
+            transmissionType: vehicle.modelKey === "pcx_150" ? "cvt" : "automatic",
+            fuelType: "gasoline",
+            licensePlate: "TBD",
+            manifest: vehicle.manifest,
+          };
+        });
+        const draft = await api.createVehicleMintDraft({
           enterpriseId: currentUser?.enterpriseId,
-          feeSignature: fee.signature,
-          feePayer: fee.feePayer,
-          vehicles: validVehicles.map((vehicle) => {
-            const label = ENTERPRISE_MODEL_LABELS[vehicle.modelKey as EnterpriseModelKey] ?? vehicle.modelKey;
-            const [make, ...modelParts] = label.split(" ");
-            return {
-              vin: vehicle.vin.trim().toUpperCase(),
-              make: make || "NOC",
-              model: modelParts.join(" ") || label,
-              modelKey: vehicle.modelKey,
-              year: Number(vehicle.year),
-              color: vehicle.color || "Unknown",
-              category: vehicle.modelKey === "harley" || vehicle.modelKey === "pcx_150" ? "motorcycle_matic" : "car",
-              transmissionType: vehicle.modelKey === "pcx_150" ? "cvt" : "automatic",
-              fuelType: "gasoline",
-              licensePlate: "TBD",
-              manifest: vehicle.manifest,
-            };
-          }),
+          minterWallet,
+          vehicles: payloadVehicles,
+        });
+        if (!draft.treeAddress) throw new Error("BUBBLEGUM_TREE_ADDRESS belum diset di backend.");
+        const minted = [];
+        let totalFeeLamports = 0;
+        for (const vehicle of draft.vehicles) {
+          const mintedVehicle = await mintCompressedVehicleWithPhantom({
+            name: vehicle.name,
+            uri: vehicle.uri ?? `https://example.com/noc-id/${vehicle.vin}.json`,
+            merkleTree: draft.treeAddress,
+            coreCollection: draft.collectionAddress,
+          });
+          totalFeeLamports += mintedVehicle.feeLamports ?? 0;
+          minted.push({
+            vehicleId: vehicle.vehicleId,
+            cnftAssetId: mintedVehicle.assetId,
+            treeAddress: mintedVehicle.treeAddress,
+            leafIndex: mintedVehicle.leafIndex,
+            mintSignature: mintedVehicle.signature,
+            feeLamports: mintedVehicle.feeLamports,
+          });
+        }
+        const response = await api.confirmVehicleMintBatch({
+          enterpriseId: draft.enterpriseId,
+          minterWallet,
+          minted,
         });
         await new Promise((resolve) => setTimeout(resolve, 2000));
         await syncVehicles();
         setVehicles([emptyVehicle()]);
         setCsvUploaded(false);
         setCsvOpen(false);
-        showToast("success", "Genesis Mint Signed", `${response.count} kendaraan minted. Network fee paid by Phantom. Sig ${response.signature.slice(0, 8)}...`);
+        showToast("success", "Genesis Mint via Phantom", `${response.count} kendaraan minted. Fee ${totalFeeLamports / 1_000_000_000} SOL. Sig ${response.signature.slice(0, 8)}...`);
       } else {
-        await new Promise((resolve) => setTimeout(resolve, 800));
+        const validParts = partEntries.filter((part) => part.name.trim() && part.partNumber.trim());
+        if (validParts.length === 0) {
+          showToast("error", "Data part belum lengkap", "Isi nama part dan nomor OEM part sebelum mint catalog.");
+          return;
+        }
+        const minterWallet = currentUser?.selfCustodyAddress;
+        if (!minterWallet || !currentUser?.enterpriseId) {
+          showToast("error", "Wallet enterprise belum siap", "Login enterprise dengan Phantom dulu sebelum mint part catalog.");
+          return;
+        }
+        const draft = await api.createPartCatalogDraft({
+          enterpriseId: currentUser.enterpriseId,
+          minterWallet,
+          parts: validParts.map((part) => ({
+            name: part.name.trim(),
+            partNumber: part.partNumber.trim().toUpperCase(),
+            category: part.category,
+            manufacturer: ENTERPRISE_NAME,
+            compatibleModels: part.models,
+            priceIdr: Number(part.priceIDR || 0),
+          })),
+        });
+        if (!draft.treeAddress) throw new Error("BUBBLEGUM_TREE_ADDRESS belum diset di backend.");
+        const minted = [];
+        let totalFeeLamports = 0;
+        for (const part of draft.parts) {
+          const mintedPart = await mintCompressedVehicleWithPhantom({
+            name: part.name,
+            uri: part.uri ?? `https://example.com/noc-id/parts/${part.partId}.json`,
+            merkleTree: draft.treeAddress,
+            coreCollection: draft.collectionAddress,
+          });
+          totalFeeLamports += mintedPart.feeLamports ?? 0;
+          minted.push({
+            partId: part.partId,
+            cnftAssetId: mintedPart.assetId,
+            treeAddress: mintedPart.treeAddress,
+            leafIndex: mintedPart.leafIndex,
+            mintSignature: mintedPart.signature,
+            feeLamports: mintedPart.feeLamports,
+          });
+        }
+        const response = await api.confirmPartCatalogMint({
+          enterpriseId: draft.enterpriseId,
+          minterWallet,
+          minted,
+        });
         setPartEntries([emptyPartCatalog()]);
-        showToast("success", "Part Catalog Queued", `${totalCount} part catalog siap diproses backend.`);
+        showToast("success", "Part Catalog Minted", `${response.count} OEM part catalog cNFT minted. Fee ${totalFeeLamports / 1_000_000_000} SOL.`);
       }
     } catch (error) {
       showToast("error", "Mint gagal", error instanceof Error ? error.message : "Backend mint endpoint gagal.");

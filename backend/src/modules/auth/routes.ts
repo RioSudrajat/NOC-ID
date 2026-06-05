@@ -60,11 +60,13 @@ function serializeAuthUser(user: {
   };
 }
 
-async function createSession(app: Parameters<FastifyPluginAsync>[0], user: { id: string; role: string; embeddedWalletAddress?: string | null; selfCustodyAddress?: string | null }) {
+async function createSession(app: Parameters<FastifyPluginAsync>[0], user: { id: string; role: string; embeddedWalletAddress?: string | null; selfCustodyAddress?: string | null; workshopId?: string | null; enterpriseId?: string | null }) {
   const token = app.jwt.sign({
     sub: user.id,
     role: user.role,
-    walletAddress: user.embeddedWalletAddress ?? user.selfCustodyAddress ?? undefined
+    walletAddress: user.embeddedWalletAddress ?? user.selfCustodyAddress ?? undefined,
+    workshopId: user.workshopId ?? undefined,
+    enterpriseId: user.enterpriseId ?? undefined
   });
   await prisma.session.create({
     data: {

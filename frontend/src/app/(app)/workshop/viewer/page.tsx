@@ -31,7 +31,7 @@ function ViewerContent() {
     if (entry) initialVehicle = entry[0] as VehicleKey;
   }
   
-  return <SharedDigitalTwinViewer mode="mechanic" initialVehicle={initialVehicle} />;
+  return <SharedDigitalTwinViewer mode="mechanic" initialVehicle={initialVehicle} initialVin={vin ?? undefined} />;
 }
 
 export default function WorkshopViewerPage() {

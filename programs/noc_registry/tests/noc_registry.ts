@@ -12,7 +12,8 @@ describe("noc_registry", () => {
     // 4. grant_credential(VerifiedSigner)
     // 5. register_vehicle_record
     // 6. record_payment_receipt
-    // 7. anchor_service_log
+    // 7. verify_component_origin with oem_certified workshop credential
+    // 8. anchor_service_log
     assert.equal(true, true);
   });
 });

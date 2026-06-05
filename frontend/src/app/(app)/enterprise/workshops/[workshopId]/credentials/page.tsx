@@ -3,21 +3,58 @@
 import { useEffect } from "react";
 import { useParams } from "next/navigation";
 import { ShieldPlus } from "lucide-react";
+import { useToast } from "@/components/ui/Toast";
+import { api } from "@/lib/api/client";
+import { signAndSendSerializedTransaction } from "@/lib/phantomTransactions";
 import { useAdminStore } from "@/store/useAdminStore";
+import { useUserStore } from "@/store/useUserStore";
 import type { WorkshopCredential } from "@/types/admin";
 
 const grantable: WorkshopCredential[] = ["oem_certified", "manufacturer_audit_partner"];
 
 export default function EnterpriseWorkshopCredentialsPage() {
   const params = useParams<{ workshopId: string }>();
+  const { showToast } = useToast();
   const hydrate = useAdminStore((state) => state.hydrate);
   const credentials = useAdminStore((state) => state.getWorkshopCredentials(params.workshopId));
   const grantCredential = useAdminStore((state) => state.grantCredential);
   const revokeCredential = useAdminStore((state) => state.revokeCredential);
+  const currentUser = useUserStore((state) => state.currentUser);
 
   useEffect(() => {
     hydrate();
   }, [hydrate]);
+
+  const handleGrant = async (credential: WorkshopCredential) => {
+    try {
+      if (!currentUser?.selfCustodyAddress) {
+        showToast("error", "Wallet belum terhubung", "Login enterprise dengan Phantom dulu sebelum grant credential.");
+        return;
+      }
+      const enterpriseId = currentUser.enterpriseId ?? "ent-astra";
+      const draft = await api.createCredentialGrantDraft({
+        workshopId: params.workshopId,
+        credential,
+        issuedBy: enterpriseId,
+        enterpriseId,
+        issuerWallet: currentUser.selfCustodyAddress,
+      });
+      const signed = await signAndSendSerializedTransaction(draft.transactionBase64);
+      await api.confirmCredentialGrant({
+        workshopId: params.workshopId,
+        credential,
+        issuedBy: enterpriseId,
+        enterpriseId,
+        issuerWallet: currentUser.selfCustodyAddress,
+        signature: signed.signature,
+        credentialRecordPda: draft.credentialRecordPda,
+      });
+      grantCredential(params.workshopId, credential, enterpriseId, enterpriseId);
+      showToast("success", "Credential Granted", `${credential} granted on-chain. Fee ${(signed.feeSol ?? 0).toFixed(8)} SOL.`);
+    } catch (error) {
+      showToast("error", "Grant credential gagal", error instanceof Error ? error.message : "Credential grant transaction gagal.");
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -40,7 +77,7 @@ export default function EnterpriseWorkshopCredentialsPage() {
         <p className="font-semibold mb-4">Grant Credential</p>
         <div className="grid gap-3 md:grid-cols-2">
           {grantable.map((credential) => (
-            <button key={credential} onClick={() => grantCredential(params.workshopId, credential, "ent-astra", "ent-astra")} className="rounded-lg border border-white/10 bg-white/5 px-4 py-3 text-left hover:border-teal-300">
+            <button key={credential} onClick={() => handleGrant(credential)} className="rounded-lg border border-white/10 bg-white/5 px-4 py-3 text-left hover:border-teal-300">
               <ShieldPlus className="h-4 w-4 mb-2 text-teal-300" />
               {credential}
             </button>
@@ -50,4 +87,3 @@ export default function EnterpriseWorkshopCredentialsPage() {
     </div>
   );
 }
-

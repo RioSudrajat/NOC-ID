@@ -12,6 +12,11 @@ export interface PartRow {
   priceIDR: number | "";
   scanned: boolean;
   oemLocked: boolean;
+  originStatus?: "unverified" | "pending" | "verified" | "non_oem" | "failed";
+  originSignature?: string;
+  originRecordPda?: string;
+  originCatalogItemId?: string;
+  originError?: string;
 }
 
 export const emptyPart = (): PartRow => ({
@@ -26,6 +31,7 @@ export const emptyPart = (): PartRow => ({
   priceIDR: "",
   scanned: false,
   oemLocked: false,
+  originStatus: undefined,
 });
 
 export const serviceLevels = ["Servis Ringan", "Servis Rutin", "Servis Berat", "Other"] as const;

@@ -11,23 +11,42 @@ function signatureFromPayload(data: Record<string, unknown>) {
   return typeof data.signature === "string" && data.signature.length >= 32 ? data.signature : null;
 }
 
+function programIdForJob(jobName: string) {
+  return jobName === "update_cnft_metadata" ? "mpl-bubblegum" : env.NOC_REGISTRY_PROGRAM_ID;
+}
+
+function actionForJob(jobName: string) {
+  switch (jobName) {
+    case "update_cnft_metadata":
+      return "client_signed_update_cnft_metadata";
+    case "anchor_service_log":
+      return "client_signed_anchor_service_log";
+    case "verify_component_origin":
+      return "client_signed_verify_component_origin";
+    default:
+      return jobName;
+  }
+}
+
 async function recordReceipt(jobName: string, data: Record<string, unknown>) {
   const signature = signatureFromPayload(data);
   if (!signature) return;
+  const programId = programIdForJob(jobName);
+  const raw = { action: actionForJob(jobName), jobName, ...data } as Prisma.InputJsonValue;
   await prisma.txReceipt.upsert({
     where: { signature },
     update: {
       confirmationStatus: "CONFIRMED",
-      programId: env.NOC_REGISTRY_PROGRAM_ID,
-      raw: data as Prisma.InputJsonValue
+      programId,
+      raw
     },
     create: {
       signature,
       cluster: env.SOLANA_CLUSTER,
-      programId: env.NOC_REGISTRY_PROGRAM_ID,
+      programId,
       confirmationStatus: "CONFIRMED",
       explorerUrl: `https://explorer.solana.com/tx/${signature}?cluster=${env.SOLANA_CLUSTER}`,
-      raw: { jobName, ...data } as Prisma.InputJsonValue
+      raw
     }
   });
 }
@@ -48,12 +67,51 @@ async function applyConfirmedSideEffects(jobName: string, data: Record<string, u
     case "anchor_service_log": {
       const serviceLogId = typeof data.serviceLogId === "string" ? data.serviceLogId : null;
       if (!serviceLogId) return;
+      const serviceLogRecordPda = typeof data.serviceLogRecordPda === "string" ? data.serviceLogRecordPda : undefined;
       const serviceLog = await prisma.serviceLog.update({
         where: { id: serviceLogId },
-        data: { recordPda: `devnet-service-log-${serviceLogId}` }
+        data: { recordPda: serviceLogRecordPda }
       });
       if (serviceLog.bookingId) {
-        await prisma.booking.update({ where: { id: serviceLog.bookingId }, data: { status: "ANCHORED" } });
+        await prisma.booking.update({ where: { id: serviceLog.bookingId }, data: { status: "ANCHORING" } });
+      }
+      return;
+    }
+    case "update_cnft_metadata": {
+      const serviceLogId = typeof data.serviceLogId === "string" ? data.serviceLogId : null;
+      const vehicleId = typeof data.vehicleId === "string" ? data.vehicleId : null;
+      const metadataHash = typeof data.metadataHash === "string" ? data.metadataHash : null;
+      const metadataUri = typeof data.metadataUri === "string" ? data.metadataUri : null;
+
+      if (vehicleId && metadataHash && metadataUri) {
+        await prisma.vehicle.update({
+          where: { id: vehicleId },
+          data: { metadataHash, metadataUri }
+        });
+      }
+
+      if (serviceLogId) {
+        const serviceLog = await prisma.serviceLog.findUnique({ where: { id: serviceLogId } });
+        if (serviceLog?.bookingId) {
+          await prisma.booking.update({ where: { id: serviceLog.bookingId }, data: { status: "ANCHORED" } });
+        }
+      }
+      return;
+    }
+    case "verify_component_origin": {
+      const bookingId = typeof data.bookingId === "string" ? data.bookingId : null;
+      const signature = signatureFromPayload(data);
+      const componentOriginRecordPda = typeof data.componentOriginRecordPda === "string" ? data.componentOriginRecordPda : undefined;
+      if (bookingId) {
+        await prisma.componentOriginVerification.update({
+          where: { bookingId },
+          data: {
+            status: "CONFIRMED",
+            txSignature: signature ?? undefined,
+            recordPda: componentOriginRecordPda,
+            explorerUrl: signature ? `https://explorer.solana.com/tx/${signature}?cluster=${env.SOLANA_CLUSTER}` : undefined,
+          },
+        });
       }
       return;
     }
@@ -121,6 +179,8 @@ const worker = new Worker(
 
     switch (job.name) {
       case "anchor_service_log":
+      case "update_cnft_metadata":
+      case "verify_component_origin":
       case "record_payment_receipt":
       case "mint_vehicle_cnft":
       case "mint_part_catalog_cnft":

@@ -26,6 +26,7 @@ const envSchema = z.object({
   BUBBLEGUM_TREE_CANOPY_DEPTH: z.coerce.number().int().nonnegative().optional(),
   METAPLEX_CORE_COLLECTION_ADDRESS: z.string().optional(),
   METAPLEX_CORE_COLLECTION_URI: z.string().url().optional(),
+  VEHICLE_QR_EXPIRY_SECONDS: z.coerce.number().int().min(30).max(3600).default(300),
   CORS_ORIGIN: z.string().default("http://localhost:3000").transform(val => val.split(',').map(s => s.trim()))
 });
 

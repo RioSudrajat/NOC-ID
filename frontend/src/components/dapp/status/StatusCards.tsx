@@ -185,7 +185,7 @@ export default function StatusCards({
           </div>
           <div className="flex items-center gap-2 text-[10px] mb-4" style={{ color: "var(--solana-green)" }}>
             <ShieldCheck className="w-3.5 h-3.5" />
-            <span>Review + service record di-anchor ke Solana dalam 1 transaksi (gas fee sudah termasuk)</span>
+            <span>Review disimpan di aplikasi. Bukti service log dan cNFT passport sudah tercatat di Solana.</span>
           </div>
           <button onClick={onSubmitReview} disabled={rating === 0} className="glow-btn w-full py-2.5 text-sm cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed">
             Kirim Review & Selesaikan
@@ -217,7 +217,7 @@ export default function StatusCards({
           {booking.review && (
             <div className="p-3 rounded-xl mb-4 flex items-center gap-2" style={{ background: "rgba(94, 234, 212,0.05)", border: "1px solid rgba(94, 234, 212,0.15)" }}>
               <CheckCircle2 className="w-4 h-4 shrink-0" style={{ color: "var(--solana-green)" }} />
-              <p className="text-xs" style={{ color: "var(--solana-green)" }}>Review ({booking.review.rating}/5) — On-chain anchored</p>
+              <p className="text-xs" style={{ color: "var(--solana-green)" }}>Review ({booking.review.rating}/5) tersimpan. Bukti servis tetap bisa dicek di timeline.</p>
             </div>
           )}
           <div className="flex gap-2">

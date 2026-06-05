@@ -184,6 +184,38 @@ pub mod noc_registry {
         Ok(())
     }
 
+    pub fn verify_component_origin(
+        ctx: Context<VerifyComponentOrigin>,
+        service_id_hash: [u8; 32],
+        invoice_hash: [u8; 32],
+        parts_hash: [u8; 32],
+        catalog_hash: [u8; 32],
+        verified_part_count: u16,
+    ) -> Result<()> {
+        require_not_paused(&ctx.accounts.platform_config)?;
+        require!(
+            ctx.accounts.workshop_record.authority == ctx.accounts.workshop_authority.key(),
+            NocError::Unauthorized
+        );
+        require!(
+            ctx.accounts.credential_record.workshop == ctx.accounts.workshop_record.key(),
+            NocError::InvalidCredential
+        );
+        require_active_credential(&ctx.accounts.credential_record, CredentialKind::OemCertified)?;
+
+        let record = &mut ctx.accounts.component_origin_record;
+        record.vehicle = ctx.accounts.vehicle_record.key();
+        record.workshop = ctx.accounts.workshop_record.key();
+        record.service_id_hash = service_id_hash;
+        record.invoice_hash = invoice_hash;
+        record.parts_hash = parts_hash;
+        record.catalog_hash = catalog_hash;
+        record.verified_part_count = verified_part_count;
+        record.created_at_unix = Clock::get()?.unix_timestamp;
+        record.bump = ctx.bumps.component_origin_record;
+        Ok(())
+    }
+
     pub fn anchor_trip_summary(
         ctx: Context<AnchorTripSummary>,
         trip_id_hash: [u8; 32],
@@ -394,6 +426,25 @@ pub struct AnchorServiceLog<'info> {
 }
 
 #[derive(Accounts)]
+#[instruction(service_id_hash: [u8; 32])]
+pub struct VerifyComponentOrigin<'info> {
+    #[account(mut)]
+    pub payer: Signer<'info>,
+    pub workshop_authority: Signer<'info>,
+    #[account(seeds = [b"platform"], bump = platform_config.bump)]
+    pub platform_config: Account<'info, PlatformConfig>,
+    #[account()]
+    pub vehicle_record: Account<'info, VehicleRecord>,
+    #[account()]
+    pub workshop_record: Account<'info, WorkshopRecord>,
+    #[account()]
+    pub credential_record: Account<'info, CredentialRecord>,
+    #[account(init, payer = payer, space = 8 + ComponentOriginRecord::INIT_SPACE, seeds = [b"component-origin", vehicle_record.key().as_ref(), service_id_hash.as_ref()], bump)]
+    pub component_origin_record: Account<'info, ComponentOriginRecord>,
+    pub system_program: Program<'info, System>,
+}
+
+#[derive(Accounts)]
 #[instruction(trip_id_hash: [u8; 32])]
 pub struct AnchorTripSummary<'info> {
     #[account(mut)]
@@ -505,6 +556,20 @@ pub struct ServiceLogRecord {
     pub invoice_hash: [u8; 32],
     pub parts_hash: [u8; 32],
     pub evidence_hash: [u8; 32],
+    pub created_at_unix: i64,
+    pub bump: u8,
+}
+
+#[account]
+#[derive(InitSpace)]
+pub struct ComponentOriginRecord {
+    pub vehicle: Pubkey,
+    pub workshop: Pubkey,
+    pub service_id_hash: [u8; 32],
+    pub invoice_hash: [u8; 32],
+    pub parts_hash: [u8; 32],
+    pub catalog_hash: [u8; 32],
+    pub verified_part_count: u16,
     pub created_at_unix: i64,
     pub bump: u8,
 }

@@ -4,6 +4,7 @@ import { api, type ApiVehicle } from "@/lib/api/client";
 import {
   DEMO_VEHICLES,
   LEGACY_VEHICLE_ID_MAP,
+  isServiceLogReadyVehicle,
   type LegacyVehicleKey,
   type VehicleIdentity,
 } from "@/types/vehicle";
@@ -190,9 +191,7 @@ export const useVehicleRegistryStore = create<VehicleRegistryStore>((set, get) =
   getVisibleVehicles: (ownerId) =>
     get().vehicles.filter((vehicle) => {
       if (!vehicle.make || !vehicle.model || !vehicle.year || !vehicle.vin) return false;
-      if (ownerId) return vehicle.currentOwnerId === ownerId;
-      if (vehicle.mintStatus === "transferred") return ownerId ? vehicle.currentOwnerId === ownerId : false;
-      if (vehicle.mintStatus === "escrow") return false;
+      if (ownerId) return vehicle.currentOwnerId === ownerId && isServiceLogReadyVehicle(vehicle);
       return vehicle.isDemo;
     }),
 

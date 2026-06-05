@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, useEffect, useCallback, useMemo } from "react";
+import { createContext, useContext, useRef, useState, useEffect, useCallback, useMemo } from "react";
 import {
   Vector3,
   Box3,
@@ -18,6 +18,7 @@ import {
 import type { Group } from "three";
 import { useFrame, ThreeEvent } from "@react-three/fiber";
 import { useGLTF } from "@react-three/drei";
+import type { PartDragOffset, PartDragOffsets, RegisterPartTransformTarget } from "@/components/3d/partDrag";
 
 /* ================================================================
    UTILITIES
@@ -39,6 +40,17 @@ interface PartDef {
   zone: PartZone;
   explodeDir: [number, number, number]; // direction to explode
 }
+
+const EMPTY_DRAG_OFFSET: PartDragOffset = [0, 0, 0];
+
+const SupraDragContext = createContext<{
+  selectedPart: string | null;
+  partDragOffsets: PartDragOffsets;
+  onPartTransformTarget?: RegisterPartTransformTarget;
+}>({
+  selectedPart: null,
+  partDragOffsets: {},
+});
 
 /* ================================================================
    PART DEFINITIONS — every selectable part with health & zone
@@ -480,16 +492,19 @@ interface SupraProps {
   selectedPart: string | null;
   xray: boolean;
   exploded: boolean;
+  partDragOffsets?: PartDragOffsets;
+  onPartTransformTarget?: RegisterPartTransformTarget;
 }
 
-export default function SupraModel({ onSelectPart, selectedPart, xray, exploded }: SupraProps) {
+export default function SupraModel({ onSelectPart, selectedPart, xray, exploded, partDragOffsets = {}, onPartTransformTarget }: SupraProps) {
   const { scene } = useGLTF("/models/supra_veilside.glb");
   const groupRef = useRef<Group>(null);
   const [hoveredPart, setHoveredPart] = useState<string | null>(null);
 
   // Clone scene + clone materials (so each mesh has its own instance)
-  const { model, partMeshes, explodeTargets } = useMemo(() => {
+  const { model, partMeshes, explodeTargets, explodedObjects, meshBasePositions } = useMemo(() => {
     const cloned = scene.clone(true);
+    const meshBases = new WeakMap<Mesh, Vector3>();
 
     // Clone materials per-mesh so we can modify individually
     // Also fix metallic surfaces: without Environment map, high metalness = black.
@@ -509,6 +524,7 @@ export default function SupraModel({ onSelectPart, selectedPart, xray, exploded 
           if (mat.metalness !== undefined && mat.metalness > 0.6) mat.metalness = 0.6;
           if (mat.roughness !== undefined && mat.roughness < 0.25) mat.roughness = 0.25;
         }
+        meshBases.set(child, child.position.clone());
       }
     });
 
@@ -529,20 +545,24 @@ export default function SupraModel({ onSelectPart, selectedPart, xray, exploded 
     });
 
     // Collect explodable groups with their original positions
-    const et: { obj: Object3D; origPos: Vector3; offset: [number, number, number] }[] = [];
+    const et: { obj: Object3D; partId: string; origPos: Vector3; offset: [number, number, number] }[] = [];
+    const eo = new WeakSet<Object3D>();
     cloned.traverse((child) => {
       if (!child.name) return;
       const base = stripSuffix(child.name);
       if (explodeGroupMap[base]) {
+        const partId = child instanceof Mesh ? resolvePartId(child) : nodeToPartMap[base] ?? "Ext.Body_Shell";
         et.push({
           obj: child,
+          partId,
           origPos: child.position.clone(),
           offset: explodeGroupMap[base],
         });
+        eo.add(child);
       }
     });
 
-    return { model: cloned, partMeshes: pm, explodeTargets: et };
+    return { model: cloned, partMeshes: pm, explodeTargets: et, explodedObjects: eo, meshBasePositions: meshBases };
   }, [scene]);
 
   // Store original material properties once
@@ -679,6 +699,25 @@ export default function SupraModel({ onSelectPart, selectedPart, xray, exploded 
   }, []);
 
   // ─── ANIMATION: auto-rotate + explode lerp ───
+  useEffect(() => {
+    if (!selectedPart) return;
+    const explodeTarget = explodeTargets.find((target) => target.partId === selectedPart)?.obj ?? null;
+    const meshTarget = partMeshes[selectedPart]?.[0] ?? null;
+    onPartTransformTarget?.(selectedPart, explodeTarget ?? meshTarget);
+  }, [explodeTargets, onPartTransformTarget, partMeshes, selectedPart]);
+
+  const hasExplodedAncestor = useCallback(
+    (mesh: Mesh) => {
+      let current: Object3D | null = mesh;
+      while (current) {
+        if (explodedObjects.has(current)) return true;
+        current = current.parent;
+      }
+      return false;
+    },
+    [explodedObjects],
+  );
+
   const _targetVec = useRef(new Vector3());
   useFrame((_, delta) => {
     if (!groupRef.current) return;
@@ -689,12 +728,25 @@ export default function SupraModel({ onSelectPart, selectedPart, xray, exploded 
     }
 
     // Smooth explode / unexplode
-    for (const { obj, origPos, offset } of explodeTargets) {
-      const tx = exploded ? origPos.x + offset[0] : origPos.x;
-      const ty = exploded ? origPos.y + offset[1] : origPos.y;
-      const tz = exploded ? origPos.z + offset[2] : origPos.z;
+    for (const { obj, partId, origPos, offset } of explodeTargets) {
+      const dragOffset = partDragOffsets[partId] ?? EMPTY_DRAG_OFFSET;
+      const tx = (exploded ? origPos.x + offset[0] : origPos.x) + dragOffset[0];
+      const ty = (exploded ? origPos.y + offset[1] : origPos.y) + dragOffset[1];
+      const tz = (exploded ? origPos.z + offset[2] : origPos.z) + dragOffset[2];
       _targetVec.current.set(tx, ty, tz);
       obj.position.lerp(_targetVec.current, 0.06);
+    }
+
+    for (const [partId, meshes] of Object.entries(partMeshes)) {
+      const dragOffset = partDragOffsets[partId];
+      if (!dragOffset) continue;
+      for (const mesh of meshes) {
+        if (hasExplodedAncestor(mesh)) continue;
+        const base = meshBasePositions.get(mesh);
+        if (!base) continue;
+        _targetVec.current.set(base.x + dragOffset[0], base.y + dragOffset[1], base.z + dragOffset[2]);
+        mesh.position.lerp(_targetVec.current, 0.06);
+      }
     }
   });
 
@@ -726,7 +778,8 @@ export default function SupraModel({ onSelectPart, selectedPart, xray, exploded 
   const showEngine = xray || exploded;
 
   return (
-    <group ref={groupRef}>
+    <SupraDragContext.Provider value={{ selectedPart, partDragOffsets, onPartTransformTarget }}>
+      <group ref={groupRef}>
       <primitive
         object={model}
         onClick={handleClick}
@@ -871,7 +924,8 @@ export default function SupraModel({ onSelectPart, selectedPart, xray, exploded 
           </ProceduralPart>
         </group>
       )}
-    </group>
+      </group>
+    </SupraDragContext.Provider>
   );
 }
 
@@ -896,14 +950,25 @@ function ProceduralPart({ id, position, rotation, exploded, onClick, onHover, se
   const ref = useRef<Group>(null);
   const meshRef = useRef<Mesh>(null);
   const targetVec = useRef(new Vector3());
+  const { selectedPart: selectedFromContext, partDragOffsets, onPartTransformTarget } = useContext(SupraDragContext);
   const def = partDefs[id];
   const isSelected = selected === id;
   const isHovered = hovered === id;
 
   const explodeDir = def?.explodeDir ?? [0, 0, 0];
+  const dragOffset = partDragOffsets[id] ?? EMPTY_DRAG_OFFSET;
   const finalPos: [number, number, number] = exploded
-    ? [position[0] + explodeDir[0], position[1] + explodeDir[1], position[2] + explodeDir[2]]
-    : position;
+    ? [
+      position[0] + explodeDir[0] + dragOffset[0],
+      position[1] + explodeDir[1] + dragOffset[1],
+      position[2] + explodeDir[2] + dragOffset[2],
+    ]
+    : [position[0] + dragOffset[0], position[1] + dragOffset[1], position[2] + dragOffset[2]];
+
+  useEffect(() => {
+    if (selectedFromContext !== id) return;
+    onPartTransformTarget?.(id, ref.current);
+  }, [id, onPartTransformTarget, selectedFromContext]);
 
   useFrame(() => {
     if (ref.current) {
